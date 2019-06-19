@@ -1,5 +1,5 @@
 .bloop/
 .metals/
 target/
-bazel*/
+bazel*
 
