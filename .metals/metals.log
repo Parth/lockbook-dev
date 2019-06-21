@@ -1,0 +1,71 @@
+INFO  time: initialize in 0.3s
+INFO  Selected port 5031
+Jun 21, 2019 1:31:59 AM org.xnio.Xnio <clinit>
+INFO: XNIO version 3.6.5.Final
+Jun 21, 2019 1:32:00 AM org.xnio.nio.NioXnio <clinit>
+INFO: XNIO NIO Implementation Version 3.6.5.Final
+Jun 21, 2019 1:32:00 AM org.jboss.threads.Version <clinit>
+INFO: JBoss Threads version 2.3.0.Beta2
+INFO  Started Metals http server at http://127.0.0.1:5031
+WARN  no build target: /Users/parth.mehrotra/Documents/devbook/src/main/scala/devbook/Library.scala
+INFO  running '/var/folders/mp/j31v9dnn1fsc0yxzdn1kmcg40000gn/T/metals5119573311200070490/gradlew --console=plain --init-script /var/folders/mp/j31v9dnn1fsc0yxzdn1kmcg40000gn/T/metals5119573311200070490/init-script.gradle bloopInstall'
+INFO  Downloading https://services.gradle.org/distributions/gradle-5.3.1-bin.zip
+WARN  no build target: /Users/parth.mehrotra/Documents/devbook/src/main/scala/devbook/Library.scala
+INFO  ...................................................................................
+INFO  
+INFO  Welcome to Gradle 5.3.1!
+INFO  
+INFO  Here are the highlights of this release:
+INFO   - Feature variants AKA "optional dependencies"
+INFO   - Type-safe accessors in Kotlin precompiled script plugins
+INFO   - Gradle Module Metadata 1.0
+INFO  
+INFO  For more details see https://docs.gradle.org/5.3.1/release-notes.html
+INFO  
+INFO  Starting a Gradle Daemon (subsequent builds will be faster)
+WARN  no build target: /Users/parth.mehrotra/Documents/devbook/src/main/scala/devbook/Library.scala
+INFO  time: initialize in 0.3s
+INFO  Selected port 5031
+Jun 21, 2019 1:36:10 AM org.xnio.Xnio <clinit>
+INFO: XNIO version 3.6.5.Final
+Jun 21, 2019 1:36:11 AM org.xnio.nio.NioXnio <clinit>
+INFO: XNIO NIO Implementation Version 3.6.5.Final
+Jun 21, 2019 1:36:11 AM org.jboss.threads.Version <clinit>
+INFO: JBoss Threads version 2.3.0.Beta2
+INFO  Started Metals http server at http://127.0.0.1:5031
+WARN  no build target: /Users/parth.mehrotra/Documents/devbook/src/main/scala/devbook/App.scala
+INFO  no build target: using presentation compiler with only scala-library
+WARN  no build target: /Users/parth.mehrotra/Documents/devbook/src/main/scala/devbook/App.scala
+INFO  time: initialize in 0.33s
+INFO  Selected port 5031
+Jun 21, 2019 1:38:51 AM org.xnio.Xnio <clinit>
+INFO: XNIO version 3.6.5.Final
+Jun 21, 2019 1:38:51 AM org.xnio.nio.NioXnio <clinit>
+INFO: XNIO NIO Implementation Version 3.6.5.Final
+Jun 21, 2019 1:38:51 AM org.jboss.threads.Version <clinit>
+INFO: JBoss Threads version 2.3.0.Beta2
+INFO  Started Metals http server at http://127.0.0.1:5031
+WARN  no build target: /Users/parth.mehrotra/Documents/devbook/src/main/scala/devbook/App.scala
+INFO  running '/var/folders/mp/j31v9dnn1fsc0yxzdn1kmcg40000gn/T/metals5583274044688346673/gradlew --console=plain --init-script /var/folders/mp/j31v9dnn1fsc0yxzdn1kmcg40000gn/T/metals5583274044688346673/init-script.gradle bloopInstall'
+INFO  no build target: using presentation compiler with only scala-library
+INFO  
+INFO  > Configure project :
+INFO  No scala library is configured, cannot determine version.
+ERROR 
+ERROR FAILURE: Build failed with an exception.
+ERROR 
+ERROR * What went wrong:
+ERROR java.lang.UnsupportedClassVersionError: org/openjfx/gradle/JavaFXPlugin has been compiled by a more recent version of the Java Runtime (class file version 55.0), this version of the Java Runtime only recognizes class file versions up to 52.0
+ERROR > org/openjfx/gradle/JavaFXPlugin has been compiled by a more recent version of the Java Runtime (class file version 55.0), this version of the Java Runtime only recognizes class file versions up to 52.0
+ERROR 
+ERROR * Try:
+ERROR Run with --stacktrace option to get the stack trace. Run with --info or --debug option to get more log output. Run with --scan to get full insights.
+ERROR 
+ERROR * Get more help at https://help.gradle.org
+ERROR 
+ERROR BUILD FAILED in 7s
+INFO  build tool exit: 1
+INFO  time: ran 'gradle bloopInstall' in 7.46s
+ERROR Gradle command failed: /var/folders/mp/j31v9dnn1fsc0yxzdn1kmcg40000gn/T/metals5583274044688346673/gradlew --console=plain --init-script /var/folders/mp/j31v9dnn1fsc0yxzdn1kmcg40000gn/T/metals5583274044688346673/init-script.gradle bloopInstall
+WARN  no build target: /Users/parth.mehrotra/Documents/devbook/src/main/scala/devbook/App.scala
+WARN  no build target: /Users/parth.mehrotra/Documents/devbook/src/main/scala/devbook/App.scala
