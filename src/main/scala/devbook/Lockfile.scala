@@ -39,6 +39,5 @@ object Lockfile {
       case _: SecurityException =>
         Some(new Error(s"I do not have write access to ${App.lockfile}"))
     }
-
   }
 }
