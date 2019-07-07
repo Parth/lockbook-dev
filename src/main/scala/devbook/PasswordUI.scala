@@ -8,7 +8,7 @@ import rx.lang.scala.{Observable, Subject}
 
 import scala.concurrent.duration._
 
-class PasswordUI(uiStream: Subject[UIEvents], lockfile: EncryptedValue) {
+class PasswordUI(primaryStream: Subject[Events], lockfile: EncryptedValue) {
   val vBox = new VBox
   val passwordField = new PasswordField
   val passwordSuccessNotificationArea = new StackPane
@@ -23,22 +23,23 @@ class PasswordUI(uiStream: Subject[UIEvents], lockfile: EncryptedValue) {
 
   private def setupListeners(): Unit = {
     passwordField.setOnAction(_ => {
-      val passwordAttempt = PasswordAttempt(
-        passwordField.getText,
-        lockfile
+      primaryStream.onNext(
+        PasswordAttempt(
+          passwordField.getText,
+          lockfile
+        )
       )
-
-      uiStream.onNext(passwordAttempt)
     })
 
-    PasswordStream(
-      uiStream.collect { case attempt: PasswordAttempt => attempt }
-    ).subscribe(either => {
-      either match {
-        case Left(pw)  => passwordSuccess(pw)
-        case Right(pf) => passwordFailed(pf)
-      }
-    })
+    primaryStream
+      .collect { case attempt: PasswordAttempt => attempt }
+      .map(Encryption.testPassword)
+      .subscribe(either => {
+        either match {
+          case Left(pw)  => passwordSuccess(pw)
+          case Right(pf) => passwordFailed(pf)
+        }
+      })
   }
 
   private def passwordSuccess(passwordSuccess: PasswordSuccess): Unit = {
@@ -52,7 +53,7 @@ class PasswordUI(uiStream: Subject[UIEvents], lockfile: EncryptedValue) {
     Observable
       .timer(Duration(1, SECONDS))
       .subscribe(_ => {
-        uiStream.onNext(ShowRepository())
+        primaryStream.onNext(ShowRepository())
       })
   }
 

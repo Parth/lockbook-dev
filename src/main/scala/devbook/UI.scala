@@ -5,37 +5,38 @@ import javafx.scene.control.SplitPane
 import javafx.stage.Stage
 import rx.lang.scala.Subject
 
-class UI(stage: Stage) {
+class UI(stage: Stage, primaryStream: Subject[Events]) {
 
   private val root: SplitPane = new SplitPane
-  private val uiStream: Subject[UIEvents] = Subject()
 
   def setup(): Unit = {
     stage.setTitle("Devbook")
 
-    uiStream.subscribe(value => {
-      value match {
-        case _: OnStart =>
-          Lockfile.getLockfile match {
-            case Some(bytes) => uiStream.onNext(ShowPassword(bytes))
-            case None        => uiStream.onNext(ShowNewDevbook())
-          }
+    primaryStream
+      .collect { case events: UIEvents => events }
+      .subscribe(value => {
+        value match {
+          case _: OnStart =>
+            Lockfile.getLockfile match {
+              case Some(bytes) => primaryStream.onNext(ShowPassword(bytes))
+              case None        => primaryStream.onNext(ShowNewDevbook())
+            }
 
-        case showPasswordEvent: ShowPassword =>
-          val passwordUI = new PasswordUI(uiStream, showPasswordEvent.lockfile)
-          root.getItems.add(passwordUI.getView)
+          case showPasswordEvent: ShowPassword =>
+            val passwordUI =
+              new PasswordUI(primaryStream, showPasswordEvent.lockfile)
+            root.getItems.add(passwordUI.getView)
 
-        case _: ShowNewDevbook =>
-          val newDevbookUI = new NewDevbookUI(uiStream)
-          root.getItems.add(newDevbookUI.getView)
+          case _: ShowNewDevbook =>
+            val newDevbookUI = new NewDevbookUI(primaryStream)
+            root.getItems.add(newDevbookUI.getView)
 
-        case _ =>
-      }
-    })
+        }
+      })
 
-    uiStream.subscribe(println(_))
+    primaryStream.subscribe(println(_))
 
-    uiStream.onNext(OnStart())
+    primaryStream.onNext(OnStart())
 
     stage.setScene(new Scene(root, 300, 600))
     stage.show()
@@ -43,5 +44,5 @@ class UI(stage: Stage) {
 
 }
 object UI {
-  def apply(stage: Stage): UI = new UI(stage)
+  def apply(stage: Stage): UI = new UI(stage, Subject[Events]())
 }

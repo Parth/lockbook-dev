@@ -8,7 +8,10 @@ import rx.lang.scala.{Observable, Subject}
 
 import scala.concurrent.duration._
 
-class NewDevbookUI(uiStream: Subject[UIEvents]) {
+class NewDevbookUI(primaryStream: Subject[Events]) {
+
+  private val newNotebookStream: Subject[PasswordEvents] = Subject()
+
   val vBox = new VBox
 
   val header = new Label("Create a new Devbook")
@@ -39,20 +42,20 @@ class NewDevbookUI(uiStream: Subject[UIEvents]) {
       if (password1 == password2) { // TODO Enforce some password requirements
         Lockfile.createLockfile(PasswordSuccess(password1)) match {
           case Some(error) =>
-            uiStream.onNext(PasswordFailure(error.toString))
+            primaryStream.onNext(PasswordFailure(error.toString))
           case None =>
-            uiStream.onNext(PasswordSuccess(password1))
+            primaryStream.onNext(PasswordSuccess(password1))
         }
       } else {
-        uiStream.onNext(PasswordFailure("Passwords do not match"))
+        primaryStream.onNext(PasswordFailure("Passwords do not match"))
       }
     })
 
-    uiStream
+    primaryStream
       .collect { case success: PasswordSuccess => success }
       .subscribe(passwordSuccess _)
 
-    uiStream
+    primaryStream
       .collect { case failure: PasswordFailure => failure }
       .subscribe(passwordFailed _)
   }
@@ -68,7 +71,7 @@ class NewDevbookUI(uiStream: Subject[UIEvents]) {
     Observable
       .timer(Duration(1, SECONDS))
       .subscribe(_ => {
-        uiStream.onNext(ShowRepository())
+        primaryStream.onNext(ShowRepository())
       })
   }
 
