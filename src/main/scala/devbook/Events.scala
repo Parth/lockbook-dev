@@ -16,3 +16,5 @@ case class PasswordAttempt(attempt: String, encryptedValue: EncryptedValue)
     extends PasswordEvents
 case class PasswordSuccess(password: String) extends PasswordEvents
 case class PasswordFailure(message: String) extends PasswordEvents
+case class PasswordCreationSuccess(password: String) extends PasswordEvents
+case class PasswordCreationFailure(message: String) extends PasswordEvents

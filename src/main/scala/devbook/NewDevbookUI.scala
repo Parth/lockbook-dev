@@ -10,8 +10,6 @@ import scala.concurrent.duration._
 
 class NewDevbookUI(primaryStream: Subject[Events]) {
 
-  private val newNotebookStream: Subject[PasswordEvents] = Subject()
-
   val vBox = new VBox
 
   val header = new Label("Create a new Devbook")
@@ -30,11 +28,10 @@ class NewDevbookUI(primaryStream: Subject[Events]) {
       confirmPasswordField,
       passwordSuccessNotificationArea
     )
-    setupListeners()
     vBox
   }
 
-  private def setupListeners(): Unit = {
+  def setupListeners(): Unit = {
     confirmPasswordField.setOnAction(_ => {
       val password1 = passwordField.getText
       val password2 = confirmPasswordField.getText
@@ -42,9 +39,9 @@ class NewDevbookUI(primaryStream: Subject[Events]) {
       if (password1 == password2) { // TODO Enforce some password requirements
         Lockfile.createLockfile(PasswordSuccess(password1)) match {
           case Some(error) =>
-            primaryStream.onNext(PasswordFailure(error.toString))
+            primaryStream.onNext(PasswordCreationFailure(error.toString))
           case None =>
-            primaryStream.onNext(PasswordSuccess(password1))
+            primaryStream.onNext(PasswordCreationSuccess(password1))
         }
       } else {
         primaryStream.onNext(PasswordFailure("Passwords do not match"))
@@ -52,15 +49,15 @@ class NewDevbookUI(primaryStream: Subject[Events]) {
     })
 
     primaryStream
-      .collect { case success: PasswordSuccess => success }
+      .collect { case success: PasswordCreationSuccess => success }
       .subscribe(passwordSuccess _)
 
     primaryStream
-      .collect { case failure: PasswordFailure => failure }
+      .collect { case failure: PasswordCreationFailure => failure }
       .subscribe(passwordFailed _)
   }
 
-  private def passwordSuccess(passwordSuccess: PasswordSuccess): Unit = {
+  private def passwordSuccess(passwordSuccess: PasswordCreationSuccess): Unit = {
     val correctPassword = new Label("Password Set")
     correctPassword.setTextFill(Color.rgb(21, 117, 84))
     passwordSuccessNotificationArea.getChildren.removeAll(
@@ -68,14 +65,11 @@ class NewDevbookUI(primaryStream: Subject[Events]) {
     )
 
     passwordSuccessNotificationArea.getChildren.add(correctPassword)
-    Observable
-      .timer(Duration(1, SECONDS))
-      .subscribe(_ => {
-        primaryStream.onNext(ShowRepository())
-      })
+    primaryStream.onNext(PasswordSuccess(passwordSuccess.password))
+    primaryStream.onNext(ShowRepository())
   }
 
-  private def passwordFailed(passwordFailure: PasswordFailure): Unit = { // https://stackoverflow.com/questions/21083945/how-to-avoid-not-on-fx-application-thread-currentthread-javafx-application-th ?
+  private def passwordFailed(passwordFailure: PasswordCreationFailure): Unit = { // https://stackoverflow.com/questions/21083945/how-to-avoid-not-on-fx-application-thread-currentthread-javafx-application-th ?
     val wrongPassword = new Label(passwordFailure.message)
     wrongPassword.setTextFill(Color.rgb(210, 39, 30))
     passwordSuccessNotificationArea.getChildren.removeAll(

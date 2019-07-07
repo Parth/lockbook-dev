@@ -4,11 +4,9 @@ import javafx.geometry.Pos
 import javafx.scene.control.{Label, PasswordField}
 import javafx.scene.layout._
 import javafx.scene.paint.Color
-import rx.lang.scala.{Observable, Subject}
+import rx.lang.scala.Subject
 
-import scala.concurrent.duration._
-
-class PasswordUI(primaryStream: Subject[Events], lockfile: EncryptedValue) {
+class PasswordUI(primaryStream: Subject[Events]) {
   val vBox = new VBox
   val passwordField = new PasswordField
   val passwordSuccessNotificationArea = new StackPane
@@ -17,19 +15,22 @@ class PasswordUI(primaryStream: Subject[Events], lockfile: EncryptedValue) {
     vBox.setAlignment(Pos.BASELINE_CENTER)
     vBox.setSpacing(10)
     vBox.getChildren.addAll(passwordField, passwordSuccessNotificationArea)
-    setupListeners()
     vBox
   }
 
-  private def setupListeners(): Unit = {
-    passwordField.setOnAction(_ => {
-      primaryStream.onNext(
-        PasswordAttempt(
-          passwordField.getText,
-          lockfile
-        )
-      )
-    })
+  def setupListeners(): Unit = {
+    primaryStream
+      .collect { case showPassword: ShowPassword => showPassword }
+      .subscribe(showPassword => {
+        passwordField.setOnAction(_ => {
+          primaryStream.onNext(
+            PasswordAttempt(
+              passwordField.getText,
+              showPassword.lockfile
+            )
+          )
+        })
+      })
 
     primaryStream
       .collect { case attempt: PasswordAttempt => attempt }
@@ -49,12 +50,9 @@ class PasswordUI(primaryStream: Subject[Events], lockfile: EncryptedValue) {
       passwordSuccessNotificationArea.getChildren
     )
 
+    primaryStream.onNext(passwordSuccess)
     passwordSuccessNotificationArea.getChildren.add(correctPassword)
-    Observable
-      .timer(Duration(1, SECONDS))
-      .subscribe(_ => {
-        primaryStream.onNext(ShowRepository())
-      })
+    primaryStream.onNext(ShowRepository())
   }
 
   private def passwordFailed(passwordFailure: PasswordFailure): Unit = {
