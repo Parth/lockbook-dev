@@ -1,6 +1,7 @@
 package devbook
 
 import javafx.geometry.Pos
+
 import javafx.scene.control.{Label, PasswordField}
 import javafx.scene.layout._
 import javafx.scene.paint.Color

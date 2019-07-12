@@ -1,5 +1,7 @@
 package devbook
 
+import java.net.URI
+
 sealed trait Events
 
 sealed trait UIEvents extends Events
@@ -18,3 +20,7 @@ case class PasswordSuccess(password: String) extends PasswordEvents
 case class PasswordFailure(message: String) extends PasswordEvents
 case class PasswordCreationSuccess(password: String) extends PasswordEvents
 case class PasswordCreationFailure(message: String) extends PasswordEvents
+
+sealed trait GitEvents extends Events
+
+case class CloneRequest(repository: URI) extends GitEvents
