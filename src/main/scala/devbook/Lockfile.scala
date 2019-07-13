@@ -10,8 +10,7 @@ trait Lockfile {
 
 class LockfileImpl(encryptionHelper: EncryptionHelper) extends Lockfile {
 
-  val path     = s"${System.getProperty("user.home")}/.devbook"
-  val lockfile = s"$path/lockfile"
+  val lockfile = s"${App.path}/lockfile"
 
   def getLockfile: Option[EncryptedValue] = {
     try {
