@@ -1,8 +1,17 @@
 package devbook
-import java.io.{File, IOException, _}
+
+import java.io.{File, IOException, PrintWriter}
 import java.nio.file.{Files, Paths}
 
-object Lockfile {
+trait Lockfile {
+  def getLockfile: Option[EncryptedValue]
+  def createLockfile(passwordSuccess: Password): Option[Error]
+}
+
+class LockfileImpl(encryptionHelper: EncryptionHelper) extends Lockfile {
+
+  val path     = s"${System.getProperty("user.home")}/.devbook"
+  val lockfile = s"$path/lockfile"
 
   def getLockfile: Option[EncryptedValue] = {
     try {
@@ -10,7 +19,7 @@ object Lockfile {
         EncryptedValue(
           new String(
             Files.readAllBytes(
-              Paths.get(App.lockfile)
+              Paths.get(lockfile)
             )
           )
         )
@@ -20,24 +29,26 @@ object Lockfile {
     }
   }
 
-  def createLockfile(passwordSuccess: PasswordSuccess): Option[Error] = {
+  def createLockfile(passwordSuccess: Password): Option[Error] = {
     try {
-      val file = new File(App.lockfile)
+      val file = new File(lockfile)
       file.getParentFile.mkdirs
       file.createNewFile
-      val pw = new PrintWriter(new File(App.lockfile))
-      val a = Encryption.encrypt(DecryptedValue("unlocked"), passwordSuccess)
+
+      val pw = new PrintWriter(new File(lockfile))
+      val a  = encryptionHelper.encrypt(DecryptedValue("unlocked"), passwordSuccess)
       a match {
         case Left(encryptedValue) =>
           pw.write(encryptedValue.garbage) // TODO pw.write suppresses IOExceptions and returns nothing... wtf?
           pw.close()
           None
+
         case Right(error) =>
           Some(error)
       }
     } catch {
       case _: SecurityException =>
-        Some(new Error(s"I do not have write access to ${App.lockfile}"))
+        Some(new Error(s"I do not have write access to $lockfile"))
     }
   }
 }

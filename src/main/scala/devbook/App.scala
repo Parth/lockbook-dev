@@ -5,9 +5,6 @@ import javafx.stage.Stage
 
 object App {
 
-  val path = s"${System.getProperty("user.home")}/.devbook"
-  val lockfile = s"$path/lockfile"
-
   def main(args: Array[String]) {
     Application.launch(classOf[App], args: _*)
   }
@@ -15,6 +12,15 @@ object App {
 
 class App extends Application {
   override def start(primaryStage: Stage): Unit = {
-    UI(primaryStage).setup()
+    val encryptionHelper: EncryptionHelper = new EncryptionImpl
+    val lockfile: Lockfile                 = new LockfileImpl(encryptionHelper)
+    val passwordHelper: PasswordHelper     = new PasswordHelperImpl(lockfile, encryptionHelper)
+
+    val newPasswordUi = new NewPasswordUi(lockfile)
+    val unlockUi      = new UnlockUi(passwordHelper)
+    val repositoryUi  = new RepositoryUi()
+
+    val uiOrchestrator = new UiOrchestrator(lockfile, unlockUi, newPasswordUi)
+    uiOrchestrator.showView(primaryStage)
   }
 }
