@@ -7,12 +7,12 @@ import javafx.scene.paint.Color
 
 class NewPasswordUi(lockfile: Lockfile) {
 
-  def getView: VBox = {
-    val vBox                            = new VBox
-    val header                          = new Label("Create a new Devbook")
-    val passwordField                   = new PasswordField
-    val confirmPasswordField            = new PasswordField
-    val passwordSuccessNotificationArea = new StackPane
+  def getView(onDone: => Unit): VBox = {
+    val vBox                 = new VBox
+    val header               = new Label("Create a new Devbook")
+    val passwordField        = new PasswordField
+    val confirmPasswordField = new PasswordField
+    val attemptInfoArea      = new StackPane
 
     vBox.setAlignment(Pos.BASELINE_CENTER)
     vBox.setSpacing(10)
@@ -20,7 +20,7 @@ class NewPasswordUi(lockfile: Lockfile) {
       header,
       passwordField,
       confirmPasswordField,
-      passwordSuccessNotificationArea
+      attemptInfoArea
     )
 
     confirmPasswordField.setOnAction(_ => {
@@ -32,27 +32,28 @@ class NewPasswordUi(lockfile: Lockfile) {
           case Some(error) =>
             val wrongPassword = new Label(error.toString)
             wrongPassword.setTextFill(Color.rgb(210, 39, 30))
-            passwordSuccessNotificationArea.getChildren.removeAll(
-              passwordSuccessNotificationArea.getChildren
+            attemptInfoArea.getChildren.removeAll(
+              attemptInfoArea.getChildren
             )
-            passwordSuccessNotificationArea.getChildren.add(wrongPassword)
+            attemptInfoArea.getChildren.add(wrongPassword)
 
           case None =>
             val correctPassword = new Label("Password Set")
             correctPassword.setTextFill(Color.rgb(21, 117, 84))
-            passwordSuccessNotificationArea.getChildren.removeAll(
-              passwordSuccessNotificationArea.getChildren
+            attemptInfoArea.getChildren.removeAll(
+              attemptInfoArea.getChildren
             )
+            attemptInfoArea.getChildren.add(correctPassword)
 
-            passwordSuccessNotificationArea.getChildren.add(correctPassword)
+            onDone
         }
       } else {
         val wrongPassword = new Label("Passwords do not match")
         wrongPassword.setTextFill(Color.rgb(210, 39, 30))
-        passwordSuccessNotificationArea.getChildren.removeAll(
-          passwordSuccessNotificationArea.getChildren
+        attemptInfoArea.getChildren.removeAll(
+          attemptInfoArea.getChildren
         )
-        passwordSuccessNotificationArea.getChildren.add(wrongPassword)
+        attemptInfoArea.getChildren.add(wrongPassword)
       }
     })
 

@@ -20,7 +20,7 @@ class App extends Application {
     val unlockUi      = new UnlockUi(passwordHelper)
     val repositoryUi  = new RepositoryUi()
 
-    val uiOrchestrator = new UiOrchestrator(lockfile, unlockUi, newPasswordUi)
+    val uiOrchestrator = new UiOrchestrator(lockfile, unlockUi, newPasswordUi, repositoryUi)
     uiOrchestrator.showView(primaryStage)
   }
 }

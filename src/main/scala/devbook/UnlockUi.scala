@@ -6,7 +6,7 @@ import javafx.scene.layout._
 import javafx.scene.paint.Color
 
 class UnlockUi(passwordHelper: PasswordHelper) {
-  def getView(passwordSuccess: () => Unit): VBox = {
+  def getView(passwordSuccess: => Unit): VBox = {
     val vBox                            = new VBox
     val passwordField                   = new PasswordField
     val passwordSuccessNotificationArea = new StackPane
@@ -22,7 +22,7 @@ class UnlockUi(passwordHelper: PasswordHelper) {
   private def passwordAttempt(
       passwordField: PasswordField,
       passwordSuccessNotificationArea: StackPane,
-      passwordSuccess: () => Unit
+      passwordSuccess: => Unit
   ): Unit = {
     passwordHelper.testPassword(PasswordAttempt(passwordField.getText)) match {
       case Left(_) =>
@@ -33,7 +33,7 @@ class UnlockUi(passwordHelper: PasswordHelper) {
         )
 
         passwordSuccessNotificationArea.getChildren.add(correctPassword)
-        passwordSuccess()
+        passwordSuccess
 
       case Right(error) =>
         val wrongPassword = new Label(error.toString)
