@@ -24,7 +24,7 @@ class UiOrchestrator(
 
   def showRepo: Unit = {
     root.getItems.removeAll(root.getItems)
-    root.getItems.add(repositoryUi.getView)
+    root.getItems.add(repositoryUi.getView(println))
   }
 
   def showLogin(onDone: => Unit): Node = {

@@ -4,13 +4,14 @@ import javafx.collections.{FXCollections, ObservableList}
 import javafx.geometry.Insets
 import javafx.scene.Scene
 import javafx.scene.control._
-import javafx.scene.layout.{BorderPane, GridPane, HBox}
+import javafx.scene.layout._
+import javafx.scene.paint.Color
 import javafx.stage.Stage
 import org.eclipse.jgit.api.Git
 
 class RepositoryUi(gitHelper: GitHelper) {
 
-  def getView: BorderPane = {
+  def getView(onClick: Git => Unit): BorderPane = {
     val borderPane    = new BorderPane
     val newRepoButton = new Button("New Repository")
     val footer        = new HBox(newRepoButton)
@@ -18,10 +19,11 @@ class RepositoryUi(gitHelper: GitHelper) {
     val listView      = new ListView[Git]
 
     gitHelper.getRepositories.foreach(repoList.add)
+
     listView.setItems(repoList)
     listView
       .cellFactoryProperty()
-      .setValue(_ => getListCell)
+      .setValue(_ => getListCell(onClick))
 
     newRepoButton.setOnAction(_ => {
       importRepoDialog(repoList)
@@ -74,8 +76,8 @@ class RepositoryUi(gitHelper: GitHelper) {
     dialog.show()
   }
 
-  private def getListCell: ListCell[Git] =
-    new ListCell[Git]() {
+  private def getListCell(onClick: Git => Unit): ListCell[Git] = {
+    val listCell: ListCell[Git] = new ListCell[Git]() {
       override def updateItem(item: Git, empty: Boolean): Unit = {
         super.updateItem(item, empty)
 
@@ -84,6 +86,17 @@ class RepositoryUi(gitHelper: GitHelper) {
           setText(getRepoNameFromUrl(item))
       }
     }
+
+    listCell.setOnMouseClicked(_ => {
+      if (!listCell.isEmpty) {
+        listCell.setBackground(
+          new Background(new BackgroundFill(Color.BLUE, CornerRadii.EMPTY, Insets.EMPTY))
+        )
+        onClick(listCell.getItem)
+      }
+    })
+    listCell
+  }
 
   private def getRepoNameFromUrl(git: Git): String = {
     val repoUrl = git.getRepository.getConfig
