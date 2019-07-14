@@ -19,6 +19,9 @@ class RepositoryUi(gitHelper: GitHelper) {
 
     gitHelper.getRepositories.foreach(repoList.add)
     listView.setItems(repoList)
+    listView
+      .cellFactoryProperty()
+      .setValue(_ => getListCell)
 
     newRepoButton.setOnAction(_ => {
       importRepoDialog(repoList)
@@ -69,5 +72,25 @@ class RepositoryUi(gitHelper: GitHelper) {
 
     dialog.setScene(new Scene(grid, 500, 300))
     dialog.show()
+  }
+
+  private def getListCell: ListCell[Git] =
+    new ListCell[Git]() {
+      override def updateItem(item: Git, empty: Boolean): Unit = {
+        super.updateItem(item, empty)
+
+        if (empty || item == null) setText(null)
+        else
+          setText(getRepoNameFromUrl(item))
+      }
+    }
+
+  private def getRepoNameFromUrl(git: Git): String = {
+    val repoUrl = git.getRepository.getConfig
+      .getString("remote", "origin", "url")
+
+    repoUrl
+      .split("/")
+      .last
   }
 }
