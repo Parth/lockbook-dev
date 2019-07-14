@@ -1,5 +1,7 @@
 package devbook
 
+import java.io.File
+
 import javafx.scene.control.SplitPane
 import javafx.scene.{Node, Scene}
 import javafx.stage.Stage
@@ -15,11 +17,10 @@ class UiOrchestrator(
 
   def showView(stage: Stage): Unit = {
     val root: SplitPane = new SplitPane
-    stage.setTitle("Devbook")
-
     root.getItems.add(showLogin(showRepo(stage, root)))
 
     stage.setScene(new Scene(root, 300, 600))
+    stage.setTitle("Lockbook Dev")
     stage.show()
   }
 
@@ -30,8 +31,13 @@ class UiOrchestrator(
 
   def showFileUi(stage: Stage, root: SplitPane)(repo: Git): Unit = {
     stage.setWidth(stage.getWidth * 2)
-    root.getItems.add(fileTreeUi.getView(repo)) // TODO only do this once
+    root.getItems.add(fileTreeUi.getView(repo, showEditorUi(stage, root))) // TODO only do this once
     root.setDividerPositions(0.4, 0.6)
+  }
+
+  def showEditorUi(stage: Stage, root: SplitPane)(f: File): Unit = {
+    stage.setWidth(stage.getWidth * 2)
+    root.setDividerPositions(0.3, 0.3, 0.4)
   }
 
   def showLogin(onDone: => Unit): Node = {

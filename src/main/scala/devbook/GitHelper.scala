@@ -30,7 +30,14 @@ class GitHelperImpl extends GitHelper {
   def uriToFolder(uri: String): String = Math.abs(uri.hashCode).toString
 
   override def getRepositories: List[Git] = {
-    val repos = new File(repoFolder).listFiles(_.isDirectory).toList
-    repos.map(file => Git.open(file))
+    val repos = new File(repoFolder)
+    if (repos.exists()) {
+      repos
+        .listFiles(_.isDirectory)
+        .toList
+        .map(file => Git.open(file))
+    } else {
+      List()
+    }
   }
 }
