@@ -12,7 +12,8 @@ class UiOrchestrator(
     unlockUI: UnlockUi,
     newPasswordUI: NewPasswordUi,
     repositoryUi: RepositoryUi,
-    fileTreeUi: FileTreeUi
+    fileTreeUi: FileTreeUi,
+    editorUi: EditorUi
 ) {
 
   def showView(stage: Stage): Unit = {
@@ -30,14 +31,23 @@ class UiOrchestrator(
   }
 
   def showFileUi(stage: Stage, root: SplitPane)(repo: Git): Unit = {
-    stage.setWidth(stage.getWidth * 2)
-    root.getItems.add(fileTreeUi.getView(repo, showEditorUi(stage, root))) // TODO only do this once
-    root.setDividerPositions(0.4, 0.6)
+    if (root.getDividers.size() == 0) {
+      stage.setWidth(stage.getWidth * 2)
+    } else {
+      root.getItems.remove(1)
+    }
+    root.getItems.add(fileTreeUi.getView(repo, showEditorUi(stage, root)))
+//    root.setDividerPositions(0.4)
   }
 
   def showEditorUi(stage: Stage, root: SplitPane)(f: File): Unit = {
-    stage.setWidth(stage.getWidth * 2)
-    root.setDividerPositions(0.3, 0.3, 0.4)
+    if (root.getDividers.size() == 1) {
+      stage.setWidth(stage.getWidth * 2)
+    } else {
+      root.getItems.remove(2)
+    }
+    root.getItems.add(editorUi.getView(f))
+//    root.setDividerPositions(0.2, 0.2)
   }
 
   def showLogin(onDone: => Unit): Node = {
