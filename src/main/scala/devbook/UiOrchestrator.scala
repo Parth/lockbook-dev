@@ -40,13 +40,13 @@ class UiOrchestrator(
 //    root.setDividerPositions(0.4)
   }
 
-  def showEditorUi(stage: Stage, root: SplitPane)(f: File): Unit = {
+  def showEditorUi(stage: Stage, root: SplitPane)(git: Git, f: File): Unit = {
     if (root.getDividers.size() == 1) {
       stage.setWidth(stage.getWidth * 2)
     } else {
       root.getItems.remove(2)
     }
-    root.getItems.add(editorUi.getView(f))
+    root.getItems.add(editorUi.getView(git, f))
 //    root.setDividerPositions(0.2, 0.2)
   }
 

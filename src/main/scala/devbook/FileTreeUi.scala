@@ -6,7 +6,7 @@ import javafx.scene.control.{TreeCell, TreeItem, TreeView}
 import org.eclipse.jgit.api.Git
 
 class FileTreeUi {
-  def getView(git: Git, onSelected: File => Unit): TreeView[File] = {
+  def getView(git: Git, onSelected: (Git, File) => Unit): TreeView[File] = {
     val treeView = new TreeView[File]
     treeView.setRoot(getViewHelper(git.getRepository.getWorkTree))
     treeView.setCellFactory(
@@ -27,7 +27,7 @@ class FileTreeUi {
       .addListener(
         (_, _, newValue) =>
           if (newValue.isLeaf)
-            onSelected(newValue.getValue)
+            onSelected(git, newValue.getValue)
       )
 
     treeView

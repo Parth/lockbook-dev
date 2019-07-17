@@ -17,12 +17,13 @@ class App extends Application {
     val lockfile: Lockfile                 = new LockfileImpl(encryptionHelper)
     val passwordHelper: PasswordHelper     = new PasswordHelperImpl(lockfile, encryptionHelper)
     val gitHelper: GitHelper               = new GitHelperImpl
+    val editorHelper                       = new EditorHelperImpl(encryptionHelper, passwordHelper, gitHelper)
 
     val newPasswordUi = new NewPasswordUi(lockfile)
     val unlockUi      = new UnlockUi(passwordHelper)
     val repositoryUi  = new RepositoryUi(gitHelper)
     val fileTreeUi    = new FileTreeUi
-    val editorUi      = new EditorUi
+    val editorUi      = new EditorUi(editorHelper)
 
     val uiOrchestrator =
       new UiOrchestrator(lockfile, unlockUi, newPasswordUi, repositoryUi, fileTreeUi, editorUi)

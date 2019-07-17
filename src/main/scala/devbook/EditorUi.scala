@@ -2,20 +2,32 @@ package devbook
 
 import java.io.File
 
-import javafx.scene.control.TextArea
-import javafx.scene.layout.BorderPane
+import javafx.scene.control.{Button, TextArea, TextField}
+import javafx.scene.layout.{BorderPane, HBox}
+import org.eclipse.jgit.api.Git
 
-import scala.io.Source
+class EditorUi(editorHelper: EditorHelper) {
 
-class EditorUi {
-
-  def getView(f: File): BorderPane = {
+  def getView(git: Git, f: File): BorderPane = {
     val root     = new BorderPane
     val textArea = new TextArea
-    val text     = Source.fromFile(f.getAbsoluteFile).getLines.mkString("\n")
-    textArea.setText(text)
+    val text     = editorHelper.getTextFromFile(f)
+
+    textArea.setText(text.left.get) // TODO handle error
+    root.setBottom(getBottom(git, f, textArea))
     root.setCenter(textArea)
     root
   }
 
+  def getBottom(git: Git, file: File, textArea: TextArea): HBox = {
+    val save          = new Button("Push")
+    val commitMessage = new TextField
+    commitMessage.setPromptText("Commit Message")
+
+    save.setOnAction(_ => {
+      editorHelper.saveCommitAndPush(commitMessage.getText, textArea.getText, file, git)
+    })
+
+    new HBox(commitMessage, save)
+  }
 }
