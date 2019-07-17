@@ -13,10 +13,11 @@ object App {
 
 class App extends Application {
   override def start(primaryStage: Stage): Unit = {
+    val gitCredentialHelper                = new GitCredentialHelperImpl
     val encryptionHelper: EncryptionHelper = new EncryptionImpl
     val lockfile: Lockfile                 = new LockfileImpl(encryptionHelper)
     val passwordHelper: PasswordHelper     = new PasswordHelperImpl(lockfile, encryptionHelper)
-    val gitHelper: GitHelper               = new GitHelperImpl
+    val gitHelper: GitHelper               = new GitHelperImpl(gitCredentialHelper)
     val editorHelper                       = new EditorHelperImpl(encryptionHelper, passwordHelper, gitHelper)
 
     val newPasswordUi = new NewPasswordUi(lockfile)

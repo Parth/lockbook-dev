@@ -4,7 +4,11 @@ import java.io.File
 
 import com.jcraft.jsch.{JSch, Session}
 import org.eclipse.jgit.api.Git
-import org.eclipse.jgit.transport.{JschConfigSessionFactory, OpenSshConfig, SshTransport, Transport}
+import org.eclipse.jgit.transport.{
+  JschConfigSessionFactory,
+  OpenSshConfig,
+  UsernamePasswordCredentialsProvider
+}
 import org.eclipse.jgit.util.FS
 
 trait GitHelper {
@@ -13,9 +17,14 @@ trait GitHelper {
   def commitAndPush(message: String, git: Git)
 }
 
-class GitHelperImpl extends GitHelper {
+class GitHelperImpl(gitCredentialHelper: GitCredentialHelper) extends GitHelper {
 
   val repoFolder = s"${App.path}/repos"
+
+  private def getCredentials: UsernamePasswordCredentialsProvider = {
+    val gitCredentials = gitCredentialHelper.getCredentials
+    new UsernamePasswordCredentialsProvider(gitCredentials.username, gitCredentials.password)
+  }
 
   override def cloneRepository(uri: String): Either[Git, Error] =
     try {
@@ -24,10 +33,7 @@ class GitHelperImpl extends GitHelper {
           .cloneRepository()
           .setURI(uri)
           .setDirectory(new File(s"$repoFolder/${uriToFolder(uri)}"))
-          .setTransportConfigCallback((transport: Transport) => {
-            val sshTransport = transport.asInstanceOf[SshTransport]
-            sshTransport.setSshSessionFactory(new CustomConfigSessionFactory)
-          })
+          .setCredentialsProvider(getCredentials)
           .call()
       )
     } catch {
@@ -56,10 +62,7 @@ class GitHelperImpl extends GitHelper {
 
     git
       .push()
-      .setTransportConfigCallback((transport: Transport) => {
-        val sshTransport = transport.asInstanceOf[SshTransport]
-        sshTransport.setSshSessionFactory(new CustomConfigSessionFactory)
-      })
+      .setCredentialsProvider(getCredentials)
       .call()
   }
 }
