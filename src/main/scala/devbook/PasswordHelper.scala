@@ -8,7 +8,7 @@ trait PasswordHelper {
   def testPassword(pwa: PasswordAttempt): Either[Password, Error]
 }
 
-class PasswordHelperImpl(lockfile: Lockfile, encryptionHelper: EncryptionHelper)
+class PasswordHelperImpl(lockfile: LockfileHelper, encryptionHelper: EncryptionHelper)
     extends PasswordHelper {
 
   var password: Option[Password] = None

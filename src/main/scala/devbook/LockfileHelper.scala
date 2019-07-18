@@ -3,12 +3,12 @@ package devbook
 import java.io.{File, IOException, PrintWriter}
 import java.nio.file.{Files, Paths}
 
-trait Lockfile {
+trait LockfileHelper {
   def getLockfile: Option[EncryptedValue]
   def createLockfile(passwordSuccess: Password): Option[Error]
 }
 
-class LockfileImpl(encryptionHelper: EncryptionHelper) extends Lockfile {
+class LockfileHelperImpl(encryptionHelper: EncryptionHelper) extends LockfileHelper {
 
   val lockfile = s"${App.path}/lockfile"
 

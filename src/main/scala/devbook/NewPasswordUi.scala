@@ -5,7 +5,7 @@ import javafx.scene.control.{Label, PasswordField}
 import javafx.scene.layout._
 import javafx.scene.paint.Color
 
-class NewPasswordUi(lockfile: Lockfile) {
+class NewPasswordUi(lockfile: LockfileHelper) {
 
   def getView(onDone: => Unit): VBox = {
     val vBox                 = new VBox

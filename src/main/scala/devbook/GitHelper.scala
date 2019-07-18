@@ -57,7 +57,7 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper) extends GitHelper 
   }
 
   override def commitAndPush(message: String, git: Git): Unit = {
-    git.add().addFilepattern("*").call()
+    git.add().addFilepattern(".").call() // TODO understand git add -A vs git add .
     git.commit().setMessage(message).call()
 
     git

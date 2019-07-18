@@ -8,12 +8,12 @@ import javafx.stage.Stage
 import org.eclipse.jgit.api.Git
 
 class UiOrchestrator(
-    lockfile: Lockfile,
-    unlockUI: UnlockUi,
-    newPasswordUI: NewPasswordUi,
-    repositoryUi: RepositoryUi,
-    fileTreeUi: FileTreeUi,
-    editorUi: EditorUi
+                      lockfile: LockfileHelper,
+                      unlockUI: UnlockUi,
+                      newPasswordUI: NewPasswordUi,
+                      repositoryUi: RepositoryUi,
+                      fileTreeUi: FileTreeUi,
+                      editorUi: EditorUi
 ) {
 
   def showView(stage: Stage): Unit = {
