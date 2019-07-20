@@ -2,7 +2,8 @@ package devbook
 
 import java.io.File
 
-import javafx.scene.control.{Button, TextArea, TextField}
+import javafx.scene.control.Alert.AlertType
+import javafx.scene.control.{Alert, Button, TextArea, TextField}
 import javafx.scene.layout.{BorderPane, HBox}
 import org.eclipse.jgit.api.Git
 
@@ -25,7 +26,13 @@ class EditorUi(editorHelper: EditorHelper) {
     commitMessage.setPromptText("Commit Message")
 
     save.setOnAction(_ => {
-      editorHelper.saveCommitAndPush(commitMessage.getText, textArea.getText, file, git)
+      editorHelper.saveCommitAndPush(commitMessage.getText, textArea.getText, file, git) match {
+        case None =>
+          val alert = new Alert(AlertType.CONFIRMATION)
+          alert.setTitle("Push Successful")
+          alert.setHeaderText("Look, an Information Dialog")
+          alert.setContentText("I have a great message for you!")
+      }
     })
 
     new HBox(commitMessage, save)

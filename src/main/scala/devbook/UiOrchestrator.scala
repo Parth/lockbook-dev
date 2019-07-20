@@ -3,51 +3,57 @@ package devbook
 import java.io.File
 
 import javafx.scene.control.SplitPane
+import javafx.scene.layout.StackPane
 import javafx.scene.{Node, Scene}
-import javafx.stage.Stage
+import javafx.stage.{Screen, Stage}
 import org.eclipse.jgit.api.Git
 
 class UiOrchestrator(
-                      lockfile: LockfileHelper,
-                      unlockUI: UnlockUi,
-                      newPasswordUI: NewPasswordUi,
-                      repositoryUi: RepositoryUi,
-                      fileTreeUi: FileTreeUi,
-                      editorUi: EditorUi
+    lockfile: LockfileHelper,
+    unlockUI: UnlockUi,
+    newPasswordUI: NewPasswordUi,
+    repositoryUi: RepositoryUi,
+    fileTreeUi: FileTreeUi,
+    editorUi: EditorUi
 ) {
 
   def showView(stage: Stage): Unit = {
-    val root: SplitPane = new SplitPane
-    root.getItems.add(showLogin(showRepo(stage, root)))
-
-    stage.setScene(new Scene(root, 300, 600))
+    val root: StackPane = new StackPane
+    root.getChildren.add(showLogin(showRepo(stage)))
+    stage.setScene(new Scene(root, 300, 300))
     stage.setTitle("Lockbook Dev")
     stage.show()
   }
 
-  def showRepo(stage: Stage, root: SplitPane): Unit = {
-    root.getItems.removeAll(root.getItems)
-    root.getItems.add(repositoryUi.getView(showFileUi(stage, root)))
+  def showRepo(stage: Stage): Unit = {
+    stage.close()
+    val root            = new SplitPane
+    val repoStackPane   = new StackPane
+    val fileStackPane   = new StackPane
+    val editorStackPane = new StackPane
+
+    root.setDividerPositions(0.25, 0.5)
+    root.getItems.setAll(repoStackPane, fileStackPane, editorStackPane)
+    repoStackPane.getChildren.setAll(
+      repositoryUi.getView(showFileUi(fileStackPane, editorStackPane))
+    )
+
+    stage.setScene(
+      new Scene(
+        root,
+        Screen.getPrimary.getVisualBounds.getWidth * 0.8,
+        Screen.getPrimary.getVisualBounds.getHeight * 0.8
+      )
+    )
+    stage.show()
   }
 
-  def showFileUi(stage: Stage, root: SplitPane)(repo: Git): Unit = {
-    if (root.getDividers.size() == 0) {
-      stage.setWidth(stage.getWidth * 2)
-    } else {
-      root.getItems.remove(1)
-    }
-    root.getItems.add(fileTreeUi.getView(repo, showEditorUi(stage, root)))
-//    root.setDividerPositions(0.4)
+  def showFileUi(fileContainer: StackPane, editorContainer: StackPane)(repo: Git): Unit = {
+    fileContainer.getChildren.add(fileTreeUi.getView(repo, showEditorUi(editorContainer)))
   }
 
-  def showEditorUi(stage: Stage, root: SplitPane)(git: Git, f: File): Unit = {
-    if (root.getDividers.size() == 1) {
-      stage.setWidth(stage.getWidth * 2)
-    } else {
-      root.getItems.remove(2)
-    }
-    root.getItems.add(editorUi.getView(git, f))
-//    root.setDividerPositions(0.2, 0.2)
+  def showEditorUi(container: StackPane)(git: Git, f: File): Unit = {
+    container.getChildren.setAll(editorUi.getView(git, f))
   }
 
   def showLogin(onDone: => Unit): Node = {

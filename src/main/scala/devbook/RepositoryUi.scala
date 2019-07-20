@@ -89,9 +89,9 @@ class RepositoryUi(gitHelper: GitHelper) {
 
     listCell.setOnMouseClicked(_ => {
       if (!listCell.isEmpty) {
-        listCell.setBackground(
-          new Background(new BackgroundFill(Color.BLUE, CornerRadii.EMPTY, Insets.EMPTY))
-        )
+//        listCell.setBackground(
+//          new Background(new BackgroundFill(Color.BLUE, CornerRadii.EMPTY, Insets.EMPTY))
+//        )
         onClick(listCell.getItem)
       }
     })

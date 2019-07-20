@@ -12,7 +12,11 @@ class UnlockUi(passwordHelper: PasswordHelper) {
     val passwordSuccessNotificationArea = new StackPane
     vBox.setAlignment(Pos.BASELINE_CENTER)
     vBox.setSpacing(10)
-    vBox.getChildren.addAll(passwordField, passwordSuccessNotificationArea)
+    vBox.getChildren.addAll(
+      new Label("Enter your passphrase"),
+      passwordField,
+      passwordSuccessNotificationArea
+    )
     passwordField.setOnAction(_ => {
       passwordAttempt(passwordField, passwordSuccessNotificationArea, passwordSuccess)
     })

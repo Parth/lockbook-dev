@@ -50,7 +50,6 @@ class FileTreeUi {
     })
 
     root.setBottom(newFileButton)
-
     root
   }
 
