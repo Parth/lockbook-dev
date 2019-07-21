@@ -22,8 +22,8 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper) extends GitHelper 
 
   val repoFolder = s"${App.path}/repos"
 
-  private def getCredentials: UsernamePasswordCredentialsProvider = {
-    val gitCredentials = gitCredentialHelper.getCredentials
+  private def getCredentials(uri: String): UsernamePasswordCredentialsProvider = {
+    val gitCredentials = gitCredentialHelper.getCredentials(uriToFolder(uri))
     new UsernamePasswordCredentialsProvider(gitCredentials.username, gitCredentials.password)
   }
 
@@ -34,7 +34,7 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper) extends GitHelper 
           .cloneRepository()
           .setURI(uri)
           .setDirectory(new File(s"$repoFolder/${uriToFolder(uri)}"))
-          .setCredentialsProvider(getCredentials)
+          .setCredentialsProvider(getCredentials(uri))
           .call()
       )
     } catch {
@@ -77,7 +77,7 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper) extends GitHelper 
 
     git
       .push()
-      .setCredentialsProvider(getCredentials)
+      .setCredentialsProvider(getCredentials(getRepoName(git)))
       .call()
   }
 }

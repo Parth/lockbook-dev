@@ -9,17 +9,17 @@ import javafx.scene.layout.GridPane
 case class GitCredentials(username: String, password: String)
 
 trait GitCredentialHelper {
-  def getCredentials: GitCredentials
+  def getCredentials(uri: String): GitCredentials
 }
 
 class GitCredentialHelperImpl extends GitCredentialHelper {
   var credentials: Option[GitCredentials] = None
 
-  def getView: Dialog[Option[GitCredentials]] = {
+  def getView(credentialName: String): Dialog[Option[GitCredentials]] = {
 
     val dialog = new Dialog[Option[GitCredentials]]
     dialog.setTitle("Login Dialog")
-    dialog.setHeaderText("Look, a Custom Login Dialog")
+    dialog.setHeaderText(s"Enter credentials for $credentialName")
 
     val loginButtonType = new ButtonType("Login", ButtonData.OK_DONE)
     dialog.getDialogPane.getButtonTypes.addAll(loginButtonType, ButtonType.CANCEL)
@@ -55,12 +55,12 @@ class GitCredentialHelperImpl extends GitCredentialHelper {
     dialog
   }
 
-  override def getCredentials: GitCredentials = {
+  override def getCredentials(name: String): GitCredentials = {
     credentials match {
       case Some(value) =>
         value
       case None =>
-        getView.showAndWait().get().get // TODO
+        getView(name).showAndWait().get().get // TODO
     }
   }
 }
