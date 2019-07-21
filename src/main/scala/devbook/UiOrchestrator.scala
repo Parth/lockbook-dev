@@ -32,7 +32,7 @@ class UiOrchestrator(
     val fileStackPane   = new StackPane
     val editorStackPane = new StackPane
 
-    root.setDividerPositions(0.25, 0.5)
+    root.setDividerPositions(0.15, 0.3)
     root.getItems.setAll(repoStackPane, fileStackPane, editorStackPane)
     repoStackPane.getChildren.setAll(
       repositoryUi.getView(showFileUi(fileStackPane, editorStackPane))

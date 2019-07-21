@@ -15,6 +15,7 @@ class EditorUi(editorHelper: EditorHelper) {
     val text     = editorHelper.getTextFromFile(f)
 
     textArea.setText(text.left.get) // TODO handle error
+    textArea.setWrapText(true) // TODO make this an option?
     root.setBottom(getBottom(git, f, textArea))
     root.setCenter(textArea)
     root

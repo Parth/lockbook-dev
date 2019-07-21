@@ -12,6 +12,8 @@ class FileTreeUi {
   def getView(git: Git, onSelected: (Git, File) => Unit): BorderPane = {
     val treeView = new TreeView[File]
     treeView.setRoot(getViewHelper(git.getRepository.getWorkTree))
+    treeView.setShowRoot(false)
+
     treeView.setCellFactory(
       _ =>
         new TreeCell[File]() {
@@ -55,9 +57,10 @@ class FileTreeUi {
 
   def getViewHelper(file: File): TreeItem[File] = {
     val item: TreeItem[File]  = new TreeItem[File](file)
-    val children: Array[File] = file.listFiles
+    val childrenUnfiltered: Array[File] = file.listFiles
 
-    if (children != null) {
+    if (childrenUnfiltered != null) {
+      val children = childrenUnfiltered.filter(_.getName != ".git")
       for (child <- children) {
         item.getChildren.add(getViewHelper(child))
       }
