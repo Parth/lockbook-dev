@@ -5,7 +5,6 @@ import javafx.geometry.Insets
 import javafx.scene.Scene
 import javafx.scene.control._
 import javafx.scene.layout._
-import javafx.scene.paint.Color
 import javafx.stage.Stage
 import org.eclipse.jgit.api.Git
 
@@ -83,7 +82,7 @@ class RepositoryUi(gitHelper: GitHelper) {
 
         if (empty || item == null) setText(null)
         else
-          setText(getRepoNameFromUrl(item))
+          setText(gitHelper.getRepoName(item))
       }
     }
 
@@ -98,12 +97,4 @@ class RepositoryUi(gitHelper: GitHelper) {
     listCell
   }
 
-  private def getRepoNameFromUrl(git: Git): String = {
-    val repoUrl = git.getRepository.getConfig
-      .getString("remote", "origin", "url")
-
-    repoUrl
-      .split("/")
-      .last
-  }
 }

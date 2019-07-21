@@ -15,6 +15,7 @@ trait GitHelper {
   def cloneRepository(uri: String): Either[Git, Error]
   def getRepositories: List[Git]
   def commitAndPush(message: String, git: Git)
+  def getRepoName(git: Git): String
 }
 
 class GitHelperImpl(gitCredentialHelper: GitCredentialHelper) extends GitHelper {
@@ -42,7 +43,21 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper) extends GitHelper 
         Right(new Error(e))
     }
 
-  def uriToFolder(uri: String): String = Math.abs(uri.hashCode).toString
+  def uriToFolder(uri: String): String = {
+    val folderName = uri.split("/").last
+    if (folderName.endsWith(".git")) {
+      folderName.substring(0, folderName.length - 4)
+    } else {
+      folderName
+    }
+  }
+
+  def getRepoName(git: Git): String = {
+    val repoUrl = git.getRepository.getConfig
+      .getString("remote", "origin", "url")
+
+    uriToFolder(repoUrl)
+  }
 
   override def getRepositories: List[Git] = {
     val repos = new File(repoFolder)
