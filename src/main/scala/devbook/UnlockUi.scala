@@ -1,19 +1,25 @@
 package devbook
 
-import javafx.geometry.Pos
+import javafx.geometry.{Insets, Pos}
 import javafx.scene.control.{Label, PasswordField}
 import javafx.scene.layout._
 import javafx.scene.paint.Color
 
 class UnlockUi(passwordHelper: PasswordHelper) {
   def getView(passwordSuccess: => Unit): VBox = {
+
     val vBox                            = new VBox
+    val prompt                          = new Label("Enter your passphrase")
     val passwordField                   = new PasswordField
     val passwordSuccessNotificationArea = new StackPane
+
+    vBox.setPadding(new Insets(20))
     vBox.setAlignment(Pos.BASELINE_CENTER)
     vBox.setSpacing(10)
+    prompt.setStyle("-fx-font-size: 15;")
+
     vBox.getChildren.addAll(
-      new Label("Enter your passphrase"),
+      prompt,
       passwordField,
       passwordSuccessNotificationArea
     )

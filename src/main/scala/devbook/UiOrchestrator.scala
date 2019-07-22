@@ -20,13 +20,15 @@ class UiOrchestrator(
   def showView(stage: Stage): Unit = {
     val root: StackPane = new StackPane
     root.getChildren.add(showLogin(showRepo(stage)))
-    stage.setScene(new Scene(root, 300, 300))
+    stage.setScene(new Scene(root, 300, 100))
+    stage.getScene.getStylesheets.add("dark.css")
     stage.setTitle("Lockbook Dev")
     stage.show()
   }
 
   def showRepo(stage: Stage): Unit = {
     stage.close()
+
     val root            = new SplitPane
     val repoStackPane   = new StackPane
     val fileStackPane   = new StackPane
@@ -45,6 +47,8 @@ class UiOrchestrator(
         Screen.getPrimary.getVisualBounds.getHeight * 0.8
       )
     )
+
+    stage.getScene.getStylesheets.add("dark.css")
     stage.show()
   }
 

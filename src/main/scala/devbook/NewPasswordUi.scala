@@ -44,7 +44,7 @@ class NewPasswordUi(lockfile: LockfileHelper) {
               attemptInfoArea.getChildren
             )
             attemptInfoArea.getChildren.add(correctPassword)
-
+            // TODO tell password manager what you set the password too
             onDone
         }
       } else {

@@ -9,12 +9,16 @@ import javafx.scene.layout.GridPane
 case class GitCredentials(username: String, password: String)
 
 trait GitCredentialHelper {
+  // TODO change this to add credentials
   def getCredentials(uri: String): GitCredentials
 }
 
 class GitCredentialHelperImpl extends GitCredentialHelper {
+
+  val credentialFolder = s"${App.path}/credentials"
   var credentials: Option[GitCredentials] = None
 
+  // TODO move this to it's own ui dependency
   def getView(credentialName: String): Dialog[Option[GitCredentials]] = {
 
     val dialog = new Dialog[Option[GitCredentials]]

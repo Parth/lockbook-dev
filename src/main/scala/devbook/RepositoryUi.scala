@@ -47,27 +47,18 @@ class RepositoryUi(gitHelper: GitHelper) {
     grid.add(new Label("Repository Url:"), 0, 0)
     grid.add(repositoryURL, 1, 0)
 
-    val comboBox = new ComboBox[String]
-    comboBox.getItems.addAll(
-      "Encrypted",
-      "Not Encrypted"
-    )
-
-    comboBox.setValue("Encrypted")
-    grid.add(comboBox, 1, 1)
-
     val cancel = new Button("Cancel")
     cancel.setOnAction(_ => {
       dialog.close()
     })
-    grid.add(cancel, 1, 2)
+    grid.add(cancel, 1, 1)
 
     val clone = new Button("Clone")
     clone.setOnAction(_ => {
       repoList.add(gitHelper.cloneRepository(repositoryURL.getText).left.get)
       dialog.close()
     })
-    grid.add(clone, 2, 2)
+    grid.add(clone, 2, 1)
 
     grid.setPadding(new Insets(20, 150, 10, 10))
 
