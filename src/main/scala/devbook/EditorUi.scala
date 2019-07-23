@@ -3,9 +3,11 @@ package devbook
 import java.io.File
 
 import javafx.scene.control.Alert.AlertType
-import javafx.scene.control.{Alert, Button, TextArea, TextField}
+import javafx.scene.control._
 import javafx.scene.layout.{BorderPane, HBox}
 import org.eclipse.jgit.api.Git
+
+import scala.util.{Failure, Success}
 
 class EditorUi(editorHelper: EditorHelper) {
 
@@ -14,10 +16,14 @@ class EditorUi(editorHelper: EditorHelper) {
     val textArea = new TextArea
     val text     = editorHelper.getTextFromFile(f)
 
-    textArea.setText(text.left.get) // TODO handle error
-    textArea.setWrapText(true) // TODO make this an option?
-    root.setBottom(getBottom(git, f, textArea))
-    root.setCenter(textArea)
+    if (text.isSuccess) {
+      textArea.setText(text.get) // TODO handle error
+      textArea.setWrapText(true) // TODO make this an option?
+      root.setBottom(getBottom(git, f, textArea))
+      root.setCenter(textArea)
+    } else {
+      root.setCenter(new Label("This file is encrypted with a different password"))
+    }
     root
   }
 
@@ -28,8 +34,14 @@ class EditorUi(editorHelper: EditorHelper) {
 
     save.setOnAction(_ => {
       editorHelper.saveCommitAndPush(commitMessage.getText, textArea.getText, file, git) match {
-        case None =>
+        case Success(_) =>
           val alert = new Alert(AlertType.CONFIRMATION)
+          alert.setTitle("Push Successful")
+          alert.show()
+
+        case Failure(exception) =>
+          val alert = new Alert(AlertType.CONFIRMATION)
+          println(exception)
           alert.setTitle("Push Successful")
           alert.setHeaderText("Look, an Information Dialog")
           alert.setContentText("I have a great message for you!")

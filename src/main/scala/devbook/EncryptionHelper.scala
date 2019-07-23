@@ -6,41 +6,36 @@ import java.util
 import java.util.Base64
 
 import javax.crypto.spec.{IvParameterSpec, PBEKeySpec, SecretKeySpec}
-import javax.crypto.{BadPaddingException, Cipher, SecretKeyFactory}
+import javax.crypto.{Cipher, SecretKeyFactory}
+
+import scala.util.{Failure, Success, Try}
 
 case class EncryptedValue(garbage: String)
 case class DecryptedValue(secret: String)
 
 trait EncryptionHelper {
-  def encrypt(value: DecryptedValue, password: Password): Either[EncryptedValue, Error]
-  def decrypt(garbage: EncryptedValue, password: Password): Either[DecryptedValue, Error]
+  def encrypt(value: DecryptedValue, password: Password): Try[EncryptedValue]
+  def decrypt(garbage: EncryptedValue, password: Password): Try[DecryptedValue]
 }
 
 class EncryptionImpl extends EncryptionHelper {
-  def encrypt(value: DecryptedValue, password: Password): Either[EncryptedValue, Error] =
-    try {
-      Left(
-        EncryptedValue(
-          encryptHelper(value.secret, password.password)
-        )
+  def encrypt(value: DecryptedValue, password: Password): Try[EncryptedValue] =
+    Try(
+      EncryptedValue(
+        encryptHelper(value.secret, password.password)
       )
-    } catch {
-      case e: Exception =>
-        Right(new Error(e.getMessage))
-    }
+    )
 
-  def decrypt(garbage: EncryptedValue, password: Password): Either[DecryptedValue, Error] =
+  def decrypt(garbage: EncryptedValue, password: Password): Try[DecryptedValue] =
     try {
-      Left(
+      Success(
         DecryptedValue(
           decryptHelper(garbage.garbage, password.password)
         )
       )
     } catch {
-      case _: BadPaddingException =>
-        Right(new Error("Incorrect Password"))
-      case e: Exception =>
-        Right(new Error(e.getMessage))
+      case _: Exception =>
+        Failure(new Error("Incorrect Password"))
     }
 
   private def encryptHelper(str: String, password: String): String = {

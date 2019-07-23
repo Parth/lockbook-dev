@@ -1,53 +1,39 @@
 package devbook
 
-import java.io.{File, IOException, PrintWriter}
-import java.nio.file.{Files, Paths}
+import java.io.{File, PrintWriter}
+
+import scala.util.{Failure, Success, Try}
 
 trait LockfileHelper {
-  def getLockfile: Option[EncryptedValue]
-  def createLockfile(passwordSuccess: Password): Option[Error]
+  def getLockfile: Try[EncryptedValue]
+  def writeToLockfile(string: String): Try[Unit]
 }
 
-class LockfileHelperImpl(encryptionHelper: EncryptionHelper) extends LockfileHelper {
+class LockfileHelperImpl(encryptionHelper: EncryptionHelper, fileHelper: FileHelper)
+    extends LockfileHelper {
 
   val lockfile = s"${App.path}/lockfile"
 
-  def getLockfile: Option[EncryptedValue] = {
-    try {
-      Some(
-        EncryptedValue(
-          new String(
-            Files.readAllBytes(
-              Paths.get(lockfile)
-            )
-          )
-        )
-      )
-    } catch {
-      case _: IOException => None
-    }
-  }
+  def getLockfile: Try[EncryptedValue] = fileHelper.readFile(lockfile).map(EncryptedValue)
 
-  def createLockfile(passwordSuccess: Password): Option[Error] = {
+  def writeToLockfile(string: String): Try[Unit] = {
     try {
       val file = new File(lockfile)
       file.getParentFile.mkdirs
       file.createNewFile
 
-      val pw = new PrintWriter(new File(lockfile))
-      val a  = encryptionHelper.encrypt(DecryptedValue("unlocked"), passwordSuccess)
-      a match {
-        case Left(encryptedValue) =>
-          pw.write(encryptedValue.garbage) // TODO pw.write suppresses IOExceptions and returns nothing... wtf?
-          pw.close()
-          None
+      val pw = new PrintWriter(new File(lockfile)) // TODO file?
+      pw.write(string)
+      pw.close()
 
-        case Right(error) =>
-          Some(error)
+      if (pw.checkError()) {
+        Failure(new Error("Something went wrong while writing to the lockfile"))
+      } else {
+        Success()
       }
     } catch {
       case _: SecurityException =>
-        Some(new Error(s"I do not have write access to $lockfile"))
+        Failure(new Error(s"I do not have write access to $lockfile"))
     }
   }
 }

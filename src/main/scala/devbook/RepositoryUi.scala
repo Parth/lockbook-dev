@@ -8,6 +8,8 @@ import javafx.scene.layout._
 import javafx.stage.Stage
 import org.eclipse.jgit.api.Git
 
+import scala.util.{Failure, Success}
+
 class RepositoryUi(gitHelper: GitHelper) {
 
   def getView(onClick: Git => Unit): BorderPane = {
@@ -55,7 +57,13 @@ class RepositoryUi(gitHelper: GitHelper) {
 
     val clone = new Button("Clone")
     clone.setOnAction(_ => {
-      repoList.add(gitHelper.cloneRepository(repositoryURL.getText).left.get)
+
+      val repo = gitHelper.cloneRepository(repositoryURL.getText) match {
+        case Success(value) =>
+          repoList.add(value)
+        case Failure(error) =>
+          println(error) // TODO
+      }
       dialog.close()
     })
     grid.add(clone, 2, 1)

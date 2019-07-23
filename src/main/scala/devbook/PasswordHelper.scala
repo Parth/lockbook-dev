@@ -1,31 +1,33 @@
 package devbook
 
+import scala.util.{Failure, Success, Try}
+
 case class PasswordAttempt(attempt: String)
 case class Password(password: String)
 
 trait PasswordHelper {
-  var password: Option[Password]
-  def testPassword(pwa: PasswordAttempt): Either[Password, Error]
+  var password: Password
+  def testPassword(pwa: PasswordAttempt): Try[Password]
+  def doMatch(password1: String, password2: String): Try[Unit] = {
+    if (password1 == password2) {
+      Success()
+    } else {
+      Failure(new Error("Passwords do not match"))
+    }
+  }
 }
 
 class PasswordHelperImpl(lockfile: LockfileHelper, encryptionHelper: EncryptionHelper)
     extends PasswordHelper {
 
-  var password: Option[Password] = None
+  var password: Password = _
 
-  override def testPassword(pwa: PasswordAttempt): Either[Password, Error] = {
-    lockfile.getLockfile match {
-      case Some(value) =>
-        encryptionHelper.decrypt(value, Password(pwa.attempt)) match {
-          case Left(_) =>
-            val successPassword = Password(pwa.attempt)
-            password = Some(successPassword)
-            Left(successPassword)
-          case Right(error) => Right(error)
-        }
-
-      case None => // highly unlikely if this is being called
-        Right(new Error("Lockfile does not exist, please restart the application"))
-    }
+  override def testPassword(pwa: PasswordAttempt): Try[Password] = {
+    lockfile.getLockfile
+      .map(encryptionHelper.decrypt(_, Password(pwa.attempt)))
+      .map(_ => {
+        password = Password(pwa.attempt)
+        Password(pwa.attempt)
+      })
   }
 }

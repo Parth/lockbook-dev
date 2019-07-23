@@ -8,6 +8,8 @@ import javafx.scene.{Node, Scene}
 import javafx.stage.{Screen, Stage}
 import org.eclipse.jgit.api.Git
 
+import scala.util.{Failure, Success}
+
 class UiOrchestrator(
     lockfile: LockfileHelper,
     unlockUI: UnlockUi,
@@ -62,9 +64,9 @@ class UiOrchestrator(
 
   def showLogin(onDone: => Unit): Node = {
     lockfile.getLockfile match {
-      case Some(_) =>
+      case Success(_) =>
         unlockUI.getView(onDone)
-      case None =>
+      case Failure(_) =>
         newPasswordUI.getView(onDone)
     }
   }

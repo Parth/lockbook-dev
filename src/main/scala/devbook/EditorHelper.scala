@@ -1,32 +1,34 @@
 package devbook
 
 import java.io.{BufferedWriter, File, FileWriter}
-import java.nio.file.{Files, Paths}
 
 import org.eclipse.jgit.api.Git
 
+import scala.util.Try
+
 trait EditorHelper {
-  def getTextFromFile(f: File): Either[String, Error]
-  def saveCommitAndPush(message: String, file: String, originalFile: File, git: Git): Option[Error]
+  def getTextFromFile(f: File): Try[String]
+  def saveCommitAndPush(message: String, file: String, originalFile: File, git: Git): Try[Unit]
 }
 
 class EditorHelperImpl(
     encryptionHelper: EncryptionHelper,
     passwordHelper: PasswordHelper,
-    gitHelper: GitHelper
+    gitHelper: GitHelper,
+    fileHelper: FileHelper
 ) extends EditorHelper {
-  override def getTextFromFile(f: File): Either[String, Error] = {
-    if (f.getName.endsWith("aes")) {
-      val base64Junk = new String(Files.readAllBytes(Paths.get(f.getAbsolutePath)))
-      val encrypted  = EncryptedValue(base64Junk)
 
-      encryptionHelper.decrypt(encrypted, passwordHelper.password.get) match {
-        case Left(decryptedValue) => Left(decryptedValue.secret)
-        case Right(error)         => Right(error)
-      } // TODO swap all the either so we can use maps
+  override def getTextFromFile(f: File): Try[String] = {
+    if (f.getName.endsWith("aes")) {
+
+      fileHelper
+        .readFile(f.getAbsolutePath)
+        .map(EncryptedValue)
+        .flatMap(encryptionHelper.decrypt(_, passwordHelper.password))
+        .map(_.secret)
 
     } else {
-      Left(new String(Files.readAllBytes(Paths.get(f.getAbsolutePath))))
+      fileHelper.readFile(f.getAbsolutePath)
     }
   }
 
@@ -35,13 +37,11 @@ class EditorHelperImpl(
       content: String,
       originalFile: File,
       git: Git
-  ): Option[Error] = {
-    None
+  ): Try[Unit] = {
 
     val contentToSave: String = if (originalFile.getName.endsWith("aes")) {
       encryptionHelper
-        .encrypt(DecryptedValue(content), passwordHelper.password.get)
-        .left
+        .encrypt(DecryptedValue(content), passwordHelper.password)
         .get
         .garbage // TODO
     } else {
@@ -51,8 +51,6 @@ class EditorHelperImpl(
     saveFile(contentToSave, originalFile)
 
     gitHelper.commitAndPush(message, git)
-
-    None
   }
 
   private def saveFile(contents: String, file: File): Unit = {

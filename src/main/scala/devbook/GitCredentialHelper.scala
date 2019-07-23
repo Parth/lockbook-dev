@@ -1,70 +1,93 @@
 package devbook
 
-import javafx.application.Platform
-import javafx.geometry.Insets
-import javafx.scene.control.ButtonBar.ButtonData
-import javafx.scene.control._
-import javafx.scene.layout.GridPane
+import java.io.{File, PrintWriter}
 
-case class GitCredentials(username: String, password: String)
+import scala.util.{Failure, Success, Try}
 
-trait GitCredentialHelper {
-  // TODO change this to add credentials
-  def getCredentials(uri: String): GitCredentials
+case class GitCredential(username: String, password: String)
+object GitCredential {
+  def deserialize(gitCredential: GitCredential): String =
+    s"${gitCredential.username},${gitCredential.password}"
+
+  def serialize(string: String): Try[GitCredential] = {
+    val parts = string.split(",")
+    if (parts.length == 2) {
+      Success(GitCredential(parts.head, parts.last))
+    } else {
+      Failure(new Error("Failed to read stored credentials."))
+    }
+  }
 }
 
-class GitCredentialHelperImpl extends GitCredentialHelper {
+trait GitCredentialHelper {
+
+  /**
+    * @param key retrieve a GitCredential. Will see if there's an encrypted credential file,
+    *            decrypt it and return the stored GitCredential. If such a file does not exist
+    *            it will prompt the user for one.
+    * @return last entered GitCredential for a given file
+    */
+  def getCredentials(key: String): Try[GitCredential]
+
+  /**
+    * Provides a way for a caller to reject credentials provided and re-prompt the user for credentials
+    *
+    * @param key key for incorrect credentials
+    * @return The GitCredential the user re-entered
+    */
+  def incorrectCredentialsAndRetry(key: String): GitCredential
+}
+
+class GitCredentialHelperImpl(
+    encryptionHelper: EncryptionHelper,
+    passwordHelper: PasswordHelper,
+    fileHelper: FileHelper
+) extends GitCredentialHelper {
 
   val credentialFolder = s"${App.path}/credentials"
-  var credentials: Option[GitCredentials] = None
 
-  // TODO move this to it's own ui dependency
-  def getView(credentialName: String): Dialog[Option[GitCredentials]] = {
+  override def getCredentials(name: String): Try[GitCredential] = {
+    fileHelper
+      .readFile(s"$credentialFolder/$name")
+      .map(EncryptedValue) match {
+      case Failure(_) =>
+        val toRet = GitCredentialUi.getView(name).showAndWait().get()
 
-    val dialog = new Dialog[Option[GitCredentials]]
-    dialog.setTitle("Login Dialog")
-    dialog.setHeaderText(s"Enter credentials for $credentialName")
+        toRet
+          .map(GitCredential.deserialize)
+          .map(DecryptedValue)
+          .flatMap(encryptionHelper.encrypt(_, passwordHelper.password))
+          .flatMap(saveToFile(_, name))
 
-    val loginButtonType = new ButtonType("Login", ButtonData.OK_DONE)
-    dialog.getDialogPane.getButtonTypes.addAll(loginButtonType, ButtonType.CANCEL)
-
-    val grid = new GridPane
-    grid.setHgap(10)
-    grid.setVgap(10)
-    grid.setPadding(new Insets(20, 150, 10, 10))
-
-    val username = new TextField
-    username.setPromptText("Username")
-    val password = new PasswordField
-    password.setPromptText("Password")
-
-    grid.add(new Label("Username:"), 0, 0)
-    grid.add(username, 1, 0)
-    grid.add(new Label("Password:"), 0, 1)
-    grid.add(password, 1, 1)
-
-    val loginButton = dialog.getDialogPane.lookupButton(loginButtonType)
-
-    dialog.getDialogPane.setContent(grid)
-
-    Platform.runLater(() => username.requestFocus())
-
-    dialog.setResultConverter {
-      case loginButtonType =>
-        Some(GitCredentials(username.getText, password.getText))
-      case _ =>
-        None
-    }
-
-    dialog
-  }
-
-  override def getCredentials(name: String): GitCredentials = {
-    credentials match {
-      case Some(value) =>
-        value
-      case None =>
-        getView(name).showAndWait().get().get // TODO
+        toRet
+      case Success(value) =>
+        Success(value)
+          .flatMap(encryptionHelper.decrypt(_, passwordHelper.password))
+          .map(_.secret)
+          .flatMap(GitCredential.serialize)
     }
   }
+
+  private def saveToFile(encryptedValue: EncryptedValue, name: String): Try[Unit] = {
+    try {
+      val file = new File(s"$credentialFolder/$name")
+      file.getParentFile.mkdirs
+      file.createNewFile
+
+      val pw = new PrintWriter(file)
+      pw.write(encryptedValue.garbage)
+      pw.close()
+
+      if (pw.checkError()) {
+        Failure(new Error("Something went wrong while saving this credential"))
+      } else {
+        Success()
+      }
+    } catch {
+      case _: SecurityException =>
+        Failure(new Error(s"I do not have write access to $credentialFolder/$name"))
+    }
+  }
+
+  override def incorrectCredentialsAndRetry(key: String): GitCredential = ???
 }

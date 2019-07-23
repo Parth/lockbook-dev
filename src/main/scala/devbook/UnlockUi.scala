@@ -5,6 +5,8 @@ import javafx.scene.control.{Label, PasswordField}
 import javafx.scene.layout._
 import javafx.scene.paint.Color
 
+import scala.util.{Failure, Success}
+
 class UnlockUi(passwordHelper: PasswordHelper) {
   def getView(passwordSuccess: => Unit): VBox = {
 
@@ -35,7 +37,7 @@ class UnlockUi(passwordHelper: PasswordHelper) {
       passwordSuccess: => Unit
   ): Unit = {
     passwordHelper.testPassword(PasswordAttempt(passwordField.getText)) match {
-      case Left(_) =>
+      case Success(_) =>
         val correctPassword = new Label("Decrypting")
         correctPassword.setTextFill(Color.rgb(21, 117, 84))
         passwordSuccessNotificationArea.getChildren.removeAll(
@@ -45,8 +47,8 @@ class UnlockUi(passwordHelper: PasswordHelper) {
         passwordSuccessNotificationArea.getChildren.add(correctPassword)
         passwordSuccess
 
-      case Right(error) =>
-        val wrongPassword = new Label(error.toString)
+      case Failure(error) =>
+        val wrongPassword = new Label(error.getMessage)
         wrongPassword.setTextFill(Color.rgb(210, 39, 30))
         passwordSuccessNotificationArea.getChildren.removeAll(
           passwordSuccessNotificationArea.getChildren
