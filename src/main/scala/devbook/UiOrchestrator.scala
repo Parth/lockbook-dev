@@ -22,7 +22,7 @@ class UiOrchestrator(
   def showView(stage: Stage): Unit = {
     val root: StackPane = new StackPane
     root.getChildren.add(showLogin(showRepo(stage)))
-    stage.setScene(new Scene(root, 300, 100))
+    stage.setScene(new Scene(root, 300, 130))
     stage.getScene.getStylesheets.add("dark.css")
     stage.setTitle("Lockbook Dev")
     stage.show()

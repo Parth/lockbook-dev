@@ -24,7 +24,7 @@ class PasswordHelperImpl(lockfile: LockfileHelper, encryptionHelper: EncryptionH
 
   override def testPassword(pwa: PasswordAttempt): Try[Password] = {
     lockfile.getLockfile
-      .map(encryptionHelper.decrypt(_, Password(pwa.attempt)))
+      .flatMap(encryptionHelper.decrypt(_, Password(pwa.attempt)))
       .map(_ => {
         password = Password(pwa.attempt)
         Password(pwa.attempt)
