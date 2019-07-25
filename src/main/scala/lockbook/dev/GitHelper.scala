@@ -1,4 +1,4 @@
-package devbook
+package lockbook.dev
 
 import java.io.File
 import java.net.URI

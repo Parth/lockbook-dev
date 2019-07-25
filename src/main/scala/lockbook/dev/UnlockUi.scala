@@ -1,4 +1,4 @@
-package devbook
+package lockbook.dev
 
 import javafx.geometry.{Insets, Pos}
 import javafx.scene.control.{Label, PasswordField}

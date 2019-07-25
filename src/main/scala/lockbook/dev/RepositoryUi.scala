@@ -1,4 +1,4 @@
-package devbook
+package lockbook.dev
 
 import javafx.collections.{FXCollections, ObservableList}
 import javafx.geometry.Insets
@@ -71,6 +71,7 @@ class RepositoryUi(gitHelper: GitHelper) {
     grid.setPadding(new Insets(20, 150, 10, 10))
 
     dialog.setScene(new Scene(grid, 500, 300))
+    dialog.getScene.getStylesheets.add("dark.css")
     dialog.show()
   }
 

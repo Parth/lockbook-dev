@@ -1,10 +1,10 @@
-package devbook
+package lockbook.dev
 
 import javafx.application.Application
 import javafx.stage.Stage
 
 object App {
-  val path = s"${System.getProperty("user.home")}/.devbook"
+  val path = s"${System.getProperty("user.home")}/.lockbook"
 
   def main(args: Array[String]) {
     Application.launch(classOf[App], args: _*)

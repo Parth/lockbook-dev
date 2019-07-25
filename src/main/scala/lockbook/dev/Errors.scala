@@ -1,4 +1,4 @@
-package devbook
+package lockbook.dev
 
 object Errors {
   val noCredentialsProvided = new Error("No Credentials Provided")

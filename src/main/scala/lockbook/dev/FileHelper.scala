@@ -1,4 +1,4 @@
-package devbook
+package lockbook.dev
 
 import java.io.IOException
 import java.nio.file.{Files, InvalidPathException, Paths}

@@ -20,4 +20,4 @@ dependencies {
 }
 
 
-mainClassName = 'devbook.App'
+mainClassName = 'lockbook.dev.App'

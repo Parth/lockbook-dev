@@ -1,4 +1,4 @@
-package devbook
+package lockbook.dev
 
 import javafx.geometry.Pos
 import javafx.scene.control.{Label, PasswordField}
@@ -15,7 +15,7 @@ class NewPasswordUi(
 
   def getView(onDone: => Unit): VBox = {
     val vBox                 = new VBox
-    val header               = new Label("Create a new Devbook")
+    val header               = new Label("Create a new Lockbook")
     val passwordField        = new PasswordField
     val confirmPasswordField = new PasswordField
     val attemptInfoArea      = new StackPane

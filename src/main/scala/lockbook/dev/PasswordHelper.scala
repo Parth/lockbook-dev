@@ -1,4 +1,4 @@
-package devbook
+package lockbook.dev
 
 import scala.util.{Failure, Success, Try}
 

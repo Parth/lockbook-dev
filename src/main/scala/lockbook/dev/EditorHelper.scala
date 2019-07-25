@@ -1,4 +1,4 @@
-package devbook
+package lockbook.dev
 
 import java.io.{BufferedWriter, File, FileWriter}
 

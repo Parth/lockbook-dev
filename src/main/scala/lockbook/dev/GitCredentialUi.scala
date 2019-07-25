@@ -1,4 +1,4 @@
-package devbook
+package lockbook.dev
 
 import javafx.application.Platform
 import javafx.geometry.Insets

@@ -1,4 +1,4 @@
-package devbook
+package lockbook.dev
 
 import javafx.scene.control.Alert.AlertType
 import javafx.scene.control.{Alert, ButtonType}
