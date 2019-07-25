@@ -35,7 +35,8 @@ class NewPasswordUi(
 
       passwordHelper
         .doMatch(password1, password2)
-        .flatMap(_ => passwordHelper.testPassword(PasswordAttempt(password1)))
+        .map(_ => Password(password1))
+        .map(passwordHelper.setPassword)
         .flatMap(encryptionHelper.encrypt(DecryptedValue("unlocked"), _))
         .map(_.garbage)
         .flatMap(lockfile.writeToLockfile) match {
