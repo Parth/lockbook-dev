@@ -36,7 +36,6 @@ class RepositoryUi(gitHelper: GitHelper) {
   }
 
   private def importRepoDialog(repoList: ObservableList[Git]): Unit = {
-    // Dialog
     val dialog = new Stage
     dialog.setTitle("Add repository to Lockbook")
 
@@ -88,9 +87,6 @@ class RepositoryUi(gitHelper: GitHelper) {
 
     listCell.setOnMouseClicked(_ => {
       if (!listCell.isEmpty) {
-//        listCell.setBackground(
-//          new Background(new BackgroundFill(Color.BLUE, CornerRadii.EMPTY, Insets.EMPTY))
-//        )
         onClick(listCell.getItem)
       }
     })
