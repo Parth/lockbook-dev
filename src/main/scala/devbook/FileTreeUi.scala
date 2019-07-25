@@ -56,7 +56,7 @@ class FileTreeUi {
   }
 
   def getViewHelper(file: File): TreeItem[File] = {
-    val item: TreeItem[File]  = new TreeItem[File](file)
+    val item: TreeItem[File]            = new TreeItem[File](file)
     val childrenUnfiltered: Array[File] = file.listFiles
 
     if (childrenUnfiltered != null) {

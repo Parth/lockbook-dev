@@ -35,7 +35,7 @@ trait GitCredentialHelper {
     * @param key key for incorrect credentials
     * @return The GitCredential the user re-entered
     */
-  def incorrectCredentialsAndRetry(key: String): GitCredential
+  def incorrectCredentials(key: String): Unit
 }
 
 class GitCredentialHelperImpl(
@@ -46,18 +46,18 @@ class GitCredentialHelperImpl(
 
   val credentialFolder = s"${App.path}/credentials"
 
-  override def getCredentials(name: String): Try[GitCredential] = {
+  override def getCredentials(key: String): Try[GitCredential] = {
     fileHelper
-      .readFile(s"$credentialFolder/$name")
+      .readFile(s"$credentialFolder/$key")
       .map(EncryptedValue) match {
       case Failure(_) =>
-        val toRet = GitCredentialUi.getView(name).showAndWait().get()
+        val toRet = GitCredentialUi.getView(key).showAndWait().get()
 
         toRet
           .map(GitCredential.deserialize)
           .map(DecryptedValue)
           .flatMap(encryptionHelper.encrypt(_, passwordHelper.password))
-          .flatMap(saveToFile(_, name))
+          .flatMap(saveToFile(_, key))
 
         toRet
       case Success(value) =>
@@ -68,9 +68,9 @@ class GitCredentialHelperImpl(
     }
   }
 
-  private def saveToFile(encryptedValue: EncryptedValue, name: String): Try[Unit] = {
+  private def saveToFile(encryptedValue: EncryptedValue, key: String): Try[Unit] = {
     try {
-      val file = new File(s"$credentialFolder/$name")
+      val file = new File(s"$credentialFolder/$key")
       file.getParentFile.mkdirs
       file.createNewFile
 
@@ -85,9 +85,11 @@ class GitCredentialHelperImpl(
       }
     } catch {
       case _: SecurityException =>
-        Failure(new Error(s"I do not have write access to $credentialFolder/$name"))
+        Failure(new Error(s"I do not have write access to $credentialFolder/$key"))
     }
   }
 
-  override def incorrectCredentialsAndRetry(key: String): GitCredential = ???
+  override def incorrectCredentials(key: String): Unit = {
+    new File(s"$credentialFolder/$key").delete()
+  }
 }

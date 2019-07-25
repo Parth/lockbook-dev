@@ -58,13 +58,13 @@ class RepositoryUi(gitHelper: GitHelper) {
     val clone = new Button("Clone")
     clone.setOnAction(_ => {
 
-      val repo = gitHelper.cloneRepository(repositoryURL.getText) match {
+      gitHelper.cloneRepository(repositoryURL.getText) match {
         case Success(value) =>
           repoList.add(value)
+          dialog.close()
         case Failure(error) =>
-          println(error) // TODO
+          AlertUi.showBad("Failed to clone repository:", error.getMessage)
       }
-      dialog.close()
     })
     grid.add(clone, 2, 1)
 

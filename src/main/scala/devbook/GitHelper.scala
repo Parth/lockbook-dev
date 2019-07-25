@@ -1,10 +1,16 @@
 package devbook
 
 import java.io.File
+import java.net.URI
 
 import com.jcraft.jsch.{JSch, Session}
 import org.eclipse.jgit.api.Git
-import org.eclipse.jgit.transport.{JschConfigSessionFactory, OpenSshConfig, UsernamePasswordCredentialsProvider}
+import org.eclipse.jgit.api.errors.TransportException
+import org.eclipse.jgit.transport.{
+  JschConfigSessionFactory,
+  OpenSshConfig,
+  UsernamePasswordCredentialsProvider
+}
 import org.eclipse.jgit.util.FS
 
 import scala.util.{Failure, Success, Try}
@@ -20,9 +26,9 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper) extends GitHelper 
 
   val repoFolder = s"${App.path}/repos"
 
-  private def getCredentials(uri: String): Try[UsernamePasswordCredentialsProvider] = {
+  private def getCredentials(uri: URI): Try[UsernamePasswordCredentialsProvider] = {
     gitCredentialHelper
-      .getCredentials(uriToFolder(uriToFolder(uri)))
+      .getCredentials(uri.getHost)
       .map(
         gitCredentials =>
           new UsernamePasswordCredentialsProvider(gitCredentials.username, gitCredentials.password)
@@ -31,7 +37,7 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper) extends GitHelper 
   }
 
   override def cloneRepository(uri: String): Try[Git] =
-    getCredentials(uri)
+    getCredentials(new URI(uri))
       .flatMap(
         credentials =>
           try {
@@ -44,7 +50,10 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper) extends GitHelper 
                 .call()
             )
           } catch {
-            case e: Exception => // TODO need to figure out how to detect login failure to invalidate password java.lang.Error: org.eclipse.jgit.api.errors.TransportException: https://github.com/Parth/private.git: not authorized
+            case e: TransportException =>
+              gitCredentialHelper.incorrectCredentials(new URI(uri).getHost)
+              Failure(new Error("Saved Credentials were invalid, please retry."))
+            case e: Exception =>
               Failure(new Error(e))
           }
       )
@@ -65,6 +74,13 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper) extends GitHelper 
     uriToFolder(repoUrl)
   }
 
+  def getRepoURI(git: Git): URI = {
+    val repoUrl = git.getRepository.getConfig
+      .getString("remote", "origin", "url")
+
+    new URI(repoUrl)
+  }
+
   override def getRepositories: List[Git] = {
     val repos = new File(repoFolder)
     if (repos.exists()) {
@@ -78,7 +94,7 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper) extends GitHelper 
   }
 
   override def commitAndPush(message: String, git: Git): Try[Unit] = {
-    getCredentials(getRepoName(git))
+    getCredentials(getRepoURI(git))
       .flatMap(credentials => {
         try {
           git.add().addFilepattern(".").call()

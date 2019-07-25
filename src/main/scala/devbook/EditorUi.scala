@@ -2,7 +2,6 @@ package devbook
 
 import java.io.File
 
-import javafx.scene.control.Alert.AlertType
 import javafx.scene.control._
 import javafx.scene.layout.{BorderPane, HBox}
 import org.eclipse.jgit.api.Git
@@ -35,16 +34,9 @@ class EditorUi(editorHelper: EditorHelper) {
     save.setOnAction(_ => {
       editorHelper.saveCommitAndPush(commitMessage.getText, textArea.getText, file, git) match {
         case Success(_) =>
-          val alert = new Alert(AlertType.CONFIRMATION)
-          alert.setTitle("Push Successful")
-          alert.show()
-
+          AlertUi.showGood("Push Successful", "Changes saved successfully.")
         case Failure(exception) =>
-          val alert = new Alert(AlertType.CONFIRMATION)
-          println(exception)
-          alert.setTitle("Push Successful")
-          alert.setHeaderText("Look, an Information Dialog")
-          alert.setContentText("I have a great message for you!")
+          AlertUi.showBad("Push Failed", exception.getMessage)
       }
     })
 
