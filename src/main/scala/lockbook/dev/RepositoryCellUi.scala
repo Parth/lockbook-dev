@@ -24,14 +24,16 @@ class RepositoryCellUi(gitHelper: GitHelper) {
       onDelete: RepositoryCell => Unit
   ): ListCell[RepositoryCell] = {
 
-    val listCell: ListCell[RepositoryCell] = new ListCell[RepositoryCell]() {
+    new ListCell[RepositoryCell]() {
 
       // TODO perhaps this can be smaller: https://stackoverflow.com/questions/28264907/javafx-listview-contextmenu
       override def updateItem(item: RepositoryCell, empty: Boolean): Unit = {
         super.updateItem(item, empty)
 
-        if (empty || item == null) setText(null)
-        else {
+        if (empty || item == null) {
+          setText(null)
+          setGraphic(null)
+        } else {
           setGraphic(getCell(item))
           val deleteItem = new MenuItem("Delete")
           deleteItem.setOnAction(_ => onDelete(item))
@@ -39,8 +41,6 @@ class RepositoryCellUi(gitHelper: GitHelper) {
         }
       }
     }
-
-    listCell
   }
 
   private def getCell(repositoryCell: RepositoryCell): GridPane = {

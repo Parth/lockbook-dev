@@ -24,7 +24,6 @@ class RepositoryUi(
 
     repoList.forEach(pull => gitHelper.pull(pull.pullCommand))
 
-    listView.setItems(repoList)
     listView
       .cellFactoryProperty()
       .setValue(_ => repositoryCellUi.getListCell(onClick, delete(listView)))
@@ -36,6 +35,8 @@ class RepositoryUi(
           onClick(newVal.git)
         }
       })
+
+    listView.setItems(repoList)
 
     newRepoButton.setOnAction(_ => {
       cloneRepoDialog.showDialog(repoList)
@@ -49,6 +50,5 @@ class RepositoryUi(
   def delete(list: ListView[RepositoryCell])(repositoryCell: RepositoryCell): Unit = {
     gitHelper.deleteRepo(repositoryCell.git)
     list.getItems.remove(repositoryCell)
-    list.refresh()
   }
 }
