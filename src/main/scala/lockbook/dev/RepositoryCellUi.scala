@@ -1,6 +1,6 @@
 package lockbook.dev
 
-import javafx.scene.control.{Label, ListCell, ProgressIndicator}
+import javafx.scene.control._
 import javafx.scene.layout.GridPane
 import org.eclipse.jgit.api.{Git, PullCommand}
 
@@ -19,16 +19,24 @@ object RepositoryCell {
 
 class RepositoryCellUi(gitHelper: GitHelper) {
 
-  def getListCell(onClick: Git => Unit): ListCell[RepositoryCell] = {
+  def getListCell(
+      onClick: Git => Unit,
+      onDelete: RepositoryCell => Unit
+  ): ListCell[RepositoryCell] = {
 
     val listCell: ListCell[RepositoryCell] = new ListCell[RepositoryCell]() {
 
+      // TODO perhaps this can be smaller: https://stackoverflow.com/questions/28264907/javafx-listview-contextmenu
       override def updateItem(item: RepositoryCell, empty: Boolean): Unit = {
         super.updateItem(item, empty)
 
         if (empty || item == null) setText(null)
-        else
+        else {
           setGraphic(getCell(item))
+          val deleteItem = new MenuItem("Delete")
+          deleteItem.setOnAction(_ => onDelete(item))
+          setContextMenu(new ContextMenu(deleteItem))
+        }
       }
     }
 

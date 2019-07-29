@@ -25,6 +25,7 @@ trait GitHelper {
   def getRepoName(git: Git): String
   def pullCommand(git: Git, progressMonitor: ProgressMonitor): PullCommand
   def pull(pullCommand: PullCommand): Future[Unit]
+  def deleteRepo(git: Git): Unit
 }
 
 class GitHelperImpl(gitCredentialHelper: GitCredentialHelper) extends GitHelper {
@@ -100,6 +101,11 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper) extends GitHelper 
     pullCommand.call()
   }
 
+  override def deleteRepo(git: Git): Unit = {
+    val file = git.getRepository.getWorkTree
+    deleteDirectory(file)
+  }
+
   private def getCredentials(git: Git): Try[UsernamePasswordCredentialsProvider] =
     getCredentials(getRepoURI(git))
 
@@ -133,6 +139,14 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper) extends GitHelper 
       .getString("remote", "origin", "url")
 
     new URI(repoUrl)
+  }
+
+  private def deleteDirectory(directoryToBeDeleted: File): Boolean = {
+    val allContents = directoryToBeDeleted.listFiles
+    if (allContents != null) for (file <- allContents) {
+      deleteDirectory(file)
+    }
+    directoryToBeDeleted.delete
   }
 }
 

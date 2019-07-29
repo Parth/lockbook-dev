@@ -27,7 +27,7 @@ class RepositoryUi(
     listView.setItems(repoList)
     listView
       .cellFactoryProperty()
-      .setValue(_ => repositoryCellUi.getListCell(onClick))
+      .setValue(_ => repositoryCellUi.getListCell(onClick, delete(listView)))
 
     listView.getSelectionModel
       .selectedItemProperty()
@@ -44,5 +44,11 @@ class RepositoryUi(
     borderPane.setCenter(listView)
     borderPane.setBottom(footer)
     borderPane
+  }
+
+  def delete(list: ListView[RepositoryCell])(repositoryCell: RepositoryCell): Unit = {
+    gitHelper.deleteRepo(repositoryCell.git)
+    list.getItems.remove(repositoryCell)
+    list.refresh()
   }
 }
