@@ -24,7 +24,7 @@ class PullProgressMonitor(val progressIndicator: ProgressIndicator) extends Prog
   override def update(completed: Int): Unit = {
     println(s"update, $completed")
     progress += completed
-    Platform.runLater(() => progressIndicator.setProgress(completed / total))
+    Platform.runLater(() => progressIndicator.setProgress(progress / total))
   }
 
   override def endTask(): Unit = {

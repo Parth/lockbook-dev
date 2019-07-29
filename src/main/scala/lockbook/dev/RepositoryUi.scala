@@ -32,7 +32,7 @@ class RepositoryUi(
       .selectedItemProperty()
       .addListener((_, old, newVal) => {
         if (old != newVal) {
-          onClick(newVal.git)
+          onClick(newVal.git) // TODO: fails if new val is null, happens if you delete the last repository
         }
       })
 
