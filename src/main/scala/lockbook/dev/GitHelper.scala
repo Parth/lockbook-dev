@@ -6,6 +6,7 @@ import java.net.URI
 import com.jcraft.jsch.{JSch, Session}
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.errors.TransportException
+import org.eclipse.jgit.lib.ProgressMonitor
 import org.eclipse.jgit.transport.{
   JschConfigSessionFactory,
   OpenSshConfig,
@@ -13,6 +14,8 @@ import org.eclipse.jgit.transport.{
 }
 import org.eclipse.jgit.util.FS
 
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
 trait GitHelper {
@@ -20,21 +23,12 @@ trait GitHelper {
   def getRepositories: List[Git]
   def commitAndPush(message: String, git: Git): Try[Unit]
   def getRepoName(git: Git): String
+  def pull(git: Git, progressMonitor: ProgressMonitor): Future[Unit]
 }
 
 class GitHelperImpl(gitCredentialHelper: GitCredentialHelper) extends GitHelper {
 
   val repoFolder = s"${App.path}/repos"
-
-  private def getCredentials(uri: URI): Try[UsernamePasswordCredentialsProvider] = {
-    gitCredentialHelper
-      .getCredentials(uri.getHost)
-      .map(
-        gitCredentials =>
-          new UsernamePasswordCredentialsProvider(gitCredentials.username, gitCredentials.password)
-      )
-
-  }
 
   override def cloneRepository(uri: String): Try[Git] =
     getCredentials(new URI(uri))
@@ -58,6 +52,63 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper) extends GitHelper 
           }
       )
 
+  override def commitAndPush(message: String, git: Git): Try[Unit] = {
+    getCredentials(getRepoURI(git))
+      .flatMap(credentials => {
+        try {
+          git.add().addFilepattern(".").call()
+          git.commit().setMessage(message).call()
+
+          git
+            .push()
+            .setCredentialsProvider(credentials)
+            .call()
+
+          Success(Unit)
+        } catch {
+          case e: Exception =>
+            Failure(new Error(e))
+        }
+      })
+  }
+
+  override def getRepositories: List[Git] = {
+    val repos = new File(repoFolder)
+    if (repos.exists()) {
+      repos
+        .listFiles(_.isDirectory)
+        .toList
+        .map(file => Git.open(file))
+    } else {
+      List()
+    }
+  }
+
+  override def pull(git: Git, progressMonitor: ProgressMonitor): Future[Unit] = Future {
+    getCredentials(git)
+      .map(
+        credentials => {
+          git
+            .pull()
+            .setCredentialsProvider(credentials)
+            .setProgressMonitor(progressMonitor)
+            .call()
+        }
+      )
+  }
+
+  private def getCredentials(git: Git): Try[UsernamePasswordCredentialsProvider] =
+    getCredentials(getRepoURI(git))
+
+  private def getCredentials(uri: URI): Try[UsernamePasswordCredentialsProvider] = {
+    gitCredentialHelper
+      .getCredentials(uri.getHost)
+      .map(
+        gitCredentials =>
+          new UsernamePasswordCredentialsProvider(gitCredentials.username, gitCredentials.password)
+      )
+  }
+
   def uriToFolder(uri: String): String = {
     val folderName = uri.split("/").last
     if (folderName.endsWith(".git")) {
@@ -79,39 +130,6 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper) extends GitHelper 
       .getString("remote", "origin", "url")
 
     new URI(repoUrl)
-  }
-
-  override def getRepositories: List[Git] = {
-    val repos = new File(repoFolder)
-    if (repos.exists()) {
-      repos
-        .listFiles(_.isDirectory)
-        .toList
-        .map(file => Git.open(file))
-    } else {
-      List()
-    }
-  }
-
-  override def commitAndPush(message: String, git: Git): Try[Unit] = {
-    getCredentials(getRepoURI(git))
-      .flatMap(credentials => {
-        try {
-          git.add().addFilepattern(".").call()
-          git.commit().setMessage(message).call()
-
-          git
-            .push()
-            .setCredentialsProvider(credentials)
-            .call()
-
-          Success()
-        } catch {
-          case e: Exception =>
-            Failure(new Error(e))
-        }
-      })
-
   }
 }
 

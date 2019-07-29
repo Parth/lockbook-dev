@@ -22,11 +22,13 @@ class App extends Application {
     val git: GitHelper               = new GitHelperImpl(gitCredential)
     val editorHelper                 = new EditorHelperImpl(encryption, password, git, file)
 
-    val newPasswordUi = new NewPasswordUi(lockfile, password, encryption)
-    val unlockUi      = new UnlockUi(password)
-    val repositoryUi  = new RepositoryUi(git)
-    val fileTreeUi    = new FileTreeUi
-    val editorUi      = new EditorUi(editorHelper)
+    val newPasswordUi    = new NewPasswordUi(lockfile, password, encryption)
+    val unlockUi         = new UnlockUi(password)
+    val repositoryCellUi = new RepositoryCellUi(git)
+    val cloneRepoDialog  = new CloneRepoDialog(git)
+    val repositoryUi     = new RepositoryUi(git, repositoryCellUi, cloneRepoDialog)
+    val fileTreeUi       = new FileTreeUi
+    val editorUi         = new EditorUi(editorHelper)
 
     val uiOrchestrator =
       new UiOrchestrator(lockfile, unlockUi, newPasswordUi, repositoryUi, fileTreeUi, editorUi)
