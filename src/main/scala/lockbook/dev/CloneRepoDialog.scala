@@ -6,13 +6,12 @@ import javafx.scene.Scene
 import javafx.scene.control.{Button, Label, TextField}
 import javafx.scene.layout.GridPane
 import javafx.stage.Stage
-import org.eclipse.jgit.api.Git
 
 import scala.util.{Failure, Success}
 
 class CloneRepoDialog(gitHelper: GitHelper) {
 
-  def showDialog(repoList: ObservableList[Git]): Unit = {
+  def showDialog(repoList: ObservableList[RepositoryCell]): Unit = {
     val dialog = new Stage
     dialog.setTitle("Add repository to Lockbook")
 
@@ -36,7 +35,7 @@ class CloneRepoDialog(gitHelper: GitHelper) {
 
       gitHelper.cloneRepository(repositoryURL.getText) match {
         case Success(value) =>
-          repoList.add(value)
+          repoList.add(RepositoryCell.fromGit(value, gitHelper))
           dialog.close()
         case Failure(error) =>
           AlertUi.showBad("Failed to clone repository:", error.getMessage)

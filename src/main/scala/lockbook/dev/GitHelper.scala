@@ -4,8 +4,8 @@ import java.io.File
 import java.net.URI
 
 import com.jcraft.jsch.{JSch, Session}
-import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.errors.TransportException
+import org.eclipse.jgit.api.{Git, PullCommand}
 import org.eclipse.jgit.lib.ProgressMonitor
 import org.eclipse.jgit.transport.{
   JschConfigSessionFactory,
@@ -23,7 +23,8 @@ trait GitHelper {
   def getRepositories: List[Git]
   def commitAndPush(message: String, git: Git): Try[Unit]
   def getRepoName(git: Git): String
-  def pull(git: Git, progressMonitor: ProgressMonitor): Future[Unit]
+  def pullCommand(git: Git, progressMonitor: ProgressMonitor): PullCommand
+  def pull(pullCommand: PullCommand): Future[Unit]
 }
 
 class GitHelperImpl(gitCredentialHelper: GitCredentialHelper) extends GitHelper {
@@ -84,17 +85,19 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper) extends GitHelper 
     }
   }
 
-  override def pull(git: Git, progressMonitor: ProgressMonitor): Future[Unit] = Future {
+  override def pullCommand(git: Git, progressMonitor: ProgressMonitor): PullCommand = {
     getCredentials(git)
-      .map(
-        credentials => {
-          git
-            .pull()
-            .setCredentialsProvider(credentials)
-            .setProgressMonitor(progressMonitor)
-            .call()
-        }
-      )
+      .map(credentials => {
+        git
+          .pull()
+          .setCredentialsProvider(credentials)
+          .setProgressMonitor(progressMonitor)
+      })
+      .get
+  }
+
+  override def pull(pullCommand: PullCommand): Future[Unit] = Future {
+    pullCommand.call()
   }
 
   private def getCredentials(git: Git): Try[UsernamePasswordCredentialsProvider] =
