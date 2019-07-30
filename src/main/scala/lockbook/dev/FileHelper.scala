@@ -1,12 +1,13 @@
 package lockbook.dev
 
-import java.io.IOException
+import java.io.{File, IOException}
 import java.nio.file.{Files, InvalidPathException, Paths}
 
 import scala.util.{Failure, Success, Try}
 
 trait FileHelper {
   def readFile(path: String): Try[String]
+  def recursiveFileDelete(file: File): Boolean
 }
 class FileHelperImpl extends FileHelper {
   override def readFile(path: String): Try[String] = {
@@ -24,5 +25,13 @@ class FileHelperImpl extends FileHelper {
       case _ =>
         Failure(new Error("An unknown error occurred while trying to read this file into memory"))
     }
+  }
+
+  def recursiveFileDelete(directoryToBeDeleted: File): Boolean = {
+    val allContents = directoryToBeDeleted.listFiles
+    if (allContents != null) for (file <- allContents) {
+      recursiveFileDelete(file)
+    }
+    directoryToBeDeleted.delete
   }
 }

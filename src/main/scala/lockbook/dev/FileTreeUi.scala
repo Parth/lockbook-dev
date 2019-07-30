@@ -2,41 +2,27 @@ package lockbook.dev
 
 import java.io.File
 
-import javafx.scene.control.{Button, TreeCell, TreeItem, TreeView}
+import javafx.scene.control._
 import javafx.scene.layout.BorderPane
 import javafx.stage.FileChooser
 import org.eclipse.jgit.api.Git
 
-class FileTreeUi {
+class FileTreeUi(fileHelper: FileHelper) {
 
   def getView(git: Git, onSelected: (Git, File) => Unit): BorderPane = {
+    // Setup TreeView
     val treeView = new TreeView[File]
     treeView.setRoot(getViewHelper(git.getRepository.getWorkTree))
     treeView.setShowRoot(false)
-
-    treeView.setCellFactory(
-      _ =>
-        new TreeCell[File]() {
-          override def updateItem(item: File, empty: Boolean): Unit = {
-            super.updateItem(item, empty)
-            if (item != null) {
-              setText(item.getName)
-            } else {
-              setText("")
-            }
-          }
-        }
-    )
-
+    treeView.setCellFactory(_ => fileToTreeCell)
     treeView.getSelectionModel.selectedItemProperty
       .addListener(
-        (_, _, newValue) =>
-          if (newValue.isLeaf)
+        (_, oldValue, newValue) =>
+          if (newValue.isLeaf && oldValue != newValue)
             onSelected(git, newValue.getValue)
       )
 
     val root = new BorderPane
-    root.setCenter(treeView)
 
     val newFileButton = new Button("New")
     newFileButton.setOnAction(_ => {
@@ -51,6 +37,7 @@ class FileTreeUi {
       }
     })
 
+    root.setCenter(treeView)
     root.setBottom(newFileButton)
     root
   }
@@ -66,5 +53,28 @@ class FileTreeUi {
       }
     }
     item
+  }
+
+  private def fileToTreeCell: TreeCell[File] = new TreeCell[File]() {
+    override def updateItem(item: File, empty: Boolean): Unit = {
+      super.updateItem(item, empty)
+      if (item != null) {
+
+        // Right Click to Delete
+        val contextMenu = new ContextMenu
+        val menuItem    = new MenuItem("Delete")
+        contextMenu.getItems.add(menuItem)
+        menuItem.setOnAction(_ => {
+          fileHelper.recursiveFileDelete(item)
+          val node = getTreeItem
+          node.getParent.getChildren.remove(node)
+        })
+        setContextMenu(contextMenu)
+
+        setText(item.getName)
+      } else {
+        setText("")
+      }
+    }
   }
 }

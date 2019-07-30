@@ -28,7 +28,8 @@ trait GitHelper {
   def deleteRepo(git: Git): Unit
 }
 
-class GitHelperImpl(gitCredentialHelper: GitCredentialHelper) extends GitHelper {
+class GitHelperImpl(gitCredentialHelper: GitCredentialHelper, fileHelper: FileHelper)
+    extends GitHelper {
 
   val repoFolder = s"${App.path}/repos"
 
@@ -103,7 +104,7 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper) extends GitHelper 
 
   override def deleteRepo(git: Git): Unit = {
     val file = git.getRepository.getWorkTree
-    deleteDirectory(file)
+    fileHelper.recursiveFileDelete(file)
   }
 
   private def getCredentials(git: Git): Try[UsernamePasswordCredentialsProvider] =
@@ -139,14 +140,6 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper) extends GitHelper 
       .getString("remote", "origin", "url")
 
     new URI(repoUrl)
-  }
-
-  private def deleteDirectory(directoryToBeDeleted: File): Boolean = {
-    val allContents = directoryToBeDeleted.listFiles
-    if (allContents != null) for (file <- allContents) {
-      deleteDirectory(file)
-    }
-    directoryToBeDeleted.delete
   }
 }
 
