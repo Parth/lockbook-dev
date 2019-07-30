@@ -47,7 +47,7 @@ class FileTreeUi(fileHelper: FileHelper) {
     val childrenUnfiltered: Array[File] = file.listFiles
 
     if (childrenUnfiltered != null) {
-      val children = childrenUnfiltered.filter(_.getName != ".git")
+      val children = childrenUnfiltered.filter(_.getName != ".git").sortBy(_.getName)
       for (child <- children) {
         item.getChildren.add(getViewHelper(child))
       }
