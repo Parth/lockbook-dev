@@ -19,13 +19,13 @@ import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
 trait GitHelper {
-  def cloneRepository(uri: String): Try[Git]
-  def getRepositories: List[Git]
-  def commitAndPush(message: String, git: Git): Try[Unit]
+  def cloneRepository(uri: String): Future[Git]
+  def getRepositories: Future[List[Git]]
+  def commitAndPush(message: String, git: Git): Future[Unit]
   def getRepoName(git: Git): String
   def pullCommand(git: Git, progressMonitor: ProgressMonitor): PullCommand
   def pull(pullCommand: PullCommand): Future[Unit]
-  def deleteRepo(git: Git): Unit
+  def deleteRepo(git: Git): Future[Unit]
 }
 
 class GitHelperImpl(gitCredentialHelper: GitCredentialHelper, fileHelper: FileHelper)
@@ -33,7 +33,7 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper, fileHelper: FileHe
 
   val repoFolder = s"${App.path}/repos"
 
-  override def cloneRepository(uri: String): Try[Git] =
+  override def cloneRepository(uri: String): Future[Git] =
     getCredentials(new URI(uri))
       .flatMap(
         credentials =>
@@ -55,7 +55,7 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper, fileHelper: FileHe
           }
       )
 
-  override def commitAndPush(message: String, git: Git): Try[Unit] = {
+  override def commitAndPush(message: String, git: Git): Future[Unit] = {
     getCredentials(getRepoURI(git))
       .flatMap(credentials => {
         try {
@@ -102,15 +102,15 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper, fileHelper: FileHe
     pullCommand.call()
   }
 
-  override def deleteRepo(git: Git): Unit = {
+  override def deleteRepo(git: Git): Future[Unit] = Future {
     val file = git.getRepository.getWorkTree
     fileHelper.recursiveFileDelete(file)
   }
 
-  private def getCredentials(git: Git): Try[UsernamePasswordCredentialsProvider] =
+  private def getCredentials(git: Git): Future[UsernamePasswordCredentialsProvider] =
     getCredentials(getRepoURI(git))
 
-  private def getCredentials(uri: URI): Try[UsernamePasswordCredentialsProvider] = {
+  private def getCredentials(uri: URI): Future[UsernamePasswordCredentialsProvider] = {
     gitCredentialHelper
       .getCredentials(uri.getHost)
       .map(

@@ -3,31 +3,32 @@ package lockbook.dev
 import java.io.{File, IOException}
 import java.nio.file.{Files, InvalidPathException, Paths}
 
-import scala.util.{Failure, Success, Try}
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 trait FileHelper {
-  def readFile(path: String): Try[String]
-  def recursiveFileDelete(file: File): Boolean
+  def readFile(path: String): Future[String]
+  def recursiveFileDelete(file: File): Future[Unit]
 }
 class FileHelperImpl extends FileHelper {
-  override def readFile(path: String): Try[String] = {
-    try {
-      Success(Files.readString(Paths.get(path)))
-    } catch {
+  override def readFile(path: String): Future[String] = {
+    Future { Files.readString(Paths.get(path)) } recoverWith {
       case _: InvalidPathException =>
-        Failure(Errors.invalidPath)
+        Future.failed(Errors.invalidPath)
       case _: IOException =>
-        Failure(Errors.fileMissing)
+        Future.failed(Errors.fileMissing)
       case _: OutOfMemoryError =>
-        Failure(new Error("File is too large to be loaded into memory"))
+        Future.failed(new Error("File is too large to be loaded into memory"))
       case _: SecurityException =>
-        Failure(new Error("Unable to read to read from file due to file permissions"))
+        Future.failed(new Error("Unable to read to read from file due to file permissions"))
       case _ =>
-        Failure(new Error("An unknown error occurred while trying to read this file into memory"))
+        Future.failed(
+          new Error("An unknown error occurred while trying to read this file into memory")
+        )
     }
   }
 
-  def recursiveFileDelete(directoryToBeDeleted: File): Boolean = {
+  def recursiveFileDelete(directoryToBeDeleted: File): Future[Unit] = Future {
     val allContents = directoryToBeDeleted.listFiles
     if (allContents != null) for (file <- allContents) {
       recursiveFileDelete(file)
