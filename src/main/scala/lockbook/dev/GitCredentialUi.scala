@@ -6,12 +6,10 @@ import javafx.scene.control.ButtonBar.ButtonData
 import javafx.scene.control._
 import javafx.scene.layout.GridPane
 
-import scala.util.{Failure, Success, Try}
-
 object GitCredentialUi {
-  def getView(credentialName: String): Dialog[Try[GitCredential]] = {
+  def getView(credentialName: String): Dialog[Option[GitCredential]] = {
 
-    val dialog = new Dialog[Try[GitCredential]]
+    val dialog = new Dialog[Option[GitCredential]]
     dialog.setTitle("Login Dialog")
     dialog.getDialogPane.getStylesheets.add("dark.css")
     dialog.setHeaderText(s"Enter credentials for $credentialName")
@@ -42,9 +40,9 @@ object GitCredentialUi {
 
     dialog.setResultConverter {
       case loginButtonType =>
-        Success(GitCredential(username.getText, password.getText))
+        Some(GitCredential(username.getText, password.getText))
       case _ =>
-        Failure(Errors.noCredentialsProvided)
+        None
     }
 
     dialog

@@ -16,7 +16,7 @@ repositories {
 
 dependencies {
     compile 'org.eclipse.jgit:org.eclipse.jgit:4.5.0.201609210915-r'
-    compile 'org.scala-lang.modules:scala-async:0.10.0'
+    compile 'org.scala-lang.modules:scala-async_2.12:0.10.0'
     implementation 'org.scala-lang:scala-library:2.12.8'
 }
 

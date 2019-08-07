@@ -12,6 +12,7 @@ import scala.util.{Failure, Success, Try}
 
 case class EncryptedValue(garbage: String)
 case class DecryptedValue(secret: String)
+case class WrongPassword() extends Error("Incorrect password")
 
 trait EncryptionHelper {
   def encrypt(value: DecryptedValue, password: Password): Try[EncryptedValue]
@@ -35,7 +36,7 @@ class EncryptionImpl extends EncryptionHelper {
       )
     } catch {
       case _: Exception =>
-        Failure(new Error("Incorrect Password"))
+        Failure(WrongPassword())
     }
 
   private def encryptHelper(str: String, password: String): String = {

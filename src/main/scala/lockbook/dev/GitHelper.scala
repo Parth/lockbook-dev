@@ -16,14 +16,14 @@ import org.eclipse.jgit.util.FS
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.{Failure, Success, Try}
+import scala.util.{Failure, Success}
 
 trait GitHelper {
   def cloneRepository(uri: String): Future[Git]
   def getRepositories: Future[List[Git]]
   def commitAndPush(message: String, git: Git): Future[Unit]
   def getRepoName(git: Git): String
-  def pullCommand(git: Git, progressMonitor: ProgressMonitor): PullCommand
+  def pullCommand(git: Git, progressMonitor: ProgressMonitor): Future[PullCommand]
   def pull(pullCommand: PullCommand): Future[Unit]
   def deleteRepo(git: Git): Future[Unit]
 }
@@ -48,7 +48,7 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper, fileHelper: FileHe
             )
           } catch {
             case e: TransportException =>
-              gitCredentialHelper.incorrectCredentials(new URI(uri).getHost)
+              gitCredentialHelper.deleteStoredCredentials(new URI(uri).getHost)
               Failure(new Error("Saved Credentials were invalid, please retry."))
             case e: Exception =>
               Failure(new Error(e))
@@ -75,7 +75,7 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper, fileHelper: FileHe
       })
   }
 
-  override def getRepositories: List[Git] = {
+  override def getRepositories: Future[List[Git]] = Future {
     val repos = new File(repoFolder)
     if (repos.exists()) {
       repos
@@ -87,19 +87,23 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper, fileHelper: FileHe
     }
   }
 
-  override def pullCommand(git: Git, progressMonitor: ProgressMonitor): PullCommand = {
-    getCredentials(git)
-      .map(credentials => {
-        git
-          .pull()
-          .setCredentialsProvider(credentials)
-          .setProgressMonitor(progressMonitor)
-      })
-      .get
-  }
+  override def pullCommand(git: Git, progressMonitor: ProgressMonitor): Future[PullCommand] = {
+    getCredentials(git) transform {
+      case Success(s) =>
+        s match {
+          // Did we get credentials properly?
+          case Some(credential) =>
+            Success(
+              git
+                .pull()
+                .setCredentialsProvider(credential)
+                .setProgressMonitor(progressMonitor)
+            )
+          case None => Failure(new Error(""))
 
-  override def pull(pullCommand: PullCommand): Future[Unit] = Future {
-    pullCommand.call()
+        }
+      case Failure(cause) => Failure(cause)
+    }
   }
 
   override def deleteRepo(git: Git): Future[Unit] = Future {
@@ -107,15 +111,17 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper, fileHelper: FileHe
     fileHelper.recursiveFileDelete(file)
   }
 
-  private def getCredentials(git: Git): Future[UsernamePasswordCredentialsProvider] =
+  private def getCredentials(git: Git): Future[Option[UsernamePasswordCredentialsProvider]] =
     getCredentials(getRepoURI(git))
 
-  private def getCredentials(uri: URI): Future[UsernamePasswordCredentialsProvider] = {
+  private def getCredentials(uri: URI): Future[Option[UsernamePasswordCredentialsProvider]] = {
     gitCredentialHelper
       .getCredentials(uri.getHost)
       .map(
-        gitCredentials =>
-          new UsernamePasswordCredentialsProvider(gitCredentials.username, gitCredentials.password)
+        _.map(
+          gitCredential =>
+            new UsernamePasswordCredentialsProvider(gitCredential.username, gitCredential.password)
+        )
       )
   }
 
