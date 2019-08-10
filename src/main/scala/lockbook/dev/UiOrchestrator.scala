@@ -2,12 +2,14 @@ package lockbook.dev
 
 import java.io.File
 
+import javafx.application.Platform
+import javafx.scene.Scene
 import javafx.scene.control.SplitPane
 import javafx.scene.layout.StackPane
-import javafx.scene.{Node, Scene}
 import javafx.stage.{Screen, Stage}
 import org.eclipse.jgit.api.Git
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Failure, Success}
 
 class UiOrchestrator(
@@ -21,10 +23,10 @@ class UiOrchestrator(
 
   def showView(stage: Stage): Unit = {
     val root: StackPane = new StackPane
-    root.getChildren.add(showLogin(showRepo(stage)))
     stage.setScene(new Scene(root, 300, 130))
     stage.getScene.getStylesheets.add("dark.css")
     stage.setTitle("Lockbook Dev")
+    processLockfileAndShowUi(root, showRepo(stage))
     stage.show()
   }
 
@@ -62,12 +64,13 @@ class UiOrchestrator(
     container.getChildren.setAll(editorUi.getView(git, f))
   }
 
-  def showLogin(onDone: => Unit): Node = {
-    lockfile.getLockfile match {
+  def processLockfileAndShowUi(root: StackPane, onDone: => Unit): Unit = {
+    lockfile.getLockfile onComplete {
       case Success(_) =>
-        unlockUI.getView(onDone)
+        Platform.runLater(() => root.getChildren.add(unlockUI.getView(onDone)))
+
       case Failure(_) =>
-        newPasswordUI.getView(onDone)
+        Platform.runLater(() => root.getChildren.add(newPasswordUI.getView(onDone)))
     }
   }
 }

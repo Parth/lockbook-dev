@@ -2,10 +2,12 @@ package lockbook.dev
 
 import java.io.{File, PrintWriter}
 
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
 trait LockfileHelper {
-  def getLockfile: Try[EncryptedValue]
+  def getLockfile: Future[EncryptedValue]
   def writeToLockfile(string: String): Try[Unit]
 }
 
@@ -14,7 +16,7 @@ class LockfileHelperImpl(encryptionHelper: EncryptionHelper, fileHelper: FileHel
 
   val lockfile = s"${App.path}/lockfile"
 
-  def getLockfile: Try[EncryptedValue] = fileHelper.readFile(lockfile).map(EncryptedValue)
+  def getLockfile: Future[EncryptedValue] = fileHelper.readFile(lockfile).map(EncryptedValue)
 
   def writeToLockfile(string: String): Try[Unit] = {
     try {
@@ -29,7 +31,7 @@ class LockfileHelperImpl(encryptionHelper: EncryptionHelper, fileHelper: FileHel
       if (pw.checkError()) {
         Failure(new Error("Something went wrong while writing to the lockfile"))
       } else {
-        Success()
+        Success(())
       }
     } catch {
       case _: SecurityException =>
