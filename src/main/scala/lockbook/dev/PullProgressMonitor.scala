@@ -13,7 +13,6 @@ class PullProgressMonitor(val progressIndicator: ProgressIndicator) extends Prog
   override def start(totalTasks: Int): Unit = {}
 
   override def beginTask(title: String, totalWork: Int): Unit = {
-    println(s"beginTask, $title, $totalWork")
     total += totalWork
     startedTasks += 1
     Platform.runLater(() => {
@@ -22,14 +21,11 @@ class PullProgressMonitor(val progressIndicator: ProgressIndicator) extends Prog
   }
 
   override def update(completed: Int): Unit = {
-    println(s"update, $completed")
     progress += completed
     Platform.runLater(() => progressIndicator.setProgress(progress / total))
   }
 
   override def endTask(): Unit = {
-    println("endtask")
-
     completedTasks += 1
     if (completedTasks == startedTasks)
       Platform.runLater(() => progressIndicator.setProgress(1))

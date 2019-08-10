@@ -1,5 +1,6 @@
 package lockbook.dev
 
+import javafx.application.Platform
 import javafx.collections.ObservableList
 import javafx.geometry.Insets
 import javafx.scene.Scene
@@ -7,6 +8,7 @@ import javafx.scene.control.{Button, Label, TextField}
 import javafx.scene.layout.GridPane
 import javafx.stage.Stage
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Failure, Success}
 
 class CloneRepoDialog(gitHelper: GitHelper) {
@@ -33,12 +35,16 @@ class CloneRepoDialog(gitHelper: GitHelper) {
     val clone = new Button("Clone")
     clone.setOnAction(_ => {
 
-      gitHelper.cloneRepository(repositoryURL.getText) match {
+      gitHelper.cloneRepository(repositoryURL.getText) andThen {
         case Success(value) =>
-          repoList.add(RepositoryCell.fromGit(value, gitHelper))
-          dialog.close()
+          Platform.runLater(() => {
+            repoList.add(RepositoryCell.fromGit(value, gitHelper))
+            dialog.close()
+          })
         case Failure(error) =>
-          AlertUi.showBad("Failed to clone repository:", error.getMessage)
+          Platform.runLater(() => {
+            AlertUi.showBad("Failed to clone repository:", error.getMessage)
+          })
       }
     })
     grid.add(clone, 2, 1)

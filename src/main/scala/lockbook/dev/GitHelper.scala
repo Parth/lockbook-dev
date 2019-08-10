@@ -23,8 +23,8 @@ trait GitHelper {
   def getRepositories: Future[List[Git]]
   def commitAndPush(message: String, git: Git): Future[Unit]
   def getRepoName(git: Git): String
-  def pullCommand(git: Git, progressMonitor: ProgressMonitor): Future[PullCommand]
-  def pull(pullCommand: PullCommand): Future[Unit]
+  def pullCommand(git: Git, progressMonitor: ProgressMonitor): PullCommand
+  def pull(git: Git, pullCommand: PullCommand): Future[Unit]
   def deleteRepo(git: Git): Future[Unit]
 }
 
@@ -34,46 +34,57 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper, fileHelper: FileHe
   val repoFolder = s"${App.path}/repos"
 
   override def cloneRepository(uri: String): Future[Git] =
-    getCredentials(new URI(uri))
-      .flatMap(
-        credentials =>
-          try {
-            Success(
-              Git
-                .cloneRepository()
-                .setURI(uri)
-                .setDirectory(new File(s"$repoFolder/${uriToFolder(uri)}"))
-                .setCredentialsProvider(credentials)
-                .call()
-            )
-          } catch {
-            case e: TransportException =>
-              gitCredentialHelper.deleteStoredCredentials(new URI(uri).getHost)
-              Failure(new Error("Saved Credentials were invalid, please retry."))
-            case e: Exception =>
-              Failure(new Error(e))
-          }
-      )
+    getCredentials(new URI(uri)) transform {
+      case Success(s) =>
+        s match {
+          // Did we get credentials properly?
+          case Some(credential) =>
+            try {
+              Success(
+                Git
+                  .cloneRepository()
+                  .setURI(uri)
+                  .setDirectory(new File(s"$repoFolder/${uriToFolder(uri)}"))
+                  .setCredentialsProvider(credential)
+                  .call()
+              )
+            } catch {
+              case _: TransportException =>
+                gitCredentialHelper.deleteStoredCredentials(new URI(uri).getHost)
+                Failure(new Error("Saved Credentials were invalid, please retry."))
+              case e: Exception =>
+                Failure(new Error(e))
 
-  override def commitAndPush(message: String, git: Git): Future[Unit] = {
-    getCredentials(getRepoURI(git))
-      .flatMap(credentials => {
-        try {
-          git.add().addFilepattern(".").call()
-          git.commit().setMessage(message).call()
+            }
+          case None => Failure(new Error("Weird error"))
 
-          git
-            .push()
-            .setCredentialsProvider(credentials)
-            .call()
-
-          Success(Unit)
-        } catch {
-          case e: Exception =>
-            Failure(new Error(e))
         }
-      })
-  }
+      case Failure(cause) => Failure(cause)
+    }
+
+  override def commitAndPush(message: String, git: Git): Future[Unit] =
+    getCredentials(git) transform {
+      case Success(s) =>
+        s match {
+          // Did we get credentials properly?
+          case Some(credential) =>
+            try {
+              git.add().addFilepattern(".").call()
+              git.commit().setMessage(message).call()
+
+              git
+                .push()
+                .setCredentialsProvider(credential)
+                .call()
+              Success(())
+            } catch {
+              case e: Exception => Failure(new Error(e))
+            }
+          case None => Failure(new Error("Weird error"))
+
+        }
+      case Failure(cause) => Failure(cause)
+    }
 
   override def getRepositories: Future[List[Git]] = Future {
     val repos = new File(repoFolder)
@@ -87,23 +98,10 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper, fileHelper: FileHe
     }
   }
 
-  override def pullCommand(git: Git, progressMonitor: ProgressMonitor): Future[PullCommand] = {
-    getCredentials(git) transform {
-      case Success(s) =>
-        s match {
-          // Did we get credentials properly?
-          case Some(credential) =>
-            Success(
-              git
-                .pull()
-                .setCredentialsProvider(credential)
-                .setProgressMonitor(progressMonitor)
-            )
-          case None => Failure(new Error(""))
-
-        }
-      case Failure(cause) => Failure(cause)
-    }
+  override def pullCommand(git: Git, progressMonitor: ProgressMonitor): PullCommand = {
+    git
+      .pull()
+      .setProgressMonitor(progressMonitor)
   }
 
   override def deleteRepo(git: Git): Future[Unit] = Future {
@@ -146,6 +144,18 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper, fileHelper: FileHe
       .getString("remote", "origin", "url")
 
     new URI(repoUrl)
+  }
+
+  override def pull(git: Git, pullCommand: PullCommand): Future[Unit] = Future {
+    println("here")
+    getCredentials(git) map {
+      case Some(value) =>
+        pullCommand
+          .setCredentialsProvider(value)
+          .call()
+      case None =>
+        throw new Exception("Weird error")
+    }
   }
 }
 

@@ -3,13 +3,12 @@ package lockbook.dev
 import java.io.File
 import java.nio.file.NoSuchFileException
 
-import scala.async.Async.{async, await}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
 case class GitCredential(username: String, password: String)
-object GitCredential {
+object GitCredential { // Apply Unapply instead of this
   def deserialize(gitCredential: GitCredential): String =
     s"${gitCredential.username},${gitCredential.password}"
 
@@ -50,9 +49,11 @@ class GitCredentialHelperImpl(
 
   val credentialFolder = s"${App.path}/credentials"
 
-  override def getCredentials(key: String): Future[Option[GitCredential]] = async {
-    val maybePassword = await(getPasswordFromFileOrUi(key))
-    maybePassword foreach savePassword(key)
+  override def getCredentials(key: String): Future[Option[GitCredential]] = {
+    val maybePassword = getPasswordFromFileOrUi(key)
+
+    maybePassword foreach {_ foreach savePassword(key)}
+
     maybePassword
   }
 

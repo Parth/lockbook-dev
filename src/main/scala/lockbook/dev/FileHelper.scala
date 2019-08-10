@@ -38,7 +38,7 @@ class FileHelperImpl extends FileHelper {
         if (pw.checkError())
           Future.failed(new Error("Something went wrong while writing to this file"))
         else
-          Future.successful()
+          Future.successful(())
       case Failure(_) =>
         Future.failed(new Error(s"I do not have write access to ${file.getAbsoluteFile}"))
     }

@@ -39,7 +39,7 @@ object GitCredentialUi {
     Platform.runLater(() => username.requestFocus())
 
     dialog.setResultConverter {
-      case loginButtonType =>
+      case `loginButtonType` =>
         Some(GitCredential(username.getText, password.getText))
       case _ =>
         None
