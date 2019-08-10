@@ -7,11 +7,7 @@ import com.jcraft.jsch.{JSch, Session}
 import org.eclipse.jgit.api.errors.TransportException
 import org.eclipse.jgit.api.{Git, PullCommand}
 import org.eclipse.jgit.lib.ProgressMonitor
-import org.eclipse.jgit.transport.{
-  JschConfigSessionFactory,
-  OpenSshConfig,
-  UsernamePasswordCredentialsProvider
-}
+import org.eclipse.jgit.transport.{JschConfigSessionFactory, OpenSshConfig, UsernamePasswordCredentialsProvider}
 import org.eclipse.jgit.util.FS
 
 import scala.concurrent.ExecutionContext.Implicits.global

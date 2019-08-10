@@ -31,7 +31,7 @@ class FileTreeUi(fileHelper: FileHelper) {
 
       val file = fileChooser.showSaveDialog(root.getScene.getWindow)
       if (file != null) {
-        file.createNewFile() // TODO, this returns a boolean
+        file.createNewFile()  // TODO, this returns a boolean
         onSelected(git, file) // TODO insert this into the right place
         treeView.setRoot(getViewHelper(git.getRepository.getWorkTree))
       }

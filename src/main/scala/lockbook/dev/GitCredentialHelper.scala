@@ -52,7 +52,7 @@ class GitCredentialHelperImpl(
   override def getCredentials(key: String): Future[Option[GitCredential]] = {
     val maybePassword = getPasswordFromFileOrUi(key)
 
-    maybePassword foreach {_ foreach savePassword(key)}
+    maybePassword foreach { _ foreach savePassword(key) }
 
     maybePassword
   }
