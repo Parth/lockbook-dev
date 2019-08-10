@@ -8,7 +8,7 @@ import javafx.scene.layout.{BorderPane, HBox}
 import org.eclipse.jgit.api.Git
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.util.{Failure, Success}
+import scala.concurrent.Future
 
 class EditorUi(editorHelper: EditorHelper) {
 
@@ -16,22 +16,27 @@ class EditorUi(editorHelper: EditorHelper) {
     val root     = new BorderPane
     val textArea = new TextArea
 
-    editorHelper.getTextFromFile(f) onComplete {
-      case Success(string) =>
-        Platform.runLater(() => {
-          textArea.setText(string)
-          textArea.setWrapText(true)
-          root.setBottom(getBottom(git, f, textArea))
-          root.setCenter(textArea)
-        })
-      case Failure(_) =>
-        Platform.runLater(
-          () => root.setCenter(new Label("This file is encrypted with a different password"))
-        )
-    }
+    loadFile(git, f, root, textArea)
 
     root
   }
+
+  private def loadFile(git: Git, f: File, root: BorderPane, textArea: TextArea): Future[Unit] =
+    Future {
+      editorHelper.getTextFromFile(f) match {
+        case Right(string: String) =>
+          Platform.runLater(() => {
+            textArea.setText(string)
+            textArea.setWrapText(true)
+            root.setBottom(getBottom(git, f, textArea))
+            root.setCenter(textArea)
+          })
+        case Left(error) =>
+          Platform.runLater(
+            () => root.setCenter(new Label(error.uiMessage))
+          )
+      }
+    }
 
   def getBottom(git: Git, file: File, textArea: TextArea): HBox = {
     val save          = new Button("Push")
@@ -39,16 +44,18 @@ class EditorUi(editorHelper: EditorHelper) {
     commitMessage.setPromptText("Commit Message")
 
     save.setOnAction(_ => {
-      editorHelper
-        .saveCommitAndPush(commitMessage.getText, textArea.getText, file, git) onComplete {
-        case Success(_) =>
-          Platform.runLater(() => {
-            AlertUi.showGood("Push Successful", "Changes saved successfully.")
-          })
-        case Failure(exception) =>
-          Platform.runLater(() => {
-            AlertUi.showBad("Push Failed", exception.getMessage)
-          })
+      Future {
+        editorHelper
+          .saveCommitAndPush(commitMessage.getText, textArea.getText, file, git) match {
+          case Right(_) =>
+            Platform.runLater(() => {
+              AlertUi.showGood("Push Successful", "Changes saved successfully.")
+            })
+          case Left(exception) =>
+            Platform.runLater(() => {
+              AlertUi.showBad("Push Failed", exception.uiMessage)
+            })
+        }
       }
     })
 

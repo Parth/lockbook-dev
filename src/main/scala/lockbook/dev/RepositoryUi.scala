@@ -6,6 +6,7 @@ import javafx.scene.layout._
 import org.eclipse.jgit.api.Git
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 class RepositoryUi(
     gitHelper: GitHelper,
@@ -20,16 +21,16 @@ class RepositoryUi(
     val repoList      = FXCollections.observableArrayList[RepositoryCell]()
     val listView      = new ListView[RepositoryCell]
 
-    val allRepoFuture = gitHelper.getRepositories
-      .map(_.map(RepositoryCell.fromGit(_, gitHelper)))
+    Future {
+      val allRepositories = gitHelper.getRepositories
+        .map(RepositoryCell.fromGit(_, gitHelper))
 
-    allRepoFuture
-      .map(_.foreach(repoList.add))
+      allRepositories
+        .map(repoList.add)
 
-    allRepoFuture.map(
-      repos => repos.foreach(repoCell => gitHelper.pull(repoCell.git, repoCell.pullCommand))
-    )
+      allRepositories.map(repoCell => gitHelper.pull(repoCell.git, repoCell.pullCommand))
 
+    }
     listView
       .cellFactoryProperty()
       .setValue(_ => repositoryCellUi.getListCell(onClick, delete(listView)))

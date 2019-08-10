@@ -5,8 +5,6 @@ import javafx.scene.control.{Label, PasswordField}
 import javafx.scene.layout._
 import javafx.scene.paint.Color
 
-import scala.util.{Failure, Success}
-
 class NewPasswordUi(
     lockfile: LockfileHelper,
     passwordHelper: PasswordHelper,
@@ -34,22 +32,20 @@ class NewPasswordUi(
       val password2 = confirmPasswordField.getText
 
       passwordHelper
-        .doMatch(password1, password2)
-        .map(_ => Password(password1))
+        .passwordIfMatch(password1, password2)
         .map(passwordHelper.setPassword)
         .flatMap(encryptionHelper.encrypt(DecryptedValue("unlocked"), _))
-        .map(_.garbage)
         .flatMap(lockfile.writeToLockfile) match {
 
-        case Failure(error) =>
-          val wrongPassword = new Label(error.getMessage)
+        case Left(error) =>
+          val wrongPassword = new Label(error.uiMessage)
           wrongPassword.setTextFill(Color.rgb(210, 39, 30))
           attemptInfoArea.getChildren.removeAll(
             attemptInfoArea.getChildren
           )
           attemptInfoArea.getChildren.add(wrongPassword)
 
-        case Success(_) =>
+        case Right(_) =>
           val correctPassword = new Label("Password Set")
           correctPassword.setTextFill(Color.rgb(21, 117, 84))
           attemptInfoArea.getChildren.removeAll(

@@ -1,16 +1,12 @@
 package lockbook.dev
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
-import scala.util.{Failure, Success, Try}
-
 case class PasswordAttempt(attempt: String)
 case class Password(password: String)
 
 trait PasswordHelper {
   var password: Password
-  def testPassword(pwa: PasswordAttempt): Future[Password]
-  def doMatch(password1: String, password2: String): Try[Unit]
+  def testPassword(pwa: PasswordAttempt): Either[LockbookError, Password]
+  def passwordIfMatch(password1: String, password2: String): Either[PasswordsDontMatch, Password]
   def setPassword(password: Password): Password
 }
 
@@ -19,11 +15,9 @@ class PasswordHelperImpl(lockfile: LockfileHelper, encryptionHelper: EncryptionH
 
   var password: Password = _
 
-  override def testPassword(pwa: PasswordAttempt): Future[Password] = {
+  override def testPassword(pwa: PasswordAttempt): Either[LockbookError, Password] = {
     lockfile.getLockfile
-      .flatMap(
-        encrypted => Future.fromTry(encryptionHelper.decrypt(encrypted, Password(pwa.attempt)))
-      )
+      .flatMap(encrypted => encryptionHelper.decrypt(encrypted, Password(pwa.attempt)))
       .map(_ => Password(pwa.attempt))
       .map(setPassword)
   }
@@ -33,11 +27,11 @@ class PasswordHelperImpl(lockfile: LockfileHelper, encryptionHelper: EncryptionH
     password
   }
 
-  override def doMatch(password1: String, password2: String): Try[Unit] = {
-    if (password1 == password2) {
-      Success(())
+  override def passwordIfMatch(p1: String, p2: String): Either[PasswordsDontMatch, Password] = {
+    if (p1 == p2) {
+      Right(Password(p1))
     } else {
-      Failure(new Error("Passwords do not match"))
+      Left(PasswordsDontMatch())
     }
   }
 }

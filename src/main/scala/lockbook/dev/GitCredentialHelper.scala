@@ -1,23 +1,18 @@
 package lockbook.dev
 
 import java.io.File
-import java.nio.file.NoSuchFileException
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
-import scala.util.{Failure, Success, Try}
 
 case class GitCredential(username: String, password: String)
 object GitCredential { // Apply Unapply instead of this
-  def deserialize(gitCredential: GitCredential): String =
+  def serialize(gitCredential: GitCredential): String =
     s"${gitCredential.username},${gitCredential.password}"
 
-  def serialize(string: String): Try[GitCredential] = {
+  def deserialize(string: String): Either[GitError, GitCredential] = {
     val parts = string.split(",")
     if (parts.length == 2) {
-      Success(GitCredential(parts.head, parts.last))
+      Right(GitCredential(parts.head, parts.last))
     } else {
-      Failure(new Error("Failed to read stored credentials."))
+      Left(CouldNotStoreCredentials())
     }
   }
 }
@@ -30,7 +25,7 @@ trait GitCredentialHelper {
     *            it will prompt the user for one.
     * @return last entered GitCredential for a given file
     */
-  def getCredentials(key: String): Future[Option[GitCredential]]
+  def getCredentials(key: String): Either[UserCanceled, GitCredential]
 
   /**
     * Provides a way for a caller to reject credentials provided and re-prompt the user for credentials
@@ -38,7 +33,7 @@ trait GitCredentialHelper {
     * @param key key for incorrect credentials
     * @return The GitCredential the user re-entered
     */
-  def deleteStoredCredentials(key: String): Future[Unit]
+  def deleteStoredCredentials(key: String): Either[FileError, Unit]
 }
 
 class GitCredentialHelperImpl(
@@ -49,41 +44,52 @@ class GitCredentialHelperImpl(
 
   val credentialFolder = s"${App.path}/credentials"
 
-  override def getCredentials(key: String): Future[Option[GitCredential]] = {
-    val maybePassword = getPasswordFromFileOrUi(key)
-
-    maybePassword foreach { _ foreach savePassword(key) }
-
-    maybePassword
-  }
-
-  private def getPasswordFromFileOrUi(key: String): Future[Option[GitCredential]] = {
-    readPasswordFileFor(key).map(result => Some(result)) recover {
-      case _: WrongPassword =>
-        deleteStoredCredentials(key)
-        GitCredentialUi.getView(key).showAndWait().get()
-      case _: NoSuchFileException =>
-        GitCredentialUi.getView(key).showAndWait().get()
+  override def getCredentials(key: String): Either[UserCanceled, GitCredential] = {
+    getPasswordFromFileOrUi(key) match {
+      case Left(value) => Left(value)
+      case Right(value) =>
+        save(key, value)
+        Right(value)
     }
   }
 
-  private def readPasswordFileFor(key: String): Future[GitCredential] = {
+  private def getPasswordFromFileOrUi(key: String): Either[UserCanceled, GitCredential] = {
+    readPasswordFileFor(key) match {
+      case Left(_) =>
+        deleteStoredCredentials(key)
+        GitCredentialUi.getView(key).showAndWait().get()
+      case Right(value) => Right(value)
+    }
+  }
+
+  private def readPasswordFileFor(key: String): Either[LockbookError, GitCredential] = {
     fileHelper
       .readFile(s"$credentialFolder/$key")
       .map(EncryptedValue)
-      .flatMap(value => Future.fromTry(encryptionHelper.decrypt(value, passwordHelper.password)))
-      .flatMap(
-        decryptedCredential => Future.fromTry(GitCredential.serialize(decryptedCredential.secret))
-      )
+      .flatMap(encryptionHelper.decrypt(_, passwordHelper.password))
+      .map(_.secret)
+      .flatMap(GitCredential.deserialize)
   }
 
-  private def savePassword(key: String)(gitCredential: GitCredential) = Future {
-    val decryptedValue = DecryptedValue(secret = GitCredential.deserialize(gitCredential))
-    val encryptedValue = encryptionHelper.encrypt(decryptedValue, passwordHelper.password)
-    fileHelper.saveToFile(new File(s"$credentialFolder/key"), encryptedValue.get.garbage)
+  private def save(key: String, gitCredential: GitCredential): Either[LockbookError, Unit] = {
+    val decryptedValue = DecryptedValue(secret = GitCredential.serialize(gitCredential))
+
+    encryptionHelper
+      .encrypt(decryptedValue, passwordHelper.password)
+      .map(_.garbage)
+      .flatMap(fileHelper.saveToFile(new File(s"$credentialFolder/key"), _))
   }
 
-  override def deleteStoredCredentials(key: String): Future[Unit] = Future {
-    new File(s"$credentialFolder/$key").delete()
+  override def deleteStoredCredentials(key: String): Either[FileError, Unit] = {
+    val file = new File(s"$credentialFolder/$key")
+    try {
+      if (file.delete()) {
+        Right(())
+      } else {
+        Left(UnableToDelateFile(file))
+      }
+    } catch {
+      case sec: SecurityException => Left(UnableToAccessFile(file, sec))
+    }
   }
 }

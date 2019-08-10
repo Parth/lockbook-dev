@@ -1,14 +1,10 @@
 package lockbook.dev
 
-import java.io.{File, PrintWriter}
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
-import scala.util.{Failure, Success, Try}
+import java.io.File
 
 trait LockfileHelper {
-  def getLockfile: Future[EncryptedValue]
-  def writeToLockfile(string: String): Try[Unit]
+  def getLockfile: Either[FileError, EncryptedValue]
+  def writeToLockfile(value: EncryptedValue): Either[FileError, Unit]
 }
 
 class LockfileHelperImpl(encryptionHelper: EncryptionHelper, fileHelper: FileHelper)
@@ -16,26 +12,10 @@ class LockfileHelperImpl(encryptionHelper: EncryptionHelper, fileHelper: FileHel
 
   val lockfile = s"${App.path}/lockfile"
 
-  def getLockfile: Future[EncryptedValue] = fileHelper.readFile(lockfile).map(EncryptedValue)
+  def getLockfile: Either[FileError, EncryptedValue] =
+    fileHelper.readFile(lockfile).map(EncryptedValue)
 
-  def writeToLockfile(string: String): Try[Unit] = {
-    try {
-      val file = new File(lockfile)
-      file.getParentFile.mkdirs
-      file.createNewFile
+  def writeToLockfile(value: EncryptedValue): Either[FileError, Unit] =
+    fileHelper.saveToFile(new File(lockfile), value.garbage)
 
-      val pw = new PrintWriter(new File(lockfile)) // TODO file?
-      pw.write(string)
-      pw.close()
-
-      if (pw.checkError()) {
-        Failure(new Error("Something went wrong while writing to the lockfile"))
-      } else {
-        Success(())
-      }
-    } catch {
-      case _: SecurityException =>
-        Failure(new Error(s"I do not have write access to $lockfile"))
-    }
-  }
 }

@@ -7,21 +7,21 @@ import com.jcraft.jsch.{JSch, Session}
 import org.eclipse.jgit.api.errors.TransportException
 import org.eclipse.jgit.api.{Git, PullCommand}
 import org.eclipse.jgit.lib.ProgressMonitor
-import org.eclipse.jgit.transport.{JschConfigSessionFactory, OpenSshConfig, UsernamePasswordCredentialsProvider}
+import org.eclipse.jgit.transport.{
+  JschConfigSessionFactory,
+  OpenSshConfig,
+  UsernamePasswordCredentialsProvider
+}
 import org.eclipse.jgit.util.FS
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
-import scala.util.{Failure, Success}
-
 trait GitHelper {
-  def cloneRepository(uri: String): Future[Git]
-  def getRepositories: Future[List[Git]]
-  def commitAndPush(message: String, git: Git): Future[Unit]
+  def cloneRepository(uri: String): Either[GitError, Git]
+  def getRepositories: List[Git]
+  def commitAndPush(message: String, git: Git): Either[GitError, Unit]
   def getRepoName(git: Git): String
   def pullCommand(git: Git, progressMonitor: ProgressMonitor): PullCommand
-  def pull(git: Git, pullCommand: PullCommand): Future[Unit]
-  def deleteRepo(git: Git): Future[Unit]
+  def pull(git: Git, pullCommand: PullCommand): Either[GitError, Unit]
+  def deleteRepo(git: Git): Either[FileError, Unit]
 }
 
 class GitHelperImpl(gitCredentialHelper: GitCredentialHelper, fileHelper: FileHelper)
@@ -29,60 +29,48 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper, fileHelper: FileHe
 
   val repoFolder = s"${App.path}/repos"
 
-  override def cloneRepository(uri: String): Future[Git] =
-    getCredentials(new URI(uri)) transform {
-      case Success(s) =>
-        s match {
-          // Did we get credentials properly?
-          case Some(credential) =>
-            try {
-              Success(
-                Git
-                  .cloneRepository()
-                  .setURI(uri)
-                  .setDirectory(new File(s"$repoFolder/${uriToFolder(uri)}"))
-                  .setCredentialsProvider(credential)
-                  .call()
-              )
-            } catch {
-              case _: TransportException =>
-                gitCredentialHelper.deleteStoredCredentials(new URI(uri).getHost)
-                Failure(new Error("Saved Credentials were invalid, please retry."))
-              case e: Exception =>
-                Failure(new Error(e))
+  override def cloneRepository(uri: String): Either[GitError, Git] = {
+    getCredentials(new URI(uri)).flatMap(credentials => {
+      try {
+        Right(
+          Git
+            .cloneRepository()
+            .setURI(uri)
+            .setDirectory(new File(s"$repoFolder/${uriToFolder(uri)}"))
+            .setCredentialsProvider(credentials)
+            .call()
+        )
+      } catch {
+        case _: TransportException =>
+          gitCredentialHelper.deleteStoredCredentials(new URI(uri).getHost)
+          Left(InvalidCredentials())
+        case _: Exception =>
+          // TODO
+          Left(InvalidCredentials())
+      }
+    })
+  }
 
-            }
-          case None => Failure(new Error("Weird error"))
+  override def commitAndPush(message: String, git: Git): Either[GitError, Unit] = {
+    getCredentials(git)
+      .flatMap(credentials => {
+        try {
+          git.add().addFilepattern(".").call()
+          git.commit().setMessage(message).call()
 
+          git
+            .push()
+            .setCredentialsProvider(credentials)
+            .call()
+
+          Right(())
+        } catch {
+          case _: Exception => Right(UserCanceled()) // TODO build this out
         }
-      case Failure(cause) => Failure(cause)
-    }
+      })
+  }
 
-  override def commitAndPush(message: String, git: Git): Future[Unit] =
-    getCredentials(git) transform {
-      case Success(s) =>
-        s match {
-          // Did we get credentials properly?
-          case Some(credential) =>
-            try {
-              git.add().addFilepattern(".").call()
-              git.commit().setMessage(message).call()
-
-              git
-                .push()
-                .setCredentialsProvider(credential)
-                .call()
-              Success(())
-            } catch {
-              case e: Exception => Failure(new Error(e))
-            }
-          case None => Failure(new Error("Weird error"))
-
-        }
-      case Failure(cause) => Failure(cause)
-    }
-
-  override def getRepositories: Future[List[Git]] = Future {
+  override def getRepositories: List[Git] = {
     val repos = new File(repoFolder)
     if (repos.exists()) {
       repos
@@ -100,23 +88,20 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper, fileHelper: FileHe
       .setProgressMonitor(progressMonitor)
   }
 
-  override def deleteRepo(git: Git): Future[Unit] = Future {
+  override def deleteRepo(git: Git): Either[FileError, Unit] = {
     val file = git.getRepository.getWorkTree
     fileHelper.recursiveFileDelete(file)
   }
 
-  private def getCredentials(git: Git): Future[Option[UsernamePasswordCredentialsProvider]] =
+  private def getCredentials(git: Git): Either[UserCanceled, UsernamePasswordCredentialsProvider] =
     getCredentials(getRepoURI(git))
 
-  private def getCredentials(uri: URI): Future[Option[UsernamePasswordCredentialsProvider]] = {
+  private def getCredentials(
+      uri: URI
+  ): Either[UserCanceled, UsernamePasswordCredentialsProvider] = {
     gitCredentialHelper
       .getCredentials(uri.getHost)
-      .map(
-        _.map(
-          gitCredential =>
-            new UsernamePasswordCredentialsProvider(gitCredential.username, gitCredential.password)
-        )
-      )
+      .map(c => new UsernamePasswordCredentialsProvider(c.username, c.password))
   }
 
   def uriToFolder(uri: String): String = {
@@ -142,16 +127,18 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper, fileHelper: FileHe
     new URI(repoUrl)
   }
 
-  override def pull(git: Git, pullCommand: PullCommand): Future[Unit] = Future {
-    println("here")
-    getCredentials(git) map {
-      case Some(value) =>
+  override def pull(git: Git, pullCommand: PullCommand): Either[GitError, Unit] = {
+    getCredentials(git).flatMap(credentials => {
+      try {
         pullCommand
-          .setCredentialsProvider(value)
+          .setCredentialsProvider(credentials)
           .call()
-      case None =>
-        throw new Exception("Weird error")
-    }
+
+        Right(())
+      } catch {
+        case _: Exception => Right(UserCanceled()) // TODO build this out
+      }
+    })
   }
 }
 

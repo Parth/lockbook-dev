@@ -4,7 +4,8 @@ import javafx.application.Application
 import javafx.stage.Stage
 
 object App {
-  val path = s"${System.getProperty("user.home")}/.lockbook"
+  val path: String   = s"${System.getProperty("user.home")}/.lockbook"
+  val debug: Boolean = true // TODO utilize this to print out exceptions passed into LockbookError
 
   def main(args: Array[String]) {
     Application.launch(classOf[App], args: _*)

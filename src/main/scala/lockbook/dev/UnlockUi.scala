@@ -7,7 +7,7 @@ import javafx.scene.layout._
 import javafx.scene.paint.Color
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.util.{Failure, Success}
+import scala.concurrent.Future
 
 class UnlockUi(passwordHelper: PasswordHelper) {
   def getView(passwordSuccess: => Unit): VBox = {
@@ -38,29 +38,31 @@ class UnlockUi(passwordHelper: PasswordHelper) {
       passwordSuccessNotificationArea: StackPane,
       passwordSuccess: => Unit
   ): Unit = {
-    passwordHelper.testPassword(PasswordAttempt(passwordField.getText)) onComplete {
-      case Success(_) =>
-        Platform.runLater(() => {
-          val correctPassword = new Label("Decrypting")
+    Future {
+      passwordHelper.testPassword(PasswordAttempt(passwordField.getText)) match {
+        case Right(_) =>
+          Platform.runLater(() => {
+            val correctPassword = new Label("Decrypting")
 
-          correctPassword.setTextFill(Color.rgb(21, 117, 84))
-          passwordSuccessNotificationArea.getChildren.removeAll(
-            passwordSuccessNotificationArea.getChildren
-          )
+            correctPassword.setTextFill(Color.rgb(21, 117, 84))
+            passwordSuccessNotificationArea.getChildren.removeAll(
+              passwordSuccessNotificationArea.getChildren
+            )
 
-          passwordSuccessNotificationArea.getChildren.add(correctPassword)
-          passwordSuccess
-        })
+            passwordSuccessNotificationArea.getChildren.add(correctPassword)
+            passwordSuccess
+          })
 
-      case Failure(error) =>
-        Platform.runLater(() => {
-          val wrongPassword = new Label(error.getMessage)
-          wrongPassword.setTextFill(Color.rgb(210, 39, 30))
-          passwordSuccessNotificationArea.getChildren.removeAll(
-            passwordSuccessNotificationArea.getChildren
-          )
-          passwordSuccessNotificationArea.getChildren.add(wrongPassword)
-        })
+        case Left(error) =>
+          Platform.runLater(() => {
+            val wrongPassword = new Label(error.uiMessage)
+            wrongPassword.setTextFill(Color.rgb(210, 39, 30))
+            passwordSuccessNotificationArea.getChildren.removeAll(
+              passwordSuccessNotificationArea.getChildren
+            )
+            passwordSuccessNotificationArea.getChildren.add(wrongPassword)
+          })
+      }
     }
   }
 }

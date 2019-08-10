@@ -1,15 +1,17 @@
 package lockbook.dev
 
-import java.io.{BufferedWriter, File, FileWriter}
+import java.io.File
 
 import org.eclipse.jgit.api.Git
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
-
 trait EditorHelper {
-  def getTextFromFile(f: File): Future[String]
-  def saveCommitAndPush(message: String, file: String, originalFile: File, git: Git): Future[Unit]
+  def getTextFromFile(f: File): Either[LockbookError, String]
+  def saveCommitAndPush(
+      message: String,
+      file: String,
+      originalFile: File,
+      git: Git
+  ): Either[LockbookError, Unit]
 }
 
 class EditorHelperImpl(
@@ -19,16 +21,13 @@ class EditorHelperImpl(
     fileHelper: FileHelper
 ) extends EditorHelper {
 
-  override def getTextFromFile(f: File): Future[String] = {
+  override def getTextFromFile(f: File): Either[LockbookError, String] = {
     if (f.getName.endsWith("aes")) {
       fileHelper
         .readFile(f.getAbsolutePath)
         .map(EncryptedValue)
-        .flatMap(
-          encrypted => Future.fromTry(encryptionHelper.decrypt(encrypted, passwordHelper.password))
-        )
+        .flatMap(encryptionHelper.decrypt(_, passwordHelper.password))
         .map(_.secret)
-
     } else {
       fileHelper.readFile(f.getAbsolutePath)
     }
@@ -39,25 +38,18 @@ class EditorHelperImpl(
       content: String,
       originalFile: File,
       git: Git
-  ): Future[Unit] = {
+  ): Either[LockbookError, Unit] = {
 
-    val contentToSave: String = if (originalFile.getName.endsWith("aes")) {
+    val contentToSave: Either[CryptoError, String] = if (originalFile.getName.endsWith("aes")) {
       encryptionHelper
         .encrypt(DecryptedValue(content), passwordHelper.password)
-        .get
-        .garbage // TODO
+        .map(_.garbage)
     } else {
-      content
+      Right(content)
     }
 
-    saveFile(contentToSave, originalFile)
-
-    gitHelper.commitAndPush(message, git)
-  }
-
-  private def saveFile(contents: String, file: File): Unit = {
-    val bw = new BufferedWriter(new FileWriter(file))
-    bw.write(contents)
-    bw.close() // TODO
+    contentToSave
+      .flatMap(fileHelper.saveToFile(originalFile, _))
+      .flatMap(_ => gitHelper.commitAndPush(message, git))
   }
 }

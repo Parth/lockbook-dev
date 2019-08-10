@@ -1,46 +1,55 @@
 package lockbook.dev
 
-import java.io.{File, PrintWriter}
+import java.io.{File, FileNotFoundException, IOException, PrintWriter}
 import java.nio.file.{Files, Paths}
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
-import scala.util.{Failure, Success}
-
 trait FileHelper {
-  def readFile(path: String): Future[String]
-  def recursiveFileDelete(file: File): Future[Unit]
-  def saveToFile(file: File, content: String): Future[Unit]
+  def readFile(path: String): Either[FileError, String]
+  def recursiveFileDelete(file: File): Either[FileError, Unit]
+  def saveToFile(file: File, content: String): Either[FileError, Unit]
 }
-class FileHelperImpl extends FileHelper {
-  override def readFile(path: String): Future[String] =
-    Future { Files.readString(Paths.get(path)) }
 
-  def recursiveFileDelete(directoryToBeDeleted: File): Future[Unit] = Future {
-    val allContents = directoryToBeDeleted.listFiles
-    if (allContents != null) for (file <- allContents) {
-      recursiveFileDelete(file)
+class FileHelperImpl extends FileHelper {
+  override def readFile(path: String): Either[FileError, String] = {
+    try {
+      Right(Files.readString(Paths.get(path)))
+    } catch {
+      case ioe: IOException       => Left(UnableToReadFile(new File(path), ioe))
+      case oom: OutOfMemoryError  => Left(FileTooBig(new File(path), oom))
+      case sec: SecurityException => Left(UnableToAccessFile(new File(path), sec))
     }
-    directoryToBeDeleted.delete
   }
 
-  override def saveToFile(file: File, content: String): Future[Unit] = Future {
-    Future {
+  def recursiveFileDelete(directoryOrFileToBeDeleted: File): Either[FileError, Unit] = {
+    try {
+      val allContents = directoryOrFileToBeDeleted.listFiles
+      if (allContents != null)
+        for (file <- allContents) {
+          recursiveFileDelete(file)
+        }
+      directoryOrFileToBeDeleted.delete
+      Right(())
+    } catch {
+      case sec: SecurityException => Left(UnableToAccessFile(directoryOrFileToBeDeleted, sec))
+    }
+  } // TODO this leaks errors
+
+  override def saveToFile(file: File, content: String): Either[FileError, Unit] = {
+    try {
       file.getParentFile.mkdirs
       file.createNewFile
 
       val pw = new PrintWriter(file)
       pw.write(content)
       pw.close()
-      pw
-    } andThen {
-      case Success(pw) =>
-        if (pw.checkError())
-          Future.failed(new Error("Something went wrong while writing to this file"))
-        else
-          Future.successful(())
-      case Failure(_) =>
-        Future.failed(new Error(s"I do not have write access to ${file.getAbsoluteFile}"))
+      if (pw.checkError()) {
+        Left(UnableToWrite(file))
+      } else {
+        Right(())
+      }
+    } catch {
+      case fnf: FileNotFoundException => Left(UnableToReadFile(file, fnf))
+      case sec: SecurityException     => Left(UnableToAccessFile(file, sec))
     }
   }
 }

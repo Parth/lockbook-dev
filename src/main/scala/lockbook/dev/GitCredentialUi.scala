@@ -7,9 +7,9 @@ import javafx.scene.control._
 import javafx.scene.layout.GridPane
 
 object GitCredentialUi {
-  def getView(credentialName: String): Dialog[Option[GitCredential]] = {
+  def getView(credentialName: String): Dialog[Either[UserCanceled, GitCredential]] = {
 
-    val dialog = new Dialog[Option[GitCredential]]
+    val dialog = new Dialog[Either[UserCanceled, GitCredential]]
     dialog.setTitle("Login Dialog")
     dialog.getDialogPane.getStylesheets.add("dark.css")
     dialog.setHeaderText(s"Enter credentials for $credentialName")
@@ -40,9 +40,9 @@ object GitCredentialUi {
 
     dialog.setResultConverter {
       case `loginButtonType` =>
-        Some(GitCredential(username.getText, password.getText))
+        Right(GitCredential(username.getText, password.getText))
       case _ =>
-        None
+        Left(UserCanceled())
     }
 
     dialog

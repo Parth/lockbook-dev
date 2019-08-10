@@ -10,7 +10,7 @@ import javafx.stage.{Screen, Stage}
 import org.eclipse.jgit.api.Git
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.util.{Failure, Success}
+import scala.concurrent.Future
 
 class UiOrchestrator(
     lockfile: LockfileHelper,
@@ -65,12 +65,14 @@ class UiOrchestrator(
   }
 
   def processLockfileAndShowUi(root: StackPane, onDone: => Unit): Unit = {
-    lockfile.getLockfile onComplete {
-      case Success(_) =>
-        Platform.runLater(() => root.getChildren.add(unlockUI.getView(onDone)))
+    Future {
+      lockfile.getLockfile match {
+        case Right(_) =>
+          Platform.runLater(() => root.getChildren.add(unlockUI.getView(onDone)))
 
-      case Failure(_) =>
-        Platform.runLater(() => root.getChildren.add(newPasswordUI.getView(onDone)))
+        case Left(_) =>
+          Platform.runLater(() => root.getChildren.add(newPasswordUI.getView(onDone)))
+      }
     }
   }
 }

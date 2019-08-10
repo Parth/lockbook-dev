@@ -1,42 +1,36 @@
 package lockbook.dev
 
 import java.io.ByteArrayOutputStream
-import java.security.SecureRandom
+import java.security.{NoSuchAlgorithmException, SecureRandom}
 import java.util
 import java.util.Base64
 
 import javax.crypto.spec.{IvParameterSpec, PBEKeySpec, SecretKeySpec}
 import javax.crypto.{Cipher, SecretKeyFactory}
 
-import scala.util.{Failure, Success, Try}
-
 case class EncryptedValue(garbage: String)
 case class DecryptedValue(secret: String)
-case class WrongPassword() extends Error("Incorrect password")
 
 trait EncryptionHelper {
-  def encrypt(value: DecryptedValue, password: Password): Try[EncryptedValue]
-  def decrypt(garbage: EncryptedValue, password: Password): Try[DecryptedValue]
+  def encrypt(value: DecryptedValue, password: Password): Either[CryptoError, EncryptedValue]
+  def decrypt(garbage: EncryptedValue, password: Password): Either[CryptoError, DecryptedValue]
 }
 
 class EncryptionImpl extends EncryptionHelper {
-  def encrypt(value: DecryptedValue, password: Password): Try[EncryptedValue] =
-    Try(
-      EncryptedValue(
-        encryptHelper(value.secret, password.password)
-      )
-    )
-
-  def decrypt(garbage: EncryptedValue, password: Password): Try[DecryptedValue] =
+  def encrypt(value: DecryptedValue, password: Password): Either[CryptoError, EncryptedValue] =
     try {
-      Success(
-        DecryptedValue(
-          decryptHelper(garbage.garbage, password.password)
-        )
-      )
+      Right(EncryptedValue(encryptHelper(value.secret, password.password)))
     } catch {
-      case _: Exception =>
-        Failure(WrongPassword())
+      case a: NoSuchAlgorithmException => Left(SecureOperationsNotSupported(a))
+    }
+
+  def decrypt(garbage: EncryptedValue, password: Password): Either[CryptoError, DecryptedValue] =
+    try {
+      Right(DecryptedValue(decryptHelper(garbage.garbage, password.password)))
+    } catch {
+      case _: IllegalArgumentException => Left(NotBase64())
+      case a: NoSuchAlgorithmException => Left(SecureOperationsNotSupported(a))
+      case _: Throwable                => Left(WrongPassphrase())
     }
 
   private def encryptHelper(str: String, password: String): String = {

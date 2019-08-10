@@ -9,7 +9,7 @@ import javafx.scene.layout.GridPane
 import javafx.stage.Stage
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.util.{Failure, Success}
+import scala.concurrent.Future
 
 class CloneRepoDialog(gitHelper: GitHelper) {
 
@@ -34,18 +34,17 @@ class CloneRepoDialog(gitHelper: GitHelper) {
 
     val clone = new Button("Clone")
     clone.setOnAction(_ => {
-
-      gitHelper.cloneRepository(repositoryURL.getText) andThen {
-        case Success(value) =>
+      Future(gitHelper.cloneRepository(repositoryURL.getText) match {
+        case Right(value) =>
           Platform.runLater(() => {
             repoList.add(RepositoryCell.fromGit(value, gitHelper))
             dialog.close()
           })
-        case Failure(error) =>
+        case Left(error) =>
           Platform.runLater(() => {
-            AlertUi.showBad("Failed to clone repository:", error.getMessage)
+            AlertUi.showBad("Failed to clone repository:", error.uiMessage)
           })
-      }
+      })
     })
     grid.add(clone, 2, 1)
 
