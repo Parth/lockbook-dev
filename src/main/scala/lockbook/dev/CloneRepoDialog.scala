@@ -51,7 +51,7 @@ class CloneRepoDialog(gitHelper: GitHelper) {
     grid.setPadding(new Insets(20, 150, 10, 10))
 
     dialog.setScene(new Scene(grid, 500, 300))
-    dialog.getScene.getStylesheets.add("dark.css")
+//    dialog.getScene.getStylesheets.add("dark.css")
     dialog.show()
   }
 }

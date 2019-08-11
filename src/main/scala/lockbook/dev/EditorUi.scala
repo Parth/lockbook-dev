@@ -24,7 +24,7 @@ class EditorUi(editorHelper: EditorHelper) {
   private def loadFile(git: Git, f: File, root: BorderPane, textArea: TextArea): Future[Unit] =
     Future {
       editorHelper.getTextFromFile(f) match {
-        case Right(string: String) =>
+        case Right(string) =>
           Platform.runLater(() => {
             textArea.setText(string)
             textArea.setWrapText(true)
