@@ -2,6 +2,11 @@ package lockbook.dev
 
 import java.io.File
 
+import javafx.application.Platform
+
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, Promise}
+
 case class GitCredential(username: String, password: String)
 object GitCredential { // Apply Unapply instead of this
   def serialize(gitCredential: GitCredential): String =
@@ -57,7 +62,14 @@ class GitCredentialHelperImpl(
     readPasswordFileFor(key) match {
       case Left(_) =>
         deleteStoredCredentials(key)
-        GitCredentialUi.getView(key).showAndWait().get()
+        val p: Promise[Either[UserCanceled, GitCredential]] =
+          Promise[Either[UserCanceled, GitCredential]]()
+
+        Platform.runLater(() => {
+          p.success(GitCredentialUi.getView(key).showAndWait().get())
+        }) // TODO not proud of this
+
+        Await.result(p.future, Duration.Inf)
       case Right(value) => Right(value)
     }
   }
@@ -77,7 +89,7 @@ class GitCredentialHelperImpl(
     encryptionHelper
       .encrypt(decryptedValue, passwordHelper.password)
       .map(_.garbage)
-      .flatMap(fileHelper.saveToFile(new File(s"$credentialFolder/key"), _))
+      .flatMap(fileHelper.saveToFile(new File(s"$credentialFolder/$key"), _))
   }
 
   override def deleteStoredCredentials(key: String): Either[FileError, Unit] = {
