@@ -11,7 +11,6 @@ object GitCredentialUi {
 
     val dialog = new Dialog[Either[UserCanceled, GitCredential]]
     dialog.setTitle("Login Dialog")
-//    dialog.getDialogPane.getStylesheets.add("dark.css")
     dialog.setHeaderText(s"Enter credentials for $credentialName")
 
     val loginButtonType = new ButtonType("Login", ButtonData.OK_DONE)
