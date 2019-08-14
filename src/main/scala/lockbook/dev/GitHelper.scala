@@ -65,7 +65,7 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper, fileHelper: FileHe
 
           Right(())
         } catch {
-          case _: Exception => Right(UserCanceled()) // TODO build this out
+          case _: Exception => Left(UserCanceled()) // TODO build this out
         }
       })
   }
@@ -136,7 +136,9 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper, fileHelper: FileHe
 
         Right(())
       } catch {
-        case _: Exception => Right(UserCanceled()) // TODO build this out
+        case e: Exception =>
+          println(e)
+          Left(UserCanceled()) // TODO build this out
       }
     })
   }
