@@ -21,22 +21,21 @@ class EditorUi(editorHelper: EditorHelper) {
     root
   }
 
-  private def loadFile(git: Git, f: File, root: BorderPane, textArea: TextArea): Future[Unit] =
-    Future {
-      editorHelper.getTextFromFile(f) match {
-        case Right(string) =>
-          Platform.runLater(() => {
-            textArea.setText(string)
-            textArea.setWrapText(true)
-            root.setBottom(getBottom(git, f, textArea))
-            root.setCenter(textArea)
-          })
-        case Left(error) =>
-          Platform.runLater(
-            () => root.setCenter(new Label(error.uiMessage))
-          )
-      }
+  private def loadFile(git: Git, f: File, root: BorderPane, text: TextArea): Future[Unit] = Future {
+    editorHelper.getTextFromFile(f) match {
+      case Right(string) =>
+        Platform.runLater(() => {
+          text.setText(string)
+          text.setWrapText(true)
+          root.setBottom(getBottom(git, f, text))
+          root.setCenter(text)
+        })
+      case Left(error) =>
+        Platform.runLater(
+          () => root.setCenter(new Label(error.uiMessage))
+        )
     }
+  }
 
   def getBottom(git: Git, file: File, textArea: TextArea): HBox = {
     val save          = new Button("Push")
