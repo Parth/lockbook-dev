@@ -2,9 +2,9 @@ package lockbook.dev
 
 import java.io.File
 
-import com.vladsch.flexmark.ast.Heading
+import com.vladsch.flexmark.ast.{Heading, Text}
 import com.vladsch.flexmark.parser.Parser
-import com.vladsch.flexmark.util.ast.{NodeVisitor, VisitHandler}
+import com.vladsch.flexmark.util.ast.{Node, NodeVisitor, VisitHandler}
 import javafx.application.Platform
 import javafx.scene.control._
 import javafx.scene.layout.{BorderPane, HBox}
@@ -80,5 +80,7 @@ class EditorUi(editorHelper: EditorHelper) {
   private val nodeVisitor: StyleClassedTextArea => NodeVisitor = (styledText: StyleClassedTextArea) =>
     new NodeVisitor(new VisitHandler[Heading](classOf[Heading], (node: Heading) => {
       styledText.setStyleClass(node.getOpeningMarker.getStartOffset, node.getText.getEndOffset, s"h${node.getLevel}")
+    }), new VisitHandler[Text](classOf[Text], (node: Text) => {
+      styledText.setStyleClass(node.getStartOffset, node.getEndOffset, "")
     }))
 }
