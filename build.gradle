@@ -14,8 +14,10 @@ repositories {
 }
 
 dependencies {
-    compile 'org.eclipse.jgit:org.eclipse.jgit:4.5.0.201609210915-r'
-    implementation 'org.scala-lang:scala-library:2.12.8'
+    compile 'org.eclipse.jgit:org.eclipse.jgit:4.5.0.201609210915-r' // For git operations
+    compile 'com.vladsch.flexmark:flexmark-all:0.50.26' // For interpreting markdown 
+    compile 'org.fxmisc.richtext:richtextfx:0.10.1' // For rich text editing
+    implementation 'org.scala-lang:scala-library:2.12.8' // For Scala
 }
 
 application {

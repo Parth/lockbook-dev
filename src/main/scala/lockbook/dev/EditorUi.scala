@@ -2,10 +2,14 @@ package lockbook.dev
 
 import java.io.File
 
+import com.vladsch.flexmark.ast.Heading
+import com.vladsch.flexmark.parser.Parser
+import com.vladsch.flexmark.util.ast.{NodeVisitor, VisitHandler}
 import javafx.application.Platform
 import javafx.scene.control._
 import javafx.scene.layout.{BorderPane, HBox}
 import org.eclipse.jgit.api.Git
+import org.fxmisc.richtext.StyleClassedTextArea
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -13,22 +17,23 @@ import scala.concurrent.Future
 class EditorUi(editorHelper: EditorHelper) {
 
   def getView(git: Git, f: File): BorderPane = {
+    val textArea = new StyleClassedTextArea()
     val root     = new BorderPane
-    val textArea = new TextArea
 
     loadFile(git, f, root, textArea)
 
     root
   }
 
-  private def loadFile(git: Git, f: File, root: BorderPane, text: TextArea): Future[Unit] = Future {
+  private def loadFile(git: Git, f: File, root: BorderPane, text: StyleClassedTextArea): Future[Unit] = Future {
     editorHelper.getTextFromFile(f) match {
-      case Right(string) =>
+      case Right(fileText) =>
         Platform.runLater(() => {
-          text.setText(string)
+          doMarkdown(text)
           text.setWrapText(true)
           root.setBottom(getBottom(git, f, text))
           root.setCenter(text)
+          text.replaceText(fileText)
         })
       case Left(error) =>
         Platform.runLater(
@@ -37,7 +42,18 @@ class EditorUi(editorHelper: EditorHelper) {
     }
   }
 
-  def getBottom(git: Git, file: File, textArea: TextArea): HBox = {
+  private def doMarkdown(text: StyleClassedTextArea) = {
+    val parser: Parser = Parser.builder().build()
+
+    text
+      .textProperty()
+      .addListener((_, _, newText) => {
+        val parsed = parser.parse(newText)
+        nodeVisitor(text).visit(parsed)
+      })
+  }
+
+  private def getBottom(git: Git, file: File, textArea: StyleClassedTextArea): HBox = {
     val save          = new Button("Push")
     val commitMessage = new TextField
     commitMessage.setPromptText("Commit Message")
@@ -60,4 +76,9 @@ class EditorUi(editorHelper: EditorHelper) {
 
     new HBox(commitMessage, save)
   }
+
+  private val nodeVisitor: StyleClassedTextArea => NodeVisitor = (styledText: StyleClassedTextArea) =>
+    new NodeVisitor(new VisitHandler[Heading](classOf[Heading], (node: Heading) => {
+      styledText.setStyleClass(node.getOpeningMarker.getStartOffset, node.getText.getEndOffset, s"h${node.getLevel}")
+    }))
 }

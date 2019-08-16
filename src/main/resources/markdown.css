@@ -1,0 +1,18 @@
+/*---- headers ----*/
+
+.h1 { -fx-font-size: 2em; }
+.h2 { -fx-font-size: 1.75em; }
+.h3 { -fx-font-size: 1.5em; }
+.h4 { -fx-font-size: 1.25em; }
+.h5 { -fx-font-size: 1.1em; }
+.h6 { -fx-font-size: 1em; }
+
+.h1,
+.h2,
+.h3,
+.h4,
+.h5,
+.h6 {
+	-fx-font-weight: bold;
+	-fx-fill: #c62828;
+}

@@ -51,6 +51,7 @@ class UiOrchestrator(
       )
     )
 
+    stage.getScene.getStylesheets.add("markdown.css")
     stage.show()
   }
 
