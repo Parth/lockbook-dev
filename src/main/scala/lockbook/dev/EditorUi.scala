@@ -2,7 +2,7 @@ package lockbook.dev
 
 import java.io.File
 
-import com.vladsch.flexmark.ast.{Heading, Text}
+import com.vladsch.flexmark.ast.{Code, Heading, Text}
 import com.vladsch.flexmark.parser.Parser
 import com.vladsch.flexmark.util.ast.{Node, NodeVisitor, VisitHandler}
 import javafx.application.Platform
@@ -82,5 +82,7 @@ class EditorUi(editorHelper: EditorHelper) {
       styledText.setStyleClass(node.getOpeningMarker.getStartOffset, node.getText.getEndOffset, s"h${node.getLevel}")
     }), new VisitHandler[Text](classOf[Text], (node: Text) => {
       styledText.setStyleClass(node.getStartOffset, node.getEndOffset, "")
+    }), new VisitHandler[Code](classOf[Code], (node: Code) => {
+      styledText.setStyleClass(node.getOpeningMarker.getStartOffset, node.getClosingMarker.getEndOffset, "code")
     }))
 }

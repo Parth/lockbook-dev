@@ -16,3 +16,9 @@
 	-fx-font-weight: bold;
 	-fx-fill: #c62828;
 }
+
+.code {
+	-fx-font-weight: bold;
+    -fx-fill: #c62828;
+    -fx-font-family: monospace;
+}
