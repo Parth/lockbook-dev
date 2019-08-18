@@ -4,12 +4,12 @@ import java.io.File
 
 import com.vladsch.flexmark.ast.{Code, Heading, Text}
 import com.vladsch.flexmark.parser.Parser
-import com.vladsch.flexmark.util.ast.{Node, NodeVisitor, VisitHandler}
+import com.vladsch.flexmark.util.ast.{NodeVisitor, VisitHandler}
 import javafx.application.Platform
 import javafx.scene.control._
 import javafx.scene.layout.{BorderPane, HBox}
 import org.eclipse.jgit.api.Git
-import org.fxmisc.richtext.StyleClassedTextArea
+import org.fxmisc.richtext.CodeArea
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -17,7 +17,7 @@ import scala.concurrent.Future
 class EditorUi(editorHelper: EditorHelper) {
 
   def getView(git: Git, f: File): BorderPane = {
-    val textArea = new StyleClassedTextArea()
+    val textArea = new CodeArea()
     val root     = new BorderPane
 
     loadFile(git, f, root, textArea)
@@ -25,7 +25,7 @@ class EditorUi(editorHelper: EditorHelper) {
     root
   }
 
-  private def loadFile(git: Git, f: File, root: BorderPane, text: StyleClassedTextArea): Future[Unit] = Future {
+  private def loadFile(git: Git, f: File, root: BorderPane, text: CodeArea): Future[Unit] = Future {
     editorHelper.getTextFromFile(f) match {
       case Right(fileText) =>
         Platform.runLater(() => {
@@ -42,7 +42,7 @@ class EditorUi(editorHelper: EditorHelper) {
     }
   }
 
-  private def doMarkdown(text: StyleClassedTextArea) = {
+  private def doMarkdown(text: CodeArea): Unit = {
     val parser: Parser = Parser.builder().build()
 
     text
@@ -53,7 +53,7 @@ class EditorUi(editorHelper: EditorHelper) {
       })
   }
 
-  private def getBottom(git: Git, file: File, textArea: StyleClassedTextArea): HBox = {
+  private def getBottom(git: Git, file: File, textArea: CodeArea): HBox = {
     val save          = new Button("Push")
     val commitMessage = new TextField
     commitMessage.setPromptText("Commit Message")
@@ -77,12 +77,15 @@ class EditorUi(editorHelper: EditorHelper) {
     new HBox(commitMessage, save)
   }
 
-  private val nodeVisitor: StyleClassedTextArea => NodeVisitor = (styledText: StyleClassedTextArea) =>
+  private val nodeVisitor: CodeArea => NodeVisitor = (styledText: CodeArea) =>
     new NodeVisitor(new VisitHandler[Heading](classOf[Heading], (node: Heading) => {
+      println(s"heading: ${node.getChars}")
       styledText.setStyleClass(node.getOpeningMarker.getStartOffset, node.getText.getEndOffset, s"h${node.getLevel}")
     }), new VisitHandler[Text](classOf[Text], (node: Text) => {
-      styledText.setStyleClass(node.getStartOffset, node.getEndOffset, "")
+      println(s"Text: ${node.getChars}")
+      styledText.setStyleClass(node.getStartOffset, node.getEndOffset, "text")
     }), new VisitHandler[Code](classOf[Code], (node: Code) => {
+      println(s"Code: ${node.getChars}")
       styledText.setStyleClass(node.getOpeningMarker.getStartOffset, node.getClosingMarker.getEndOffset, "code")
     }))
 }

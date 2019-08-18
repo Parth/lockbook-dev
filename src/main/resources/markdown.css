@@ -18,6 +18,10 @@
 	-fx-fill: #c62828;
 }
 
+.styled-text-area .text {
+    -fx-font-family: sans-serif;
+}
+
 .styled-text-area .code {
 	-fx-font-weight: bold;
     -fx-fill: #c62828;
