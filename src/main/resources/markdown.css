@@ -38,5 +38,12 @@
 .styled-text-area .code-block {
     -fx-font-family: monospace;
     -fx-font-weight: bold;
-    -fx-background-color: grey;
+    -fx-background-color: #f6f6f6;
+}
+
+.styled-text-area .quote-block {
+    -fx-font-family: serif;
+    -fx-font-weight: lighter;
+    -fx-background-color: #f0f0d0;
+
 }

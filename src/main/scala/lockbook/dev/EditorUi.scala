@@ -59,8 +59,7 @@ class EditorUi(editorHelper: EditorHelper) {
     val commitMessage = new TextField
     commitMessage.setPromptText("Commit Message")
 
-    save.setOnAction(_ => {
-      Future {
+    save.setOnAction(_ => {      Future {
         editorHelper
           .saveCommitAndPush(commitMessage.getText, textArea.getText, file, git) match {
           case Right(_) =>
@@ -96,6 +95,9 @@ class EditorUi(editorHelper: EditorHelper) {
         styledText.setStyleClass(node.getOpeningMarker.getStartOffset, node.getClosingMarker.getEndOffset, "code-block")
         setParagraphStyle(styledText, node, "code-block")
       }
+    }), new VisitHandler[BlockQuote](classOf[BlockQuote], (node: BlockQuote) => {
+      styledText.setStyleClass(node.getStartOffset, node.getEndOffset, "quote-block")
+      setParagraphStyle(styledText, node, "quote-block")
     }))
 
   private def setParagraphStyle(styledText: CodeArea, node: Node, style: String) = {
