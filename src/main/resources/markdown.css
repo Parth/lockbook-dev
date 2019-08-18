@@ -47,3 +47,14 @@
     -fx-background-color: #f0f0d0;
 
 }
+
+.styled-text-area .link {
+    -fx-fill: blue;
+    -fx-underline: true;
+    -fx-font-weight: bold;
+}
+
+.styled-text-area .href {
+    -fx-fill: green;
+    -fx-font-style: italic;
+}

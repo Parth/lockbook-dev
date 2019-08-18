@@ -98,7 +98,11 @@ class EditorUi(editorHelper: EditorHelper) {
     }), new VisitHandler[BlockQuote](classOf[BlockQuote], (node: BlockQuote) => {
       styledText.setStyleClass(node.getStartOffset, node.getEndOffset, "quote-block")
       setParagraphStyle(styledText, node, "quote-block")
-    }))
+    }), new VisitHandler[Link](classOf[Link], (node: Link) => {
+      styledText.setStyleClass(node.getTextOpeningMarker.getStartOffset+1, node.getTextClosingMarker.getEndOffset-1, "link")
+      styledText.setStyleClass(node.getLinkOpeningMarker.getStartOffset+1, node.getLinkClosingMarker.getEndOffset-1, "href")
+      setParagraphStyle(styledText, node, "inline")
+    }) )
 
   private def setParagraphStyle(styledText: CodeArea, node: Node, style: String) = {
     Array
