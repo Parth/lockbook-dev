@@ -1,39 +1,42 @@
-.text {
+.styled-text-area .text {
     -fx-font-family: sans-serif;
     -fx-font-weight: normal;
+    -fx-background-color: white;
 }
 
-/*---- headers ----*/
+.styled-text-area .inline {
+    -fx-background-color: white;
+}
 
-.h1 { -fx-font-size: 2em; }
-.h2 { -fx-font-size: 1.75em; }
-.h3 { -fx-font-size: 1.5em; }
-.h4 { -fx-font-size: 1.25em; }
-.h5 { -fx-font-size: 1.1em; }
-.h6 { -fx-font-size: 1em; }
+.styled-text-area .h1 { -fx-font-size: 2em; }
+.styled-text-area .h2 { -fx-font-size: 1.75em; }
+.styled-text-area .h3 { -fx-font-size: 1.5em; }
+.styled-text-area .h4 { -fx-font-size: 1.25em; }
+.styled-text-area .h5 { -fx-font-size: 1.1em; }
+.styled-text-area .h6 { -fx-font-size: 1em; }
 
-.h1,
-.h2,
-.h3,
-.h4,
-.h5,
-.h6 {
+.styled-text-area .h1,
+.styled-text-area .h2,
+.styled-text-area .h3,
+.styled-text-area .h4,
+.styled-text-area .h5,
+.styled-text-area .h6 {
 	-fx-font-weight: bold;
 	-fx-fill: #c62828;
 }
 
-.code {
+.styled-text-area .code {
 	-fx-font-weight: bold;
     -fx-fill: #c62828;
     -fx-font-family: monospace;
 }
 
-.emphasis {
+.styled-text-area .emphasis {
 	-fx-font-weight: bolder;
 }
 
-.code_block {
+.styled-text-area .code-block {
     -fx-font-family: monospace;
     -fx-font-weight: bold;
-    -fx-base: #FFFFFF;
+    -fx-background-color: grey;
 }

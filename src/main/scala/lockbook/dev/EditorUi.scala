@@ -4,13 +4,14 @@ import java.io.File
 
 import com.vladsch.flexmark.ast._
 import com.vladsch.flexmark.parser.Parser
-import com.vladsch.flexmark.util.ast.{NodeVisitor, VisitHandler}
+import com.vladsch.flexmark.util.ast.{Node, NodeVisitor, VisitHandler}
 import javafx.application.Platform
 import javafx.scene.control._
 import javafx.scene.layout.{BorderPane, HBox}
 import org.eclipse.jgit.api.Git
 import org.fxmisc.richtext.CodeArea
 
+import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -78,16 +79,28 @@ class EditorUi(editorHelper: EditorHelper) {
   }
 
   private val nodeVisitor: CodeArea => NodeVisitor = (styledText: CodeArea) =>
-    new NodeVisitor(new VisitHandler[Heading](classOf[Heading], (node: Heading) => {
-      styledText.setStyleClass(node.getOpeningMarker.getStartOffset, node.getText.getEndOffset, s"h${node.getLevel}")
-    }), new VisitHandler[Text](classOf[Text], (node: Text) => {
+    new NodeVisitor(new VisitHandler[Text](classOf[Text], (node: Text) => {
       styledText.setStyleClass(node.getStartOffset, node.getEndOffset, "text")
+      setParagraphStyle(styledText, node, "inline")
+    }), new VisitHandler[Heading](classOf[Heading], (node: Heading) => {
+      styledText.setStyleClass(node.getOpeningMarker.getStartOffset, node.getText.getEndOffset, s"h${node.getLevel}")
+      setParagraphStyle(styledText, node, "inline")
     }), new VisitHandler[Code](classOf[Code], (node: Code) => {
       styledText.setStyleClass(node.getOpeningMarker.getStartOffset, node.getClosingMarker.getEndOffset, "code")
+      setParagraphStyle(styledText, node, "inline")
     }), new VisitHandler[Emphasis](classOf[Emphasis], (node: Emphasis) => {
       styledText.setStyleClass(node.getOpeningMarker.getStartOffset, node.getClosingMarker.getEndOffset, "emphasis")
+      setParagraphStyle(styledText, node, "inline")
     }), new VisitHandler[FencedCodeBlock](classOf[FencedCodeBlock], (node: FencedCodeBlock) => {
-      if (node.getClosingFence.getEndOffset != 0)
-        styledText.setStyleClass(node.getOpeningFence.getStartOffset, node.getClosingFence.getEndOffset, "code_block")
+      if (node.getClosingFence.getEndOffset != 0) {
+        styledText.setStyleClass(node.getOpeningMarker.getStartOffset, node.getClosingMarker.getEndOffset, "code-block")
+        setParagraphStyle(styledText, node, "code-block")
+      }
     }))
+
+  private def setParagraphStyle(styledText: CodeArea, node: Node, style: String) = {
+    Array
+      .range(node.getStartLineNumber, node.getEndLineNumber + 1)
+      .foreach(styledText.setParagraphStyle(_, List(style).asJava))
+  }
 }
