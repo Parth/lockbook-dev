@@ -31,3 +31,9 @@
 .emphasis {
 	-fx-font-weight: bolder;
 }
+
+.code_block {
+    -fx-font-family: monospace;
+    -fx-font-weight: bold;
+    -fx-base: #FFFFFF;
+}
