@@ -22,7 +22,7 @@
 .styled-text-area .h5,
 .styled-text-area .h6 {
 	-fx-font-weight: bold;
-	-fx-fill: #c62828;
+	-fx-fill: gray;
 }
 
 .styled-text-area .code {

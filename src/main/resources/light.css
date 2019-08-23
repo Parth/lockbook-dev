@@ -1,12 +1,14 @@
 .root {
      -fx-base: white;
      -fx-background: white;
-     -fx-control-inner-background: white;
-     -fx-control-inner-background-alt: white;
--fx-focus-color: transparent;
--fx-faint-focus-color: transparent;
+
+     -fx-focus-color: transparent;
+     -fx-faint-focus-color: transparent;
  }
 
+ .progress-indicator {
+    -fx-max-height: 1em;
+ }
  .progress-indicator .percentage {
      -fx-fill:null;
  }
@@ -14,3 +16,24 @@
  .progress-indicator  {
      -fx-padding: 0 0 -16 0;
  }
+
+ .split-pane > .split-pane-divider {
+    -fx-background-color: rgb(233, 233, 233);
+    -fx-padding: 0 1px, 0, 1px;
+ }
+
+.styled-text-area {
+    -fx-padding: 1em;
+}
+
+.list-view {
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+    -fx-control-inner-background: rgb(246, 246, 246);
+    -fx-control-inner-background-alt: rgb(246, 246, 246);
+}
+
+.list-cell {
+    -fx-border-width:3px;
+    -fx-border-color:rgb(246, 246, 246);
+}

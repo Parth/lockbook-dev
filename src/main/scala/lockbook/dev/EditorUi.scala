@@ -18,7 +18,7 @@ import scala.concurrent.Future
 class EditorUi(editorHelper: EditorHelper) {
 
   def getView(git: Git, f: File): BorderPane = {
-    val textArea = new CodeArea()
+    val textArea = new CodeArea
     val root     = new BorderPane
 
     loadFile(git, f, root, textArea)

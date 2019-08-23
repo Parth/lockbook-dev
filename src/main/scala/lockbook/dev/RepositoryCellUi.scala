@@ -24,6 +24,7 @@ object RepositoryCell {
       .addListener(_ => {
         if (progressIndicator.getProgress == 1) progressIndicator.setVisible(false)
       })
+
     progressIndicator
   }
 }
