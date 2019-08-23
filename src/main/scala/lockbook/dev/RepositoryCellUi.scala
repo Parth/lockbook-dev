@@ -1,19 +1,30 @@
 package lockbook.dev
 
+import javafx.geometry.HPos
 import javafx.scene.control._
-import javafx.scene.layout.GridPane
+import javafx.scene.layout.{ColumnConstraints, GridPane, Priority}
 import org.eclipse.jgit.api.{Git, PullCommand}
 
 case class RepositoryCell(git: Git, pullCommand: PullCommand, progressMonitor: PullProgressMonitor)
 
 object RepositoryCell {
   def fromGit(git: Git, gitHelper: GitHelper): RepositoryCell = {
-    val ppm = new PullProgressMonitor(new ProgressIndicator(0))
+    val ppm = new PullProgressMonitor(getProgressIndicator)
     RepositoryCell(
       git = git,
       pullCommand = gitHelper.pullCommand(git, ppm),
       progressMonitor = ppm
     )
+  }
+
+  private def getProgressIndicator: ProgressIndicator = {
+    val progressIndicator = new ProgressIndicator(0)
+    progressIndicator
+      .progressProperty()
+      .addListener(_ => {
+        if (progressIndicator.getProgress == 1) progressIndicator.setVisible(false)
+      })
+    progressIndicator
   }
 }
 
@@ -46,6 +57,16 @@ class RepositoryCellUi(gitHelper: GitHelper) {
   private def getCell(repositoryCell: RepositoryCell): GridPane = {
     val gridPane = new GridPane
     val label    = new Label(gitHelper.getRepoName(repositoryCell.git))
+
+    val column1 = new ColumnConstraints
+    column1.setHgrow(Priority.ALWAYS)
+    column1.setFillWidth(true)
+    val column2 = new ColumnConstraints
+    column2.setHgrow(Priority.NEVER)
+
+    column2.setHalignment(HPos.RIGHT)
+
+    gridPane.getColumnConstraints.addAll(column1, column2)
 
     gridPane.add(label, 0, 0)
     gridPane.add(repositoryCell.progressMonitor.progressIndicator, 1, 0)
