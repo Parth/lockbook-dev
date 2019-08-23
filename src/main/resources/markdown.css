@@ -8,10 +8,10 @@
     -fx-background-color: white;
 }
 
-.styled-text-area .h1 { -fx-font-size: 2em; }
-.styled-text-area .h2 { -fx-font-size: 1.75em; }
-.styled-text-area .h3 { -fx-font-size: 1.5em; }
-.styled-text-area .h4 { -fx-font-size: 1.25em; }
+.styled-text-area .h1 { -fx-font-size: 1.5em; }
+.styled-text-area .h2 { -fx-font-size: 1.4em; }
+.styled-text-area .h3 { -fx-font-size: 1.3em; }
+.styled-text-area .h4 { -fx-font-size: 1.2em; }
 .styled-text-area .h5 { -fx-font-size: 1.1em; }
 .styled-text-area .h6 { -fx-font-size: 1em; }
 
@@ -45,7 +45,6 @@
     -fx-font-family: serif;
     -fx-font-weight: lighter;
     -fx-background-color: #f0f0d0;
-
 }
 
 .styled-text-area .link {
