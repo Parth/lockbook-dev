@@ -21,7 +21,7 @@ object RepositoryCell {
     val progressIndicator = new ProgressIndicator(0)
     progressIndicator
       .progressProperty()
-      .addListener(_ => {
+      .addListener((_, _, _) => {
         if (progressIndicator.getProgress == 1) progressIndicator.setVisible(false)
       })
 

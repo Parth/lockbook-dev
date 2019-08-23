@@ -1,6 +1,7 @@
 package lockbook.dev
 
 import java.io.File
+import java.util.TimerTask
 
 import com.vladsch.flexmark.ast._
 import com.vladsch.flexmark.parser.Parser
@@ -31,6 +32,7 @@ class EditorUi(editorHelper: EditorHelper) {
       case Right(fileText) =>
         Platform.runLater(() => {
           doMarkdown(text)
+          doAutosave(text)
           text.setWrapText(true)
           root.setBottom(getBottom(git, f, text))
           root.setCenter(text)
@@ -54,12 +56,34 @@ class EditorUi(editorHelper: EditorHelper) {
       })
   }
 
+  private def doAutosave(area: CodeArea): Unit = {
+    val task = new TimerTask {
+        def run(): Unit = println("")
+    }
+    area.textProperty().addListener((_, _, _) => {
+        Future {
+          editorHelper
+            .saveCommitAndPush("", textArea.getText, file, git) match {
+            case Right(_) =>
+              Platform.runLater(() => {
+                AlertUi.showGood("Push Successful", "Changes saved successfully.")
+              })
+            case Left(exception) =>
+              Platform.runLater(() => {
+                AlertUi.showBad("Push Failed", exception.uiMessage)
+              })
+          }
+        }
+      })
+  }
+
   private def getBottom(git: Git, file: File, textArea: CodeArea): HBox = {
     val save          = new Button("Push")
     val commitMessage = new TextField
     commitMessage.setPromptText("Commit Message")
 
-    save.setOnAction(_ => {      Future {
+    save.setOnAction(_ => {
+      Future {
         editorHelper
           .saveCommitAndPush(commitMessage.getText, textArea.getText, file, git) match {
           case Right(_) =>
@@ -99,12 +123,14 @@ class EditorUi(editorHelper: EditorHelper) {
       styledText.setStyleClass(node.getStartOffset, node.getEndOffset, "quote-block")
       setParagraphStyle(styledText, node, "quote-block")
     }), new VisitHandler[Link](classOf[Link], (node: Link) => {
-      styledText.setStyleClass(node.getTextOpeningMarker.getStartOffset+1, node.getTextClosingMarker.getEndOffset-1, "link")
-      styledText.setStyleClass(node.getLinkOpeningMarker.getStartOffset+1, node.getLinkClosingMarker.getEndOffset-1, "href")
+      styledText
+        .setStyleClass(node.getTextOpeningMarker.getStartOffset + 1, node.getTextClosingMarker.getEndOffset - 1, "link")
+      styledText
+        .setStyleClass(node.getLinkOpeningMarker.getStartOffset + 1, node.getLinkClosingMarker.getEndOffset - 1, "href")
       setParagraphStyle(styledText, node, "inline")
-    }) )
+    }))
 
-  private def setParagraphStyle(styledText: CodeArea, node: Node, style: String) = {
+  private def setParagraphStyle(styledText: CodeArea, node: Node, style: String): Unit = {
     Array
       .range(node.getStartLineNumber, node.getEndLineNumber + 1)
       .foreach(styledText.setParagraphStyle(_, List(style).asJava))
