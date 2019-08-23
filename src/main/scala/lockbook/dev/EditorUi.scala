@@ -1,7 +1,6 @@
 package lockbook.dev
 
 import java.io.File
-import java.util.TimerTask
 
 import com.vladsch.flexmark.ast._
 import com.vladsch.flexmark.parser.Parser
@@ -32,7 +31,6 @@ class EditorUi(editorHelper: EditorHelper) {
       case Right(fileText) =>
         Platform.runLater(() => {
           doMarkdown(text)
-          doAutosave(text)
           text.setWrapText(true)
           root.setBottom(getBottom(git, f, text))
           root.setCenter(text)
@@ -53,27 +51,6 @@ class EditorUi(editorHelper: EditorHelper) {
       .addListener((_, _, newText) => {
         val parsed = parser.parse(newText)
         nodeVisitor(text).visit(parsed)
-      })
-  }
-
-  private def doAutosave(area: CodeArea): Unit = {
-    val task = new TimerTask {
-        def run(): Unit = println("")
-    }
-    area.textProperty().addListener((_, _, _) => {
-        Future {
-          editorHelper
-            .saveCommitAndPush("", textArea.getText, file, git) match {
-            case Right(_) =>
-              Platform.runLater(() => {
-                AlertUi.showGood("Push Successful", "Changes saved successfully.")
-              })
-            case Left(exception) =>
-              Platform.runLater(() => {
-                AlertUi.showBad("Push Failed", exception.uiMessage)
-              })
-          }
-        }
       })
   }
 
@@ -130,7 +107,7 @@ class EditorUi(editorHelper: EditorHelper) {
       setParagraphStyle(styledText, node, "inline")
     }))
 
-  private def setParagraphStyle(styledText: CodeArea, node: Node, style: String): Unit = {
+  private def setParagraphStyle(styledText: CodeArea, node: Node, style: String) = {
     Array
       .range(node.getStartLineNumber, node.getEndLineNumber + 1)
       .foreach(styledText.setParagraphStyle(_, List(style).asJava))
