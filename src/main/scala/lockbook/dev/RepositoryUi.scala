@@ -1,6 +1,7 @@
 package lockbook.dev
 
 import javafx.collections.FXCollections
+import javafx.geometry.{HPos, Pos}
 import javafx.scene.control._
 import javafx.scene.layout._
 import org.eclipse.jgit.api.Git
@@ -17,9 +18,10 @@ class RepositoryUi(
   def getView(onClick: Git => Unit): BorderPane = {
     val borderPane    = new BorderPane
     val newRepoButton = new Button("New Repository")
-    val footer        = new HBox(newRepoButton)
     val repoList      = FXCollections.observableArrayList[RepositoryCell]()
     val listView      = new ListView[RepositoryCell]
+
+    borderPane.setId("repoList")
 
     Future {
       val allRepositories = gitHelper.getRepositories
@@ -49,8 +51,9 @@ class RepositoryUi(
       cloneRepoDialog.showDialog(repoList)
     })
 
+    BorderPane.setAlignment(newRepoButton, Pos.CENTER)
     borderPane.setCenter(listView)
-    borderPane.setBottom(footer)
+    borderPane.setBottom(newRepoButton)
     borderPane
   }
 

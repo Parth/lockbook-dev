@@ -2,6 +2,7 @@ package lockbook.dev
 
 import java.io.File
 
+import javafx.geometry.Pos
 import javafx.scene.control._
 import javafx.scene.layout.BorderPane
 import javafx.stage.FileChooser
@@ -24,7 +25,7 @@ class FileTreeUi(fileHelper: FileHelper) {
 
     val root = new BorderPane
 
-    val newFileButton = new Button("New")
+    val newFileButton = new Button("New File")
     newFileButton.setOnAction(_ => {
       val fileChooser = new FileChooser
       fileChooser.setInitialDirectory(git.getRepository.getWorkTree)
@@ -36,6 +37,8 @@ class FileTreeUi(fileHelper: FileHelper) {
         treeView.setRoot(getViewHelper(git.getRepository.getWorkTree))
       }
     })
+
+    BorderPane.setAlignment(newFileButton, Pos.CENTER)
 
     root.setCenter(treeView)
     root.setBottom(newFileButton)
