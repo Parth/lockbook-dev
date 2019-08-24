@@ -10,7 +10,6 @@ import javafx.application.Platform
 import javafx.geometry.Pos
 import javafx.scene.control._
 import javafx.scene.layout.BorderPane
-import javafx.scene.text.{Font, FontPosture}
 import org.eclipse.jgit.api.Git
 import org.fxmisc.richtext.CodeArea
 
@@ -25,7 +24,7 @@ class EditorUi(editorHelper: EditorHelper) {
     val root      = new BorderPane
     val syncLabel = new Label("Loading File")
 
-    loadFile(git, f, root, textArea)
+    loadFile(git, f, root, textArea, syncLabel)
 
     BorderPane.setAlignment(syncLabel, Pos.CENTER_RIGHT)
     syncLabel.setId("SyncStatus")
@@ -36,7 +35,7 @@ class EditorUi(editorHelper: EditorHelper) {
     root
   }
 
-  private def loadFile(git: Git, f: File, root: BorderPane, text: CodeArea): Future[Unit] = Future {
+  private def loadFile(git: Git, f: File, root: BorderPane, text: CodeArea, syncLabel: Label): Future[Unit] = Future {
     editorHelper.getTextFromFile(f) match {
       case Right(fileText) =>
         Platform.runLater(() => {
@@ -44,6 +43,7 @@ class EditorUi(editorHelper: EditorHelper) {
           text.setWrapText(true)
           root.setCenter(text)
           text.replaceText(fileText)
+          syncLabel.setText("File loaded successfully")
         })
       case Left(error) =>
         Platform.runLater(
@@ -53,15 +53,17 @@ class EditorUi(editorHelper: EditorHelper) {
   }
 
   private def scheduleAutoSave(text: CodeArea, syncLabel: Label, saveTask: Runnable): Unit = {
-    val executor                                = new ScheduledThreadPoolExecutor(1)
+    val executor                                = new ScheduledThreadPoolExecutor(1) // This needs to be shutdown for clean exit
     var currentTask: Option[ScheduledFuture[_]] = None
 
     text
       .textProperty()
-      .addListener((_, _, _) => {
-        syncLabel.setText("")
+      .addListener((_, oldValue, _) => {
         currentTask.foreach(_.cancel(false))
-        currentTask = Some(executor.schedule(saveTask, 1, TimeUnit.SECONDS))
+        if (oldValue != "") {
+          syncLabel.setText("")
+          currentTask = Some(executor.schedule(saveTask, 1, TimeUnit.SECONDS))
+        }
       })
   }
 
