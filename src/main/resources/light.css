@@ -37,3 +37,9 @@
     -fx-border-width:3px;
     -fx-border-color:rgb(246, 246, 246);
 }
+
+#SyncStatus {
+    -fx-padding: 5px;
+    -fx-text-fill: grey;
+    -fx-font-style: italic;
+}
