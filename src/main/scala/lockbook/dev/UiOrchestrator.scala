@@ -25,6 +25,7 @@ class UiOrchestrator(
     val root: StackPane = new StackPane
     stage.setScene(new Scene(root, 300, 130))
     stage.setTitle("Lockbook Dev")
+    stage.getScene.getStylesheets.add("light.css")
     processLockfileAndShowUi(root, showRepo(stage))
     stage.show()
   }
