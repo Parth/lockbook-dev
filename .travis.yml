@@ -16,7 +16,7 @@ jobs:
           skip_cleanup: true
           on:
               tags: false
-          name: Lockbook 0.$TRAVIS_BUILD_NUMBER MacOS
+          name: Lockbook 0.$TRAVIS_BUILD_NUMBER
           body: $TRAVIS_COMMIT - $TRAVIS_COMMIT_MESSAGE - $(date +'%d.%m.%Y %R')
 
     - stage: build
@@ -31,5 +31,5 @@ jobs:
           skip_cleanup: true
           on:
               tags: false
-          name: Lockbook 0.$TRAVIS_BUILD_NUMBER Linux
+          name: Lockbook 0.$TRAVIS_BUILD_NUMBER
           body: $TRAVIS_COMMIT - $TRAVIS_COMMIT_MESSAGE - $(date +'%d.%m.%Y %R')
