@@ -1,5 +1,6 @@
 install: true
 
+language: scala
 os: linux
 dist: trusty
 jdk: oraclejdk11
@@ -11,7 +12,16 @@ deploy:
     before_deploy: "./gradlew runtimeZip"
     provider: releases
     api_key: $RELEASE_TOKEN
-    file: build/image.zip
+    file: $HOME/build/image.zip
     skip_cleanup: true
     on:
         tags: false
+
+before_cache:
+  - rm -rf  $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -rf $HOME/.gradle/caches/*/plugin-resolution/
+
+cache:
+  directories:
+    - $HOME/.gradle/caches/
+    - $HOME/.gradle/wrapper/
