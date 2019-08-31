@@ -37,7 +37,6 @@
 
 .styled-text-area .code-block {
     -fx-font-family: monospace;
-    -fx-font-weight: bold;
     -fx-background-color: #f6f6f6;
 }
 
