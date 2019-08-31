@@ -11,7 +11,7 @@ script:
 deploy:
     provider: releases
     api_key: $RELEASE_TOKEN
-    file: $HOME/build/image.zip
+    file: build/image.zip
     skip_cleanup: true
     on:
         tags: false
