@@ -16,7 +16,7 @@ deploy:
     on:
         tags: false
     name: Lockbook v$TRAVIS_BUILD_NUMBER
-    body: $TRAVIS_COMMIT: $TRAVIS_COMMIT_MESSAGE build at: $(date +'%d.%m.%Y %R')
+    body: $TRAVIS_COMMIT - $TRAVIS_COMMIT_MESSAGE - $(date +'%d.%m.%Y %R')
 
 before_cache:
   - rm -rf  $HOME/.gradle/caches/modules-2/modules-2.lock
