@@ -1,3 +1,5 @@
+![Build Status](https://travis-ci.com/lockbook/lockbook-dev-desktop.svg?branch=master)
+
 ![Dev Logo Color][logo-dev-color]
 
 * Requires Java 12
