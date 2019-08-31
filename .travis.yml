@@ -6,3 +6,11 @@ jdk: oraclejdk11
 
 script:
   - ./gradlew runtime
+
+deploy:
+    before_deploy: "./gradlew runtimeZip"
+    provider: releases
+    api_key: $release-token
+    file: build/image.zip
+    on:
+        tags: false
