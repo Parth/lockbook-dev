@@ -1,28 +1,21 @@
 install: true
 
-language: java
-os: linux
-dist: trusty
-jdk: oraclejdk11
+language: generic
 
-script:
-  - ./gradlew runtimeZip
+jobs:
+    include:
+    - stage
+      build
+      os: osx
+      osx_image: xcode11
+      script: ./ci/dist_mac_os.sh
 
-deploy:
-    provider: releases
-    api_key: $RELEASE_TOKEN
-    file: build/binaries.zip
-    skip_cleanup: true
-    on:
-        tags: false
-    name: Lockbook 0.$TRAVIS_BUILD_NUMBER
-    body: $TRAVIS_COMMIT - $TRAVIS_COMMIT_MESSAGE - $(date +'%d.%m.%Y %R')
-
-before_cache:
-  - rm -rf  $HOME/.gradle/caches/modules-2/modules-2.lock
-  - rm -rf $HOME/.gradle/caches/*/plugin-resolution/
-
-cache:
-  directories:
-    - $HOME/.gradle/caches/
-    - $HOME/.gradle/wrapper/
+      deploy:
+          provider: releases
+          api_key: $RELEASE_TOKEN
+          file: build/jpackage/lockbook-dev-desktop.app
+          skip_cleanup: true
+          on:
+              tags: false
+          name: Lockbook 0.$TRAVIS_BUILD_NUMBER MacOS
+          body: $TRAVIS_COMMIT - $TRAVIS_COMMIT_MESSAGE - $(date +'%d.%m.%Y %R')
