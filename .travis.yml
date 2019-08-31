@@ -5,6 +5,7 @@ language: generic
 jobs:
     include:
     - stage: build
+      name: "Dist MacOs"
       os: osx
       jdk: oraclejdk11
       osx_image: xcode11
@@ -20,6 +21,7 @@ jobs:
           body: $TRAVIS_COMMIT - $TRAVIS_COMMIT_MESSAGE - $(date +'%d.%m.%Y %R')
 
     - stage: build
+      name: "Dist Linux"
       jdk: oraclejdk11
       os: linux
       dist: bionic
