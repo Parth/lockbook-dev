@@ -4,8 +4,7 @@ language: generic
 
 jobs:
     include:
-    - stage
-      build
+    - stage: build
       os: osx
       osx_image: xcode11
       script: ./ci/dist_mac_os.sh
