@@ -18,3 +18,18 @@ jobs:
               tags: false
           name: Lockbook 0.$TRAVIS_BUILD_NUMBER MacOS
           body: $TRAVIS_COMMIT - $TRAVIS_COMMIT_MESSAGE - $(date +'%d.%m.%Y %R')
+    - stage: build
+      os: linux
+      dist: trusty
+      jdk: oraclejdk11
+      script: ./ci/dist_linux.sh
+
+      deploy:
+          provider: releases
+          api_key: $RELEASE_TOKEN
+          file: build/jpackage/lockbook-macos.tar.gz
+          skip_cleanup: true
+          on:
+              tags: false
+          name: Lockbook 0.$TRAVIS_BUILD_NUMBER MacOS
+          body: $TRAVIS_COMMIT - $TRAVIS_COMMIT_MESSAGE - $(date +'%d.%m.%Y %R')
