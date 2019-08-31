@@ -28,9 +28,9 @@ jobs:
       deploy:
           provider: releases
           api_key: $RELEASE_TOKEN
-          file: build/jpackage/lockbook-macos.tar.gz
+          file: build/jpackage/lockbook-linux.tar.gz
           skip_cleanup: true
           on:
               tags: false
-          name: Lockbook 0.$TRAVIS_BUILD_NUMBER MacOS
+          name: Lockbook 0.$TRAVIS_BUILD_NUMBER Linux
           body: $TRAVIS_COMMIT - $TRAVIS_COMMIT_MESSAGE - $(date +'%d.%m.%Y %R')
