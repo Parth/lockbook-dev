@@ -22,7 +22,7 @@ jobs:
     - stage: build
       jdk: oraclejdk11
       os: linux
-      dist: trusty
+      dist: bionic
       script: ./ci/dist_linux.sh
 
       deploy:
