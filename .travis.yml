@@ -1,6 +1,6 @@
 install: true
 
-language: scala
+language: java
 os: linux
 dist: trusty
 jdk: oraclejdk11
@@ -9,7 +9,7 @@ script:
   - ./gradlew runtime
 
 deploy:
-    before_deploy: "./gradlew runtimeZip"
+    before_deploy: "./gradlew runtimeZip && ls"
     provider: releases
     api_key: $RELEASE_TOKEN
     file: $HOME/build/image.zip
