@@ -6,7 +6,7 @@ dist: trusty
 jdk: oraclejdk11
 
 script:
-  - ./gradlew runtime
+  - env
 
 deploy:
     before_deploy: "./gradlew runtimeZip && ls"
