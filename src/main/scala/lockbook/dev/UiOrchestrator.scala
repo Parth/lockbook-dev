@@ -1,6 +1,7 @@
 package lockbook.dev
 
 import java.io.File
+import java.util.concurrent.ScheduledThreadPoolExecutor
 
 import javafx.application.Platform
 import javafx.scene.Scene
@@ -18,7 +19,8 @@ class UiOrchestrator(
     newPasswordUI: NewPasswordUi,
     repositoryUi: RepositoryUi,
     fileTreeUi: FileTreeUi,
-    editorUi: EditorUi
+    editorUi: EditorUi,
+    executor: ScheduledThreadPoolExecutor
 ) {
 
   def showView(stage: Stage): Unit = {
@@ -54,6 +56,7 @@ class UiOrchestrator(
 
     stage.getScene.getStylesheets.add("light.css")
     stage.getScene.getStylesheets.add("markdown.css")
+    closeRequestListener(stage)
     stage.show()
   }
 
@@ -75,5 +78,11 @@ class UiOrchestrator(
           Platform.runLater(() => root.getChildren.add(newPasswordUI.getView(onDone)))
       }
     }
+  }
+
+  private def closeRequestListener(stage: Stage): Unit = {
+    stage.setOnCloseRequest(_ => {
+      executor.shutdown()
+    })
   }
 }

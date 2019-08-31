@@ -1,5 +1,7 @@
 package lockbook.dev
 
+import java.util.concurrent.ScheduledThreadPoolExecutor
+
 import javafx.application.Application
 import javafx.stage.Stage
 
@@ -15,24 +17,26 @@ object App {
 class App extends Application {
   override def start(primaryStage: Stage): Unit = {
 
-    val file: FileHelper             = new FileHelperImpl
-    val encryption: EncryptionHelper = new EncryptionImpl
-    val lockfile: LockfileHelper     = new LockfileHelperImpl(encryption, file)
-    val password: PasswordHelper     = new PasswordHelperImpl(lockfile, encryption)
-    val gitCredential                = new GitCredentialHelperImpl(encryption, password, file)
-    val git: GitHelper               = new GitHelperImpl(gitCredential, file)
-    val editorHelper                 = new EditorHelperImpl(encryption, password, git, file)
+    val executor: ScheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(1)
 
-    val newPasswordUi    = new NewPasswordUi(lockfile, password, encryption)
-    val unlockUi         = new UnlockUi(password)
-    val repositoryCellUi = new RepositoryCellUi(git)
-    val cloneRepoDialog  = new CloneRepoDialog(git)
-    val repositoryUi     = new RepositoryUi(git, repositoryCellUi, cloneRepoDialog)
-    val fileTreeUi       = new FileTreeUi(file)
-    val editorUi         = new EditorUi(editorHelper)
+    val file: FileHelper                       = new FileHelperImpl
+    val encryption: EncryptionHelper           = new EncryptionImpl
+    val lockfile: LockfileHelper               = new LockfileHelperImpl(encryption, file)
+    val password: PasswordHelper               = new PasswordHelperImpl(lockfile, encryption)
+    val gitCredential: GitCredentialHelperImpl = new GitCredentialHelperImpl(encryption, password, file)
+    val git: GitHelper                         = new GitHelperImpl(gitCredential, file)
+    val editorHelper: EditorHelperImpl         = new EditorHelperImpl(encryption, password, git, file)
+
+    val newPasswordUi: NewPasswordUi       = new NewPasswordUi(lockfile, password, encryption)
+    val unlockUi: UnlockUi                 = new UnlockUi(password)
+    val repositoryCellUi: RepositoryCellUi = new RepositoryCellUi(git)
+    val cloneRepoDialog: CloneRepoDialog   = new CloneRepoDialog(git)
+    val repositoryUi: RepositoryUi         = new RepositoryUi(git, repositoryCellUi, cloneRepoDialog)
+    val fileTreeUi: FileTreeUi             = new FileTreeUi(file)
+    val editorUi: EditorUi                 = new EditorUi(editorHelper, executor)
 
     val uiOrchestrator =
-      new UiOrchestrator(lockfile, unlockUi, newPasswordUi, repositoryUi, fileTreeUi, editorUi)
+      new UiOrchestrator(lockfile, unlockUi, newPasswordUi, repositoryUi, fileTreeUi, editorUi, executor)
     uiOrchestrator.showView(primaryStage)
   }
 }

@@ -17,7 +17,7 @@ import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class EditorUi(editorHelper: EditorHelper) {
+class EditorUi(editorHelper: EditorHelper, executor: ScheduledThreadPoolExecutor) {
 
   def getView(git: Git, f: File): BorderPane = {
     val textArea  = new CodeArea
@@ -53,7 +53,6 @@ class EditorUi(editorHelper: EditorHelper) {
   }
 
   private def scheduleAutoSave(text: CodeArea, syncLabel: Label, saveTask: Runnable): Unit = {
-    val executor                                = new ScheduledThreadPoolExecutor(1) // This needs to be shutdown for clean exit
     var currentTask: Option[ScheduledFuture[_]] = None
 
     text
