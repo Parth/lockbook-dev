@@ -12,7 +12,7 @@ jobs:
       deploy:
           provider: releases
           api_key: $RELEASE_TOKEN
-          file: build/jpackage/lockbook-dev-desktop.app
+          file: build/jpackage/lockbook-macos.tar.gz
           skip_cleanup: true
           on:
               tags: false
