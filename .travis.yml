@@ -9,7 +9,6 @@ jobs:
       jdk: oraclejdk11
       osx_image: xcode11
       script: ./ci/dist_mac_os.sh
-
       deploy:
           provider: releases
           api_key: $RELEASE_TOKEN
@@ -19,12 +18,12 @@ jobs:
               tags: false
           name: Lockbook 0.$TRAVIS_BUILD_NUMBER MacOS
           body: $TRAVIS_COMMIT - $TRAVIS_COMMIT_MESSAGE - $(date +'%d.%m.%Y %R')
+
     - stage: build
       jdk: oraclejdk11
       os: linux
       dist: bionic
       script: ./ci/dist_linux.sh
-
       deploy:
           provider: releases
           api_key: $RELEASE_TOKEN
