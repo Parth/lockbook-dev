@@ -10,7 +10,7 @@ script:
 deploy:
     before_deploy: "./gradlew runtimeZip"
     provider: releases
-    api_key: $release-token
+    api_key: $RELEASE_TOKEN
     file: build/image.zip
     on:
         tags: false
