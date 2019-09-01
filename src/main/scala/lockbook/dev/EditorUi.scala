@@ -66,7 +66,7 @@ class EditorUi(editorHelper: EditorHelper, executor: ScheduledThreadPoolExecutor
       })
   }
 
-  def saveCommitAndPushTask(l: Label, codeArea: CodeArea, file: File, git: Git): Runnable = () => {
+  private def saveCommitAndPushTask(l: Label, codeArea: CodeArea, file: File, git: Git): Runnable = () => {
     Platform.runLater(() => l.setText("Syncing..."))
     Future {
       editorHelper

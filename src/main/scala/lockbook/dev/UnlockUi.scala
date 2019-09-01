@@ -39,7 +39,7 @@ class UnlockUi(passwordHelper: PasswordHelper) {
       passwordSuccess: => Unit
   ): Unit = {
     Future {
-      passwordHelper.testPassword(PasswordAttempt(passwordField.getText)) match {
+      passwordHelper.testAndSetPassword(PasswordAttempt(passwordField.getText)) match {
         case Right(_) =>
           Platform.runLater(() => {
             val correctPassword = new Label("Decrypting")

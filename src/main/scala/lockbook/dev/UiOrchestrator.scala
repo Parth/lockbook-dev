@@ -1,7 +1,7 @@
 package lockbook.dev
 
 import java.io.File
-import java.util.concurrent.ScheduledThreadPoolExecutor
+import java.util.concurrent.{ScheduledFuture, ScheduledThreadPoolExecutor, TimeUnit}
 
 import javafx.application.Platform
 import javafx.scene.Scene
@@ -20,20 +20,25 @@ class UiOrchestrator(
     repositoryUi: RepositoryUi,
     fileTreeUi: FileTreeUi,
     editorUi: EditorUi,
+    stage: Stage,
     executor: ScheduledThreadPoolExecutor
 ) {
 
-  def showView(stage: Stage): Unit = {
+  private var locked: Boolean = false // Give this some more thought
+  private var closing: Boolean = false
+
+  def showView(): Unit = {
     val root: StackPane = new StackPane
     stage.setScene(new Scene(root, 300, 130))
     stage.setTitle("Lockbook Dev")
     stage.getScene.getStylesheets.add("light.css")
-    processLockfileAndShowUi(root, showRepo(stage))
+    processLockfileAndShowUi(root, showRepo())
     stage.show()
   }
 
-  def showRepo(stage: Stage): Unit = {
+  private def showRepo(): Unit = {
     stage.close()
+    locked = false
 
     val root            = new SplitPane
     val repoStackPane   = new StackPane
@@ -54,21 +59,22 @@ class UiOrchestrator(
       )
     )
 
-    stage.getScene.getStylesheets.add("light.css")
-    stage.getScene.getStylesheets.add("markdown.css")
-    closeRequestListener(stage)
+    stage.getScene.getStylesheets.add("light.css")    // good settings candidate
+    stage.getScene.getStylesheets.add("markdown.css") // good settings candidate
+    closeRequestListener()
+    addFocusListener()
     stage.show()
   }
 
-  def showFileUi(fileContainer: StackPane, editorContainer: StackPane)(repo: Git): Unit = {
+  private def showFileUi(fileContainer: StackPane, editorContainer: StackPane)(repo: Git): Unit = {
     fileContainer.getChildren.add(fileTreeUi.getView(repo, showEditorUi(editorContainer)))
   }
 
-  def showEditorUi(container: StackPane)(git: Git, f: File): Unit = {
+  private def showEditorUi(container: StackPane)(git: Git, f: File): Unit = {
     container.getChildren.setAll(editorUi.getView(git, f))
   }
 
-  def processLockfileAndShowUi(root: StackPane, onDone: => Unit): Unit = {
+  private def processLockfileAndShowUi(root: StackPane, onDone: => Unit): Unit = {
     Future {
       lockfile.getLockfile match {
         case Right(_) =>
@@ -80,9 +86,35 @@ class UiOrchestrator(
     }
   }
 
-  private def closeRequestListener(stage: Stage): Unit = {
+  private def closeRequestListener(): Unit = {
     stage.setOnCloseRequest(_ => {
+      closing = true
       executor.shutdown()
+    })
+  }
+
+  private def addFocusListener(): Unit = {
+    var lockScheduledTask: Option[ScheduledFuture[_]] = None // TODO give this some more thought
+
+    stage
+      .focusedProperty()
+      .addListener((_, isHidden, _) => {
+        if (!locked && !closing) {
+          lockScheduledTask.foreach(_.cancel(false))
+          if (isHidden) {
+            lockScheduledTask = Some(executor.schedule(lockTask, 5, TimeUnit.MINUTES)) // good settings candidate
+          } else {
+            lockScheduledTask = None
+          }
+        }
+      })
+  }
+
+  private def lockTask: Runnable = () => {
+    Platform.runLater(() => {
+      locked = true
+      stage.close()
+      showView()
     })
   }
 }

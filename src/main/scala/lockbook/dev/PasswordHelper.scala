@@ -5,17 +5,17 @@ case class Password(password: String)
 
 trait PasswordHelper {
   var password: Password
-  def testPassword(pwa: PasswordAttempt): Either[LockbookError, Password]
+  def testAndSetPassword(pwa: PasswordAttempt): Either[LockbookError, Password]
   def passwordIfMatch(password1: String, password2: String): Either[PasswordsDontMatch, Password]
   def setPassword(password: Password): Password
+  def clearPassword(): Unit
 }
 
-class PasswordHelperImpl(lockfile: LockfileHelper, encryptionHelper: EncryptionHelper)
-    extends PasswordHelper {
+class PasswordHelperImpl(lockfile: LockfileHelper, encryptionHelper: EncryptionHelper) extends PasswordHelper {
 
   var password: Password = _
 
-  override def testPassword(pwa: PasswordAttempt): Either[LockbookError, Password] = {
+  override def testAndSetPassword(pwa: PasswordAttempt): Either[LockbookError, Password] = {
     lockfile.getLockfile
       .flatMap(encrypted => encryptionHelper.decrypt(encrypted, Password(pwa.attempt)))
       .map(_ => Password(pwa.attempt))
@@ -34,4 +34,6 @@ class PasswordHelperImpl(lockfile: LockfileHelper, encryptionHelper: EncryptionH
       Left(PasswordsDontMatch())
     }
   }
+
+  override def clearPassword(): Unit = this.password = null // Should make password optional?
 }

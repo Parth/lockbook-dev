@@ -15,7 +15,7 @@ object App {
 }
 
 class App extends Application {
-  override def start(primaryStage: Stage): Unit = {
+  override def start(stage: Stage): Unit = {
 
     val executor: ScheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(1)
 
@@ -36,7 +36,7 @@ class App extends Application {
     val editorUi: EditorUi                 = new EditorUi(editorHelper, executor)
 
     val uiOrchestrator =
-      new UiOrchestrator(lockfile, unlockUi, newPasswordUi, repositoryUi, fileTreeUi, editorUi, executor)
-    uiOrchestrator.showView(primaryStage)
+      new UiOrchestrator(lockfile, unlockUi, newPasswordUi, repositoryUi, fileTreeUi, editorUi, stage, executor)
+    uiOrchestrator.showView()
   }
 }
