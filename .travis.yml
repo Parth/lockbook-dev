@@ -5,7 +5,7 @@ language: generic
 jobs:
     include:
     - stage: build
-      name: "Dist MacOs"
+      name: "Dist macOS"
       os: osx
       jdk: oraclejdk11
       osx_image: xcode11
