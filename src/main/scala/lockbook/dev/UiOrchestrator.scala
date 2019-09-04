@@ -24,11 +24,13 @@ class UiOrchestrator(
     executor: ScheduledThreadPoolExecutor
 ) {
 
-  private var locked: Boolean = false // Give this some more thought
+  private var locked: Boolean  = false // Give this some more thought
   private var closing: Boolean = false
 
   def showView(): Unit = {
     val root: StackPane = new StackPane
+    stage.setMaximized(false)
+    stage.setFullScreen(false)
     stage.setScene(new Scene(root, 300, 130))
     stage.setTitle("Lockbook Dev")
     stage.getScene.getStylesheets.add("light.css")
@@ -106,6 +108,10 @@ class UiOrchestrator(
           } else {
             lockScheduledTask = None
           }
+        }
+
+        if (!locked && !closing && !isHidden) {
+          repositoryUi.pullAllRepos()
         }
       })
   }

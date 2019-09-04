@@ -23,6 +23,7 @@ object RepositoryCell {
       .progressProperty()
       .addListener((_, _, _) => {
         if (progressIndicator.getProgress == 1) progressIndicator.setVisible(false)
+        else progressIndicator.setVisible(true)
       })
 
     progressIndicator

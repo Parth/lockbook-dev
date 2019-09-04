@@ -89,8 +89,10 @@ class EditorUi(editorHelper: EditorHelper, executor: ScheduledThreadPoolExecutor
     text
       .textProperty()
       .addListener((_, _, newText) => {
-        val parsed = parser.parse(newText)
-        nodeVisitor(text).visit(parsed)
+        Future {
+          val parsed = parser.parse(newText)
+          Platform.runLater(() => nodeVisitor(text).visit(parsed))
+        }
       })
   }
 
@@ -111,6 +113,7 @@ class EditorUi(editorHelper: EditorHelper, executor: ScheduledThreadPoolExecutor
       if (node.getClosingFence.getEndOffset != 0) {
         styledText.setStyleClass(node.getOpeningMarker.getStartOffset, node.getClosingMarker.getEndOffset, "code-block")
         setParagraphStyle(styledText, node, "code-block")
+
       }
     }), new VisitHandler[BlockQuote](classOf[BlockQuote], (node: BlockQuote) => {
       styledText.setStyleClass(node.getStartOffset, node.getEndOffset, "quote-block")
