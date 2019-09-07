@@ -92,14 +92,12 @@ class EditorUi(editorHelper: EditorHelper, executor: ScheduledThreadPoolExecutor
 
   private def doMarkdown(text: CodeArea): Unit = {
     val markdownTask =
-      CancelableAction(executor, FiniteDuration(200, TimeUnit.MILLISECONDS), renderMarkdownTask(text)) // Good settings candidate
+      CancelableAction(executor, FiniteDuration(100, TimeUnit.MILLISECONDS), renderMarkdownTask(text)) // Good settings candidate
 
     text
       .textProperty()
-      .addListener((_, _, newText) => {
-        Future {
-          markdownTask.snooze()
-        }
+      .addListener((_, _, _) => {
+        markdownTask.snooze()
       })
   }
 
