@@ -1,11 +1,11 @@
 package lockbook.dev
 
 import java.io.File
-import java.util.concurrent.{ScheduledFuture, ScheduledThreadPoolExecutor, TimeUnit}
+import java.util.concurrent.{ScheduledThreadPoolExecutor, TimeUnit}
 
 import com.vladsch.flexmark.ast._
 import com.vladsch.flexmark.parser.Parser
-import com.vladsch.flexmark.util.ast.{Node, NodeVisitor, VisitHandler}
+import com.vladsch.flexmark.util.ast.{Document, Node, NodeVisitor, VisitHandler}
 import javafx.application.Platform
 import javafx.geometry.Pos
 import javafx.scene.control._
@@ -16,8 +16,11 @@ import org.fxmisc.richtext.CodeArea
 import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.concurrent.duration.FiniteDuration
 
 class EditorUi(editorHelper: EditorHelper, executor: ScheduledThreadPoolExecutor) {
+
+  val parser: Parser = Parser.builder().build()
 
   def getView(git: Git, f: File): BorderPane = {
     val textArea  = new CodeArea
@@ -52,21 +55,20 @@ class EditorUi(editorHelper: EditorHelper, executor: ScheduledThreadPoolExecutor
     }
   }
 
-  private def scheduleAutoSave(text: CodeArea, syncLabel: Label, saveTask: Runnable): Unit = {
-    var currentTask: Option[ScheduledFuture[_]] = None
+  private def scheduleAutoSave(text: CodeArea, syncLabel: Label, saveTask: () => Unit): Unit = {
+    val saveOnIdle = CancelableAction(executor, FiniteDuration(1, TimeUnit.SECONDS), saveTask)
 
     text
       .textProperty()
       .addListener((_, oldValue, _) => {
-        currentTask.foreach(_.cancel(false))
         if (oldValue != "") {
           syncLabel.setText("")
-          currentTask = Some(executor.schedule(saveTask, 1, TimeUnit.SECONDS))
+          saveOnIdle.snooze()
         }
       })
   }
 
-  private def saveCommitAndPushTask(l: Label, codeArea: CodeArea, file: File, git: Git): Runnable = () => {
+  private def saveCommitAndPushTask(l: Label, codeArea: CodeArea, file: File, git: Git): () => Unit = () => {
     Platform.runLater(() => l.setText("Syncing..."))
     Future {
       editorHelper
@@ -83,15 +85,20 @@ class EditorUi(editorHelper: EditorHelper, executor: ScheduledThreadPoolExecutor
     }
   }
 
+  private def renderMarkdownTask(codeArea: CodeArea): () => Unit = () => {
+    val parsed: Document = parser.parse(codeArea.getText())
+    Platform.runLater(() => nodeVisitor(codeArea).visit(parsed))
+  }
+
   private def doMarkdown(text: CodeArea): Unit = {
-    val parser: Parser = Parser.builder().build()
+    val markdownTask =
+      CancelableAction(executor, FiniteDuration(200, TimeUnit.MILLISECONDS), renderMarkdownTask(text)) // Good settings candidate
 
     text
       .textProperty()
       .addListener((_, _, newText) => {
         Future {
-          val parsed = parser.parse(newText)
-          Platform.runLater(() => nodeVisitor(text).visit(parsed))
+          markdownTask.snooze()
         }
       })
   }

@@ -17,7 +17,7 @@ object App {
 class App extends Application {
   override def start(stage: Stage): Unit = {
 
-    val executor: ScheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(1)
+    val executor: ScheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(8)
 
     val file: FileHelper                       = new FileHelperImpl
     val encryption: EncryptionHelper           = new EncryptionImpl
