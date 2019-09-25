@@ -11,6 +11,12 @@ class CancelableAction(executor: ScheduledThreadPoolExecutor, delay: FiniteDurat
     currentTask = Some(executor.schedule(CancelableAction.getRunnable(fun), delay.toMillis, TimeUnit.MILLISECONDS))
   }
 
+  def doNow(): Unit = {
+    cancel()
+    currentTask = None
+    executor.execute(CancelableAction.getRunnable(fun))
+  }
+
   def snooze(): Unit = {
     cancel()
     schedule()

@@ -4,14 +4,11 @@ import java.io.File
 import java.net.URI
 
 import com.jcraft.jsch.{JSch, Session}
+import org.eclipse.jgit.api.MergeResult.MergeStatus
 import org.eclipse.jgit.api.errors.TransportException
 import org.eclipse.jgit.api.{Git, PullCommand}
 import org.eclipse.jgit.lib.ProgressMonitor
-import org.eclipse.jgit.transport.{
-  JschConfigSessionFactory,
-  OpenSshConfig,
-  UsernamePasswordCredentialsProvider
-}
+import org.eclipse.jgit.transport.{JschConfigSessionFactory, OpenSshConfig, UsernamePasswordCredentialsProvider}
 import org.eclipse.jgit.util.FS
 
 trait GitHelper {
@@ -20,7 +17,7 @@ trait GitHelper {
   def commitAndPush(message: String, git: Git): Either[GitError, Unit]
   def getRepoName(git: Git): String
   def pullCommand(git: Git, progressMonitor: ProgressMonitor): PullCommand
-  def pull(git: Git, pullCommand: PullCommand): Either[GitError, Unit]
+  def pull(git: Git, pullCommand: PullCommand): Either[GitError, MergeStatus]
   def deleteRepo(git: Git): Either[FileError, Unit]
 }
 
@@ -127,14 +124,13 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper, fileHelper: FileHe
     new URI(repoUrl)
   }
 
-  override def pull(git: Git, pullCommand: PullCommand): Either[GitError, Unit] = {
+  override def pull(git: Git, pullCommand: PullCommand): Either[GitError, MergeStatus] = {
     getCredentials(git).flatMap(credentials => {
       try {
-        pullCommand
+        Right(pullCommand
           .setCredentialsProvider(credentials)
-          .call()
+          .call().getMergeResult.getMergeStatus)
 
-        Right(())
       } catch {
         case e: Exception =>
           println(e)

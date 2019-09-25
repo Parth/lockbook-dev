@@ -33,9 +33,21 @@ class EditorUi(editorHelper: EditorHelper, executor: ScheduledThreadPoolExecutor
     syncLabel.setId("SyncStatus")
     root.bottomProperty().setValue(syncLabel)
     val autoSaveTask = saveCommitAndPushTask(syncLabel, textArea, f, git)
-    scheduleAutoSave(textArea, syncLabel, autoSaveTask)
+    val saveOnIdle = CancelableAction(executor, FiniteDuration(1, TimeUnit.SECONDS), autoSaveTask)
+
+
+    scheduleAutoSave(textArea, syncLabel, saveOnIdle)
+    handleFocusChanges(textArea, f, saveOnIdle)
 
     root
+  }
+
+  private def handleFocusChanges(codeArea: CodeArea, f: File, saveTask: CancelableAction): Unit = {
+    codeArea.focusedProperty().addListener((_, _, focused) => {
+      if (!focused) {
+        saveTask.doNow()
+      }
+    })
   }
 
   private def loadFile(git: Git, f: File, root: BorderPane, text: CodeArea, syncLabel: Label): Future[Unit] = Future {
@@ -55,15 +67,13 @@ class EditorUi(editorHelper: EditorHelper, executor: ScheduledThreadPoolExecutor
     }
   }
 
-  private def scheduleAutoSave(text: CodeArea, syncLabel: Label, saveTask: () => Unit): Unit = {
-    val saveOnIdle = CancelableAction(executor, FiniteDuration(1, TimeUnit.SECONDS), saveTask)
-
+  private def scheduleAutoSave(text: CodeArea, syncLabel: Label, saveTask: CancelableAction): Unit = {
     text
       .textProperty()
       .addListener((_, oldValue, _) => {
         if (oldValue != "") {
           syncLabel.setText("")
-          saveOnIdle.snooze()
+          saveTask.snooze()
         }
       })
   }
@@ -92,7 +102,7 @@ class EditorUi(editorHelper: EditorHelper, executor: ScheduledThreadPoolExecutor
 
   private def doMarkdown(text: CodeArea): Unit = {
     val markdownTask =
-      CancelableAction(executor, FiniteDuration(100, TimeUnit.MILLISECONDS), renderMarkdownTask(text)) // Good settings candidate
+      CancelableAction(executor, FiniteDuration(200, TimeUnit.MILLISECONDS), renderMarkdownTask(text)) // Good settings candidate
 
     text
       .textProperty()
