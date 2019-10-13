@@ -64,7 +64,7 @@ class EditorUi(editorHelper: EditorHelper, gitHelper: GitHelper, executor: Sched
                       Platform.runLater(() => label.setText("Commit & Push Successful"))
                   }
                 }
-                
+
               }
             }
           )
