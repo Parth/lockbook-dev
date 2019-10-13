@@ -17,7 +17,7 @@ object App {
 class App extends Application {
   override def start(stage: Stage): Unit = {
 
-    val executor: ScheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(1)
+    val executor: ScheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(2)
 
     val file: FileHelper                       = new FileHelperImpl
     val encryption: EncryptionHelper           = new EncryptionImpl
@@ -25,7 +25,7 @@ class App extends Application {
     val password: PasswordHelper               = new PasswordHelperImpl(lockfile, encryption)
     val gitCredential: GitCredentialHelperImpl = new GitCredentialHelperImpl(encryption, password, file)
     val git: GitHelper                         = new GitHelperImpl(gitCredential, file)
-    val editorHelper: EditorHelperImpl         = new EditorHelperImpl(encryption, password, git, file)
+    val editorHelper: EditorHelperImpl         = new EditorHelperImpl(encryption, password, file)
 
     val newPasswordUi: NewPasswordUi       = new NewPasswordUi(lockfile, password, encryption)
     val unlockUi: UnlockUi                 = new UnlockUi(password)
@@ -33,7 +33,7 @@ class App extends Application {
     val cloneRepoDialog: CloneRepoDialog   = new CloneRepoDialog(git)
     val repositoryUi: RepositoryUi         = new RepositoryUi(git, repositoryCellUi, cloneRepoDialog)
     val fileTreeUi: FileTreeUi             = new FileTreeUi(file)
-    val editorUi: EditorUi                 = new EditorUi(editorHelper, executor)
+    val editorUi: EditorUi                 = new EditorUi(editorHelper, git, executor)
 
     val uiOrchestrator =
       new UiOrchestrator(lockfile, unlockUi, newPasswordUi, repositoryUi, fileTreeUi, editorUi, stage, executor)

@@ -2,22 +2,14 @@ package lockbook.dev
 
 import java.io.File
 
-import org.eclipse.jgit.api.Git
-
 trait EditorHelper {
   def getTextFromFile(f: File): Either[LockbookError, String]
-  def saveCommitAndPush(
-      message: String,
-      file: String,
-      originalFile: File,
-      git: Git
-  ): Either[LockbookError, Unit]
+  def save(file: String, originalFile: File): Either[LockbookError, Unit]
 }
 
 class EditorHelperImpl(
     encryptionHelper: EncryptionHelper,
     passwordHelper: PasswordHelper,
-    gitHelper: GitHelper,
     fileHelper: FileHelper
 ) extends EditorHelper {
 
@@ -33,12 +25,7 @@ class EditorHelperImpl(
     }
   }
 
-  override def saveCommitAndPush(
-      message: String,
-      content: String,
-      originalFile: File,
-      git: Git
-  ): Either[LockbookError, Unit] = {
+  override def save(content: String, originalFile: File): Either[LockbookError, Unit] = {
 
     val contentToSave: Either[CryptoError, String] = if (originalFile.getName.endsWith("aes")) {
       encryptionHelper
@@ -50,6 +37,5 @@ class EditorHelperImpl(
 
     contentToSave
       .flatMap(fileHelper.saveToFile(originalFile, _))
-      .flatMap(_ => gitHelper.commitAndPush(message, git))
   }
 }

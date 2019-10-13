@@ -1,7 +1,7 @@
 package lockbook.dev
 
 import java.io.File
-import java.util.concurrent.{ScheduledFuture, ScheduledThreadPoolExecutor, TimeUnit}
+import java.util.concurrent.{ScheduledThreadPoolExecutor, TimeUnit}
 
 import javafx.application.Platform
 import javafx.scene.Scene
@@ -12,6 +12,7 @@ import org.eclipse.jgit.api.Git
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.concurrent.duration.FiniteDuration
 
 class UiOrchestrator(
     lockfile: LockfileHelper,
@@ -96,17 +97,16 @@ class UiOrchestrator(
   }
 
   private def addFocusListener(): Unit = {
-    var lockScheduledTask: Option[ScheduledFuture[_]] = None // TODO give this some more thought
+    var lockWhenBackground =
+      CancelableAction(executor, FiniteDuration(5, TimeUnit.MINUTES), lockTask) // good settings candidate
 
     stage
       .focusedProperty()
       .addListener((_, isHidden, _) => {
         if (!locked && !closing) {
-          lockScheduledTask.foreach(_.cancel(false))
+          lockWhenBackground.cancel()
           if (isHidden) {
-            lockScheduledTask = Some(executor.schedule(lockTask, 5, TimeUnit.MINUTES)) // good settings candidate
-          } else {
-            lockScheduledTask = None
+            lockWhenBackground.schedule()
           }
         }
 
@@ -116,7 +116,7 @@ class UiOrchestrator(
       })
   }
 
-  private def lockTask: Runnable = () => {
+  private val lockTask: () => Unit = () => {
     Platform.runLater(() => {
       locked = true
       stage.close()

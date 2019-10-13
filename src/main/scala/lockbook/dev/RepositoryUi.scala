@@ -66,6 +66,6 @@ class RepositoryUi(
     println("pull all repos")
     repoList
       .stream()
-      .forEach(repoCell => gitHelper.pull(repoCell.git, repoCell.pullCommand))
+      .forEach(repoCell => println(gitHelper.pull(repoCell.git, repoCell.pullCommand)))
   }
 }

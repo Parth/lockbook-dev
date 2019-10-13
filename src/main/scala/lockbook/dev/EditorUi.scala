@@ -1,14 +1,15 @@
 package lockbook.dev
 
 import java.io.File
-import java.util.concurrent.{ScheduledFuture, ScheduledThreadPoolExecutor, TimeUnit}
+import java.util.concurrent.{ScheduledThreadPoolExecutor, TimeUnit}
 
 import com.vladsch.flexmark.ast._
 import com.vladsch.flexmark.parser.Parser
-import com.vladsch.flexmark.util.ast.{Node, NodeVisitor, VisitHandler}
+import com.vladsch.flexmark.util.ast.{Document, Node, NodeVisitor, VisitHandler}
 import javafx.application.Platform
 import javafx.geometry.Pos
 import javafx.scene.control._
+import javafx.scene.input.{KeyCode, KeyCodeCombination, KeyCombination, KeyEvent}
 import javafx.scene.layout.BorderPane
 import org.eclipse.jgit.api.Git
 import org.fxmisc.richtext.CodeArea
@@ -16,8 +17,10 @@ import org.fxmisc.richtext.CodeArea
 import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.concurrent.duration.FiniteDuration
+class EditorUi(editorHelper: EditorHelper, gitHelper: GitHelper, executor: ScheduledThreadPoolExecutor) {
 
-class EditorUi(editorHelper: EditorHelper, executor: ScheduledThreadPoolExecutor) {
+  val parser: Parser = Parser.builder().build()
 
   def getView(git: Git, f: File): BorderPane = {
     val textArea  = new CodeArea
@@ -30,9 +33,53 @@ class EditorUi(editorHelper: EditorHelper, executor: ScheduledThreadPoolExecutor
     syncLabel.setId("SyncStatus")
     root.bottomProperty().setValue(syncLabel)
     val autoSaveTask = saveCommitAndPushTask(syncLabel, textArea, f, git)
-    scheduleAutoSave(textArea, syncLabel, autoSaveTask)
+    val saveOnIdle   = CancelableAction(executor, FiniteDuration(1, TimeUnit.SECONDS), autoSaveTask)
+
+    scheduleAutoSave(textArea, syncLabel, saveOnIdle)
+    handleFocusChanges(textArea, f, saveOnIdle)
+    addSyncListener(root, git, syncLabel)
 
     root
+  }
+
+  private def addSyncListener(root: BorderPane, git: Git, label: Label): Unit = {
+    val saveKeyCombo = new KeyCodeCombination(KeyCode.S, KeyCombination.META_DOWN)
+
+    // Add shortcut listener when we're mounted to a scene
+    root
+      .sceneProperty()
+      .addListener((_, _, newv) => {
+        if (newv != null) {
+          newv.addEventHandler(
+            KeyEvent.KEY_PRESSED,
+            (event: KeyEvent) => {
+              if (saveKeyCombo.`match`(event)) {
+
+                // Shortcut is actually matched here
+                Future {
+                  gitHelper.commitAndPush("", git) match {
+                    case Left(error) =>
+                      Platform.runLater(() => label.setText(s"Git operation failed: ${error.uiMessage}"))
+                    case Right(_) =>
+                      Platform.runLater(() => label.setText("Commit & Push Successful"))
+                  }
+                }
+                
+              }
+            }
+          )
+        }
+      })
+  }
+
+  private def handleFocusChanges(codeArea: CodeArea, f: File, saveTask: CancelableAction): Unit = {
+    codeArea
+      .focusedProperty()
+      .addListener((_, _, focused) => {
+        if (!focused) {
+          saveTask.doNow()
+        }
+      })
   }
 
   private def loadFile(git: Git, f: File, root: BorderPane, text: CodeArea, syncLabel: Label): Future[Unit] = Future {
@@ -52,47 +99,47 @@ class EditorUi(editorHelper: EditorHelper, executor: ScheduledThreadPoolExecutor
     }
   }
 
-  private def scheduleAutoSave(text: CodeArea, syncLabel: Label, saveTask: Runnable): Unit = {
-    var currentTask: Option[ScheduledFuture[_]] = None
-
+  private def scheduleAutoSave(text: CodeArea, syncLabel: Label, saveTask: CancelableAction): Unit = {
     text
       .textProperty()
       .addListener((_, oldValue, _) => {
-        currentTask.foreach(_.cancel(false))
         if (oldValue != "") {
           syncLabel.setText("")
-          currentTask = Some(executor.schedule(saveTask, 1, TimeUnit.SECONDS))
+          saveTask.snooze()
         }
       })
   }
 
-  private def saveCommitAndPushTask(l: Label, codeArea: CodeArea, file: File, git: Git): Runnable = () => {
-    Platform.runLater(() => l.setText("Syncing..."))
+  private def saveCommitAndPushTask(l: Label, codeArea: CodeArea, file: File, git: Git): () => Unit = () => {
+    Platform.runLater(() => l.setText("Saving..."))
     Future {
       editorHelper
-        .saveCommitAndPush("", codeArea.getText, file, git) match {
+        .save(codeArea.getText, file) match {
         case Right(_) =>
           Platform.runLater(() => {
-            l.setText("Sync successful")
+            l.setText("Saved")
           })
         case Left(exception) =>
           Platform.runLater(() => {
-            l.setText(s"Push Failed: $exception.uiMessage}")
+            l.setText(s"Save Failed: ${exception.uiMessage}")
           })
       }
     }
   }
 
+  private def renderMarkdownTask(codeArea: CodeArea): () => Unit = () => {
+    val parsed: Document = parser.parse(codeArea.getText())
+    Platform.runLater(() => nodeVisitor(codeArea).visit(parsed))
+  }
+
   private def doMarkdown(text: CodeArea): Unit = {
-    val parser: Parser = Parser.builder().build()
+    val markdownTask =
+      CancelableAction(executor, FiniteDuration(200, TimeUnit.MILLISECONDS), renderMarkdownTask(text)) // Good settings candidate
 
     text
       .textProperty()
-      .addListener((_, _, newText) => {
-        Future {
-          val parsed = parser.parse(newText)
-          Platform.runLater(() => nodeVisitor(text).visit(parsed))
-        }
+      .addListener((_, _, _) => {
+        markdownTask.snooze()
       })
   }
 
