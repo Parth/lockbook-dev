@@ -9,6 +9,7 @@ import com.vladsch.flexmark.util.ast.{Document, Node, NodeVisitor, VisitHandler}
 import javafx.application.Platform
 import javafx.geometry.Pos
 import javafx.scene.control._
+import javafx.scene.input.{KeyCode, KeyCodeCombination, KeyCombination, KeyEvent}
 import javafx.scene.layout.BorderPane
 import org.eclipse.jgit.api.Git
 import org.fxmisc.richtext.CodeArea
@@ -17,8 +18,7 @@ import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
-
-class EditorUi(editorHelper: EditorHelper, executor: ScheduledThreadPoolExecutor) {
+class EditorUi(editorHelper: EditorHelper, gitHelper: GitHelper, executor: ScheduledThreadPoolExecutor) {
 
   val parser: Parser = Parser.builder().build()
 
@@ -33,21 +33,53 @@ class EditorUi(editorHelper: EditorHelper, executor: ScheduledThreadPoolExecutor
     syncLabel.setId("SyncStatus")
     root.bottomProperty().setValue(syncLabel)
     val autoSaveTask = saveCommitAndPushTask(syncLabel, textArea, f, git)
-    val saveOnIdle = CancelableAction(executor, FiniteDuration(1, TimeUnit.SECONDS), autoSaveTask)
-
+    val saveOnIdle   = CancelableAction(executor, FiniteDuration(1, TimeUnit.SECONDS), autoSaveTask)
 
     scheduleAutoSave(textArea, syncLabel, saveOnIdle)
     handleFocusChanges(textArea, f, saveOnIdle)
+    addSyncListener(root, git, syncLabel)
 
     root
   }
 
+  private def addSyncListener(root: BorderPane, git: Git, label: Label): Unit = {
+    val saveKeyCombo = new KeyCodeCombination(KeyCode.S, KeyCombination.META_DOWN)
+
+    // Add shortcut listener when we're mounted to a scene
+    root
+      .sceneProperty()
+      .addListener((_, _, newv) => {
+        if (newv != null) {
+          newv.addEventHandler(
+            KeyEvent.KEY_PRESSED,
+            (event: KeyEvent) => {
+              if (saveKeyCombo.`match`(event)) {
+
+                // Shortcut is actually matched here
+                Future {
+                  gitHelper.commitAndPush("", git) match {
+                    case Left(error) =>
+                      Platform.runLater(() => label.setText(s"Git operation failed: ${error.uiMessage}"))
+                    case Right(_) =>
+                      Platform.runLater(() => label.setText("Commit & Push Successful"))
+                  }
+                }
+              }
+
+            }
+          )
+        }
+      })
+  }
+
   private def handleFocusChanges(codeArea: CodeArea, f: File, saveTask: CancelableAction): Unit = {
-    codeArea.focusedProperty().addListener((_, _, focused) => {
-      if (!focused) {
-        saveTask.doNow()
-      }
-    })
+    codeArea
+      .focusedProperty()
+      .addListener((_, _, focused) => {
+        if (!focused) {
+          saveTask.doNow()
+        }
+      })
   }
 
   private def loadFile(git: Git, f: File, root: BorderPane, text: CodeArea, syncLabel: Label): Future[Unit] = Future {
@@ -79,17 +111,17 @@ class EditorUi(editorHelper: EditorHelper, executor: ScheduledThreadPoolExecutor
   }
 
   private def saveCommitAndPushTask(l: Label, codeArea: CodeArea, file: File, git: Git): () => Unit = () => {
-    Platform.runLater(() => l.setText("Syncing..."))
+    Platform.runLater(() => l.setText("Saving..."))
     Future {
       editorHelper
-        .saveCommitAndPush("", codeArea.getText, file, git) match {
+        .save(codeArea.getText, file) match {
         case Right(_) =>
           Platform.runLater(() => {
-            l.setText("Sync successful")
+            l.setText("Saved")
           })
         case Left(exception) =>
           Platform.runLater(() => {
-            l.setText(s"Push Failed: $exception.uiMessage}")
+            l.setText(s"Save Failed: ${exception.uiMessage}")
           })
       }
     }
