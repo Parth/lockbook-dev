@@ -1,11 +1,10 @@
 package lockbook.dev
 
 import java.io.File
+import java.util.Optional
 
-import javafx.geometry.Pos
-import javafx.scene.control._
+import javafx.scene.control.{TextInputDialog, _}
 import javafx.scene.layout.BorderPane
-import javafx.stage.FileChooser
 import org.eclipse.jgit.api.Git
 
 class FileTreeUi(fileHelper: FileHelper) {
@@ -15,33 +14,17 @@ class FileTreeUi(fileHelper: FileHelper) {
     val treeView = new TreeView[File]
     treeView.setRoot(getViewHelper(git.getRepository.getWorkTree))
     treeView.setShowRoot(false)
-    treeView.setCellFactory(_ => fileToTreeCell)
+    treeView.setCellFactory(_ => fileToTreeCell(git, onSelected))
     treeView.getSelectionModel.selectedItemProperty
       .addListener(
         (_, oldValue, newValue) =>
-          if (newValue.isLeaf && oldValue != newValue)
+          if (newValue.isLeaf && oldValue != newValue && newValue.getValue.isFile)
             onSelected(git, newValue.getValue)
       )
 
     val root = new BorderPane
 
-    val newFileButton = new Button("New File")
-    newFileButton.setOnAction(_ => {
-      val fileChooser = new FileChooser
-      fileChooser.setInitialDirectory(git.getRepository.getWorkTree)
-
-      val file = fileChooser.showSaveDialog(root.getScene.getWindow)
-      if (file != null) {
-        file.createNewFile()  // TODO, this returns a boolean
-        onSelected(git, file) // TODO insert this into the right place
-        treeView.setRoot(getViewHelper(git.getRepository.getWorkTree))
-      }
-    })
-
-    BorderPane.setAlignment(newFileButton, Pos.CENTER)
-
     root.setCenter(treeView)
-    root.setBottom(newFileButton)
     root
   }
 
@@ -58,26 +41,86 @@ class FileTreeUi(fileHelper: FileHelper) {
     item
   }
 
-  private def fileToTreeCell: TreeCell[File] = new TreeCell[File]() {
-    override def updateItem(item: File, empty: Boolean): Unit = {
-      super.updateItem(item, empty)
-      if (item != null) {
+  private def fileToTreeCell(git: Git, onSelected: (Git, File) => Unit): TreeCell[File] =
+    new TreeCell[File]() {
+      override def updateItem(item: File, empty: Boolean): Unit = {
+        super.updateItem(item, empty)
+        if (item != null) {
 
-        // Right Click to Delete
-        val contextMenu = new ContextMenu
-        val menuItem    = new MenuItem("Delete")
-        contextMenu.getItems.add(menuItem)
-        menuItem.setOnAction(_ => {
-          fileHelper.recursiveFileDelete(item)
-          val node = getTreeItem
-          node.getParent.getChildren.remove(node)
-        })
-        setContextMenu(contextMenu)
+          val contextMenu = new ContextMenu
+          val delete      = new MenuItem("Delete")
+          val newFile     = new MenuItem("New File")
+          val newFolder   = new MenuItem("New Folder")
+          contextMenu.getItems.addAll(newFolder, newFile, delete)
 
-        setText(item.getName)
-      } else {
-        setText("")
+          val enclosingFolderNode = if (getTreeItem.getValue.isDirectory) {
+            getTreeItem
+          } else {
+            getTreeItem.getParent
+          }
+
+          delete.setOnAction(_ => {
+            fileHelper.recursiveFileDelete(item)
+            getTreeItem.getParent.getChildren.remove(getTreeItem)
+          })
+
+          // TODO consolidate this code more
+          newFile.setOnAction(_ => {
+            val parentDirectory = if (!item.isDirectory) item.getParentFile else item
+            newFileOrFolderDialogResult(true).map(name => s"${parentDirectory.getAbsolutePath}/$name")  match {
+              case Some(newFileName) =>
+                val newFile = new File(newFileName)
+                newFile.createNewFile()
+
+                val newTreeItem = new TreeItem[File](newFile)
+                enclosingFolderNode.getChildren.add(newTreeItem)
+
+                val location = getTreeView.getRow(newTreeItem)
+                getTreeView.getSelectionModel.select(location)
+
+              case None =>
+            }
+          })
+
+          newFolder.setOnAction(_ => {
+            val parentDirectory = if (!item.isDirectory) item.getParentFile else item
+            newFileOrFolderDialogResult(false).map(name => s"${parentDirectory.getAbsolutePath}/$name/")  match {
+              case Some(newFileName) =>
+                val newFile = new File(newFileName)
+                newFile.mkdirs()
+
+                println(newFile.isDirectory)
+
+                val newTreeItem = new TreeItem[File](newFile)
+                enclosingFolderNode.getChildren.add(newTreeItem)
+
+                val location = getTreeView.getRow(newTreeItem)
+                getTreeView.getSelectionModel.select(location)
+
+              case None =>
+            }
+          })
+
+          setContextMenu(contextMenu)
+          setText(item.getName)
+        } else {
+          setText("")
+        }
       }
     }
+
+  private def newFileOrFolderDialogResult(isFile: Boolean): Option[String] = {
+    val fileOrFolder = if (isFile) "file" else "folder"
+
+    val dialog = new TextInputDialog
+
+    dialog.setTitle(s"Create new $fileOrFolder")
+    dialog.setHeaderText(s"Enter $fileOrFolder name")
+    dialog.setContentText("Name:")
+
+    val result: Optional[String] = dialog.showAndWait
+
+    if (result.isPresent) Some(result.get()) else None
   }
+
 }

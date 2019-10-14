@@ -26,6 +26,10 @@ case class UnableToDelateFile(f: File) extends FileError {
   val uiMessage = s"Unable to delete ${f.getName}"
 }
 
+case class FileIsFolder(f: File) extends FileError {
+  val uiMessage = s"${f.getName} is a folder"
+}
+
 // Errors from EncryptionHelper
 trait CryptoError extends LockbookError
 case class SecureOperationsNotSupported(e: NoSuchAlgorithmException) extends CryptoError {

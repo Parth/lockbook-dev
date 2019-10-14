@@ -89,7 +89,7 @@ class EditorUi(editorHelper: EditorHelper, gitHelper: GitHelper, executor: Sched
           doMarkdown(text)
           text.setWrapText(true)
           root.setCenter(text)
-          text.replaceText(fileText)
+          text.replaceText(fileText) // TODO Empty files makes this upset
           syncLabel.setText("File loaded successfully")
         })
       case Left(error) =>

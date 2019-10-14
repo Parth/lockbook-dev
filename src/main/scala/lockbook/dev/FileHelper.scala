@@ -12,7 +12,10 @@ trait FileHelper {
 class FileHelperImpl extends FileHelper {
   override def readFile(path: String): Either[FileError, String] = {
     try {
-      Right(Files.readString(Paths.get(path)))
+      if (new File(path).isDirectory)
+        Left(FileIsFolder(new File(path)))
+      else
+        Right(Files.readString(Paths.get(path)))
     } catch {
       case ioe: IOException       => Left(UnableToReadFile(new File(path), ioe))
       case oom: OutOfMemoryError  => Left(FileTooBig(new File(path), oom))
