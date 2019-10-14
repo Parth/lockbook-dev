@@ -3,17 +3,21 @@
     -fx-fill: white;
 }
 
+.styled-text-area .caret {
+    -fx-stroke: white;
+}
+
 .styled-text-area .text {
     -fx-font-family: sans-serif;
     -fx-font-weight: normal;
     -fx-fill: white;
 }
 
-.styled-text-area .h1 { -fx-font-size: 1.5em; }
-.styled-text-area .h2 { -fx-font-size: 1.4em; }
-.styled-text-area .h3 { -fx-font-size: 1.3em; }
-.styled-text-area .h4 { -fx-font-size: 1.2em; }
-.styled-text-area .h5 { -fx-font-size: 1.1em; }
+.styled-text-area .h1 { -fx-font-size: 2em; }
+.styled-text-area .h2 { -fx-font-size: 1.8em; }
+.styled-text-area .h3 { -fx-font-size: 1.6em; }
+.styled-text-area .h4 { -fx-font-size: 1.4em; }
+.styled-text-area .h5 { -fx-font-size: 1.2em; }
 .styled-text-area .h6 { -fx-font-size: 1em; }
 
 .styled-text-area .h1,
@@ -38,11 +42,19 @@
 
 .styled-text-area .code-block {
     -fx-font-family: monospace;
+    -fx-fill: rgb(69, 237, 108);
+}
+
+.styled-text-area .bullet {
+    -fx-fill: rgb(214, 120, 181);
+}
+
+.styled-text-area .number {
+    -fx-fill: rgb(182, 151, 243);
 }
 
 .styled-text-area .quote-block {
-    -fx-font-family: serif;
-    -fx-font-weight: lighter;
+    -fx-fill: #6272a4;
 }
 
 .styled-text-area .link {
