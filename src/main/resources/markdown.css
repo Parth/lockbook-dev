@@ -27,7 +27,7 @@
 .styled-text-area .h5,
 .styled-text-area .h6 {
 	-fx-font-weight: bold;
-	-fx-fill: gray;
+	-fx-fill: rgb(200, 118, 50);
 }
 
 .styled-text-area .code {
