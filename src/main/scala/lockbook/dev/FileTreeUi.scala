@@ -67,7 +67,7 @@ class FileTreeUi(fileHelper: FileHelper) {
           // TODO consolidate this code more
           newFile.setOnAction(_ => {
             val parentDirectory = if (!item.isDirectory) item.getParentFile else item
-            newFileOrFolderDialogResult(true).map(name => s"${parentDirectory.getAbsolutePath}/$name")  match {
+            newFileOrFolderDialogResult(true).map(name => s"${parentDirectory.getAbsolutePath}/$name") match {
               case Some(newFileName) =>
                 val newFile = new File(newFileName)
                 newFile.createNewFile()
@@ -84,7 +84,7 @@ class FileTreeUi(fileHelper: FileHelper) {
 
           newFolder.setOnAction(_ => {
             val parentDirectory = if (!item.isDirectory) item.getParentFile else item
-            newFileOrFolderDialogResult(false).map(name => s"${parentDirectory.getAbsolutePath}/$name/")  match {
+            newFileOrFolderDialogResult(false).map(name => s"${parentDirectory.getAbsolutePath}/$name/") match {
               case Some(newFileName) =>
                 val newFile = new File(newFileName)
                 newFile.mkdirs()
