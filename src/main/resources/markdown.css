@@ -1,11 +1,12 @@
+.styled-text-area {
+    -fx-background-color: rgb(20, 20, 20);
+    -fx-fill: white;
+}
+
 .styled-text-area .text {
     -fx-font-family: sans-serif;
     -fx-font-weight: normal;
-    -fx-background-color: white;
-}
-
-.styled-text-area .inline {
-    -fx-background-color: white;
+    -fx-fill: white;
 }
 
 .styled-text-area .h1 { -fx-font-size: 1.5em; }
@@ -37,13 +38,11 @@
 
 .styled-text-area .code-block {
     -fx-font-family: monospace;
-    -fx-background-color: #f6f6f6;
 }
 
 .styled-text-area .quote-block {
     -fx-font-family: serif;
     -fx-font-weight: lighter;
-    -fx-background-color: #f0f0d0;
 }
 
 .styled-text-area .link {

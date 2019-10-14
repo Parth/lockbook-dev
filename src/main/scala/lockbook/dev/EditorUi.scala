@@ -56,6 +56,7 @@ class EditorUi(editorHelper: EditorHelper, gitHelper: GitHelper, executor: Sched
               if (saveKeyCombo.`match`(event)) {
 
                 // Shortcut is actually matched here
+                label.setText("Pushing changes to github...")
                 Future {
                   gitHelper.commitAndPush("", git) match {
                     case Left(error) =>

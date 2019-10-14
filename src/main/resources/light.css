@@ -1,45 +1,70 @@
 .root {
-     -fx-base: white;
-     -fx-background: white;
+    -fx-base: #3d3d3d;
+    -fx-background: #3d3d3d;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+}
 
-     -fx-focus-color: transparent;
-     -fx-faint-focus-color: transparent;
- }
+.tree-view {
+    -fx-background-insets: 0;
+    -fx-background-color: rgb(30, 30, 30);
+}
 
- .tree-view {
-    -fx-background-insets:0
- }
+.tree-cell {
+    -fx-background-color: rgb(30, 30, 30);
+    -fx-text-fill: #ffffff;
+}
 
- .progress-indicator {
+.tree-view:focused .tree-cell:filled:selected {
+    -fx-background-color: black;
+}
+
+.tree-cell:filled:selected {
+    -fx-background-color: black;
+}
+
+.progress-indicator {
     -fx-max-height: 1em;
- }
- .progress-indicator .percentage {
-     -fx-fill:null;
- }
+}
 
- .progress-indicator  {
-     -fx-padding: 0 0 -16 0;
- }
+.progress-indicator .percentage {
+    -fx-fill: null;
+}
 
- .split-pane > .split-pane-divider {
-    -fx-background-color: rgb(233, 233, 233);
-    -fx-padding: 0 0.5px, 0, 0.5px;
- }
+.progress-indicator {
+    -fx-padding: 0 0 -16 0;
+}
+
+.split-pane > .split-pane-divider {
+    -fx-background-color: rgb(30, 30, 30);
+    -fx-padding: 0 0.1px, 0, 0.1px;
+}
 
 .styled-text-area {
-    -fx-padding: 1em;
+    -fx-padding: 0.5em;
+}
+
+.list-view * {
+    -fx-text-fill: white;
+    -fx-fill: white;
 }
 
 .list-view {
     -fx-background-insets: 0;
     -fx-padding: 0;
-    -fx-control-inner-background: rgb(246, 246, 246);
-    -fx-control-inner-background-alt: rgb(246, 246, 246);
+    -fx-control-inner-background: rgb(45, 45, 45);
+    -fx-control-inner-background-alt: rgb(45, 45, 45);
 }
 
 .list-cell {
-    -fx-border-width:3px;
-    -fx-border-color:rgb(246, 246, 246);
+    -fx-focus-color: transparent;
+    -fx-background-insets: 0, 0, 0, 0;
+    -fx-border-color: rgb(45, 45, 45);
+}
+
+.list-cell:filled:selected {
+    /* 4: (Styling when out of focus)*/
+    -fx-background-color: black;
 }
 
 #SyncStatus {
@@ -49,13 +74,14 @@
 }
 
 #repoList {
-    -fx-background-color: rgb(246, 246, 246);
+    -fx-background-color: rgb(45, 45, 45);
 }
 
 .password-field {
     -fx-background-insets: 0;
-    -fx-background-color: transparent, white, transparent, white;
+    -fx-background-color: transparent, #2a2a2a, transparent, #2a2a2a;
     -fx-background-radius: 0, 0, 0, 0;
+    -fx-text-inner-color: white;
 
     -fx-box-border: none;
     -fx-focus-color: -fx-control-inner-background;
