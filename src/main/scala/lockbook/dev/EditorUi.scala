@@ -30,6 +30,7 @@ class EditorUi(editorHelper: EditorHelper, gitHelper: GitHelper, executor: Sched
 
     BorderPane.setAlignment(syncLabel, Pos.CENTER_RIGHT)
     syncLabel.setId("SyncStatus")
+    root.setId("SyncStatusParent")
     root.bottomProperty().setValue(syncLabel)
     val autoSaveTask = saveCommitAndPushTask(syncLabel, textArea, f, git)
     val saveOnIdle   = CancelableAction(executor, FiniteDuration(1, TimeUnit.SECONDS), autoSaveTask)

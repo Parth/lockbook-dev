@@ -34,7 +34,8 @@ class RepositoryCellUi(gitHelper: GitHelper) {
 
   def getListCell(
       onClick: Git => Unit,
-      onDelete: RepositoryCell => Unit
+      onDelete: RepositoryCell => Unit,
+      onClone: () => Unit
   ): ListCell[RepositoryCell] = {
 
     new ListCell[RepositoryCell]() {
@@ -49,8 +50,10 @@ class RepositoryCellUi(gitHelper: GitHelper) {
         } else {
           setGraphic(getCell(item))
           val deleteItem = new MenuItem("Delete")
+          val newRepo    = new MenuItem("Clone Repository")
           deleteItem.setOnAction(_ => onDelete(item))
-          setContextMenu(new ContextMenu(deleteItem))
+          newRepo.setOnAction(_ => onClone())
+          setContextMenu(new ContextMenu(newRepo, deleteItem))
         }
       }
     }

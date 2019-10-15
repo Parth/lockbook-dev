@@ -1,7 +1,6 @@
 package lockbook.dev
 
 import javafx.collections.{FXCollections, ObservableList}
-import javafx.geometry.Pos
 import javafx.scene.control._
 import javafx.scene.layout._
 import org.eclipse.jgit.api.Git
@@ -18,9 +17,8 @@ class RepositoryUi(
   val repoList: ObservableList[RepositoryCell] = FXCollections.observableArrayList[RepositoryCell]()
 
   def getView(onClick: Git => Unit): BorderPane = {
-    val borderPane    = new BorderPane
-    val newRepoButton = new Button("New Repository")
-    val listView      = new ListView[RepositoryCell]
+    val borderPane = new BorderPane
+    val listView   = new ListView[RepositoryCell]
 
     borderPane.setId("repoList")
 
@@ -35,7 +33,7 @@ class RepositoryUi(
 
     listView
       .cellFactoryProperty()
-      .setValue(_ => repositoryCellUi.getListCell(onClick, delete(listView)))
+      .setValue(_ => repositoryCellUi.getListCell(onClick, delete(listView), () => cloneRepoDialog.showDialog(repoList)))
 
     listView.getSelectionModel
       .selectedItemProperty()
@@ -47,13 +45,13 @@ class RepositoryUi(
 
     listView.setItems(repoList)
 
-    newRepoButton.setOnAction(_ => {
+    val cloneRepo = new MenuItem("Clone Repository")
+    listView.setContextMenu(new ContextMenu(cloneRepo))
+    cloneRepo.setOnAction(_ => {
       cloneRepoDialog.showDialog(repoList)
     })
 
-    BorderPane.setAlignment(newRepoButton, Pos.CENTER)
     borderPane.setCenter(listView)
-    borderPane.setBottom(newRepoButton)
     borderPane
   }
 
