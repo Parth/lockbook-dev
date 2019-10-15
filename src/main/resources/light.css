@@ -71,11 +71,11 @@
     -fx-padding: 5px;
     -fx-text-fill: grey;
     -fx-font-style: italic;
-    -fx-background-color: rgb(20, 20, 20);;
+    -fx-background-color: rgb(20, 20, 20);
 }
 
 #SyncStatusParent {
-    -fx-background-color: rgb(20, 20, 20);;
+    -fx-background-color: rgb(20, 20, 20);
 }
 
 #repoList {
