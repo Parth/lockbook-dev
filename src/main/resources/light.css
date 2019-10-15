@@ -94,3 +94,8 @@
     -fx-text-box-border: -fx-control-inner-background;
     -fx-border-width: -1;
 }
+
+.context-menu {
+    -fx-background-color: #3d3d3d;
+    -fx-text-fill: white;
+}
