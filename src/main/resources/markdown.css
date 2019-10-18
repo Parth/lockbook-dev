@@ -32,7 +32,7 @@
 
 .styled-text-area .code {
 	-fx-font-weight: bold;
-    -fx-fill: #c62828;
+    -fx-fill: #DB2B39;
     -fx-font-family: monospace;
 }
 
@@ -46,24 +46,19 @@
 }
 
 .styled-text-area .bullet {
-    -fx-fill: rgb(214, 120, 181);
+    -fx-fill: #AA0D91;
+    -fx-font-weight: bolder;
 }
 
 .styled-text-area .number {
-    -fx-fill: rgb(182, 151, 243);
+    -fx-fill: #AA0D91;
+    -fx-font-weight: bolder;
 }
 
 .styled-text-area .quote-block {
-    -fx-fill: #6272a4;
+    -fx-fill: #FC6A5D;
 }
 
 .styled-text-area .link {
-    -fx-fill: blue;
-    -fx-underline: true;
-    -fx-font-weight: bold;
-}
-
-.styled-text-area .href {
-    -fx-fill: green;
-    -fx-font-style: italic;
+    -fx-fill: #1E91D6;
 }

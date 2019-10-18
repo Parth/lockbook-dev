@@ -161,9 +161,7 @@ class EditorUi(editorHelper: EditorHelper, gitHelper: GitHelper, executor: Sched
       styledText.setStyleClass(node.getStartOffset, node.getEndOffset, "quote-block")
     }), new VisitHandler[Link](classOf[Link], (node: Link) => {
       styledText
-        .setStyleClass(node.getTextOpeningMarker.getStartOffset + 1, node.getTextClosingMarker.getEndOffset - 1, "link")
-      styledText
-        .setStyleClass(node.getLinkOpeningMarker.getStartOffset + 1, node.getLinkClosingMarker.getEndOffset - 1, "href")
+        .setStyleClass(node.getTextOpeningMarker.getStartOffset, node.getLinkClosingMarker.getEndOffset, "link")
     }), new VisitHandler[BulletListItem](classOf[BulletListItem], (node: BulletListItem) => {
       styledText.setStyleClass(node.getOpeningMarker.getStartOffset, node.getOpeningMarker.getEndOffset, "bullet")
     }), new VisitHandler[OrderedListItem](classOf[OrderedListItem], (node: OrderedListItem) => {
