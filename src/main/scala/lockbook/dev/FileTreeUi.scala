@@ -120,6 +120,7 @@ class FileTreeUi(fileHelper: FileHelper) {
 
     val result: Optional[String] = dialog.showAndWait
 
+
     if (result.isPresent) Some(result.get()) else None
   }
 

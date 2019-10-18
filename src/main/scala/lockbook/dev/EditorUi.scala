@@ -9,7 +9,7 @@ import com.vladsch.flexmark.util.ast.{Document, NodeVisitor, VisitHandler}
 import javafx.application.Platform
 import javafx.geometry.Pos
 import javafx.scene.control._
-import javafx.scene.input.{KeyCode, KeyCodeCombination, KeyCombination, KeyEvent}
+import javafx.scene.input.{KeyCode, KeyCodeCombination, KeyCombination, KeyEvent, MouseEvent}
 import javafx.scene.layout.BorderPane
 import org.eclipse.jgit.api.Git
 import org.fxmisc.richtext.CodeArea
@@ -27,6 +27,13 @@ class EditorUi(editorHelper: EditorHelper, gitHelper: GitHelper, executor: Sched
     val syncLabel = new Label("Loading File")
 
     loadFile(git, f, root, textArea, syncLabel)
+
+    textArea.setOnMouseClicked((me: MouseEvent) => {
+      if (me.isMetaDown) {
+//        val x, y = (me.getX, me.getY)
+        println(textArea.getCaretPosition)
+      }
+    })
 
     BorderPane.setAlignment(syncLabel, Pos.CENTER_RIGHT)
     syncLabel.setId("SyncStatus")
