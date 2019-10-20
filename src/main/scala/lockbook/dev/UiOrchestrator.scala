@@ -6,6 +6,7 @@ import java.util.concurrent.{ScheduledThreadPoolExecutor, TimeUnit}
 import javafx.application.Platform
 import javafx.scene.Scene
 import javafx.scene.control.SplitPane
+import javafx.scene.input.{KeyCode, KeyCodeCombination, KeyCombination, KeyEvent}
 import javafx.scene.layout.StackPane
 import javafx.stage.{Screen, Stage}
 import org.eclipse.jgit.api.Git
@@ -96,6 +97,10 @@ class UiOrchestrator(
     })
   }
 
+  private def addLockListener(stage: Stage): Unit = {
+
+  }
+
   private def addFocusListener(): Unit = {
     var lockWhenBackground =
       CancelableAction(executor, FiniteDuration(5, TimeUnit.MINUTES), lockTask) // good settings candidate
@@ -114,6 +119,20 @@ class UiOrchestrator(
           repositoryUi.pullAllRepos()
         }
       })
+
+    val saveKeyCombo = new KeyCodeCombination(KeyCode.L, KeyCombination.META_DOWN)
+
+    stage
+      .sceneProperty()
+      .addListener((_, _, newv) => {
+        newv.addEventHandler(
+          KeyEvent.KEY_PRESSED,
+          (event:KeyEvent) => {
+            if(saveKeyCombo.`match`(event)) {
+              lockWhenBackground.doNow()
+            }
+          })
+      })
   }
 
   private val lockTask: () => Unit = () => {
@@ -123,4 +142,6 @@ class UiOrchestrator(
       showView()
     })
   }
+
+
 }
