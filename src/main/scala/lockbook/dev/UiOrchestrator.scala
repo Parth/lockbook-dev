@@ -66,6 +66,7 @@ class UiOrchestrator(
     stage.getScene.getStylesheets.add("light.css")    // good settings candidate
     stage.getScene.getStylesheets.add("markdown.css") // good settings candidate
     closeRequestListener()
+    println("About to run addFocusListener")
     addFocusListener()
     stage.show()
   }
@@ -99,7 +100,7 @@ class UiOrchestrator(
 
 
   private def addFocusListener(): Unit = {
-    var lockWhenBackground =
+    val lockWhenBackground =
       CancelableAction(executor, FiniteDuration(5, TimeUnit.MINUTES), lockTask) // good settings candidate
 
     stage
@@ -120,16 +121,15 @@ class UiOrchestrator(
     val saveKeyCombo = new KeyCodeCombination(KeyCode.L, KeyCombination.META_DOWN)
 
     stage
-      .sceneProperty() //unsure where I should add a listener to
-      .addListener((_, _, newv) => {
-        newv.addEventHandler(
-          KeyEvent.KEY_PRESSED,
-          (event:KeyEvent) => {
-            if(saveKeyCombo.`match`(event)) {
-              lockWhenBackground.doNow()
+        .getScene
+        .addEventHandler(
+            KeyEvent.KEY_PRESSED,
+            (event: KeyEvent) => {
+              if (saveKeyCombo.`match`(event)) {
+                lockWhenBackground.doNow()
+              }
             }
-          })
-      })
+        )
   }
 
   private val lockTask: () => Unit = () => {
