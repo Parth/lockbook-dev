@@ -66,7 +66,6 @@ class UiOrchestrator(
     stage.getScene.getStylesheets.add("light.css")    // good settings candidate
     stage.getScene.getStylesheets.add("markdown.css") // good settings candidate
     closeRequestListener()
-    println("About to run addFocusListener")
     addFocusListener()
     stage.show()
   }
