@@ -14,6 +14,7 @@ repositories {
 }
 
 dependencies {
+    implementation 'org.slf4j:slf4j-nop:1.7.25' // For logging, but really to suppress JGit giving annoying warnings
     implementation 'org.eclipse.jgit:org.eclipse.jgit:4.5.0.201609210915-r' // For git operations
     implementation 'com.vladsch.flexmark:flexmark-all:0.50.26' // For interpreting markdown 
     implementation 'org.fxmisc.richtext:richtextfx:0.10.1' // For rich text editing
