@@ -97,7 +97,6 @@ class UiOrchestrator(
     })
   }
 
-
   private def addFocusListener(): Unit = {
     val lockWhenBackground =
       CancelableAction(executor, FiniteDuration(5, TimeUnit.MINUTES), lockTask) // good settings candidate
@@ -119,16 +118,15 @@ class UiOrchestrator(
 
     val saveKeyCombo = new KeyCodeCombination(KeyCode.L, KeyCombination.META_DOWN)
 
-    stage
-        .getScene
-        .addEventHandler(
-            KeyEvent.KEY_PRESSED,
-            (event: KeyEvent) => {
-              if (saveKeyCombo.`match`(event)) {
-                lockWhenBackground.doNow()
-              }
-            }
-        )
+    stage.getScene
+      .addEventHandler(
+        KeyEvent.KEY_PRESSED,
+        (event: KeyEvent) => {
+          if (saveKeyCombo.`match`(event)) {
+            lockWhenBackground.doNow()
+          }
+        }
+      )
   }
 
   private val lockTask: () => Unit = () => {
@@ -138,6 +136,5 @@ class UiOrchestrator(
       showView()
     })
   }
-
 
 }
