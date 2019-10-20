@@ -97,9 +97,6 @@ class UiOrchestrator(
     })
   }
 
-  private def addLockListener(stage: Stage): Unit = {
-
-  }
 
   private def addFocusListener(): Unit = {
     var lockWhenBackground =
@@ -123,7 +120,7 @@ class UiOrchestrator(
     val saveKeyCombo = new KeyCodeCombination(KeyCode.L, KeyCombination.META_DOWN)
 
     stage
-      .sceneProperty()
+      .sceneProperty() //unsure where I should add a listener to
       .addListener((_, _, newv) => {
         newv.addEventHandler(
           KeyEvent.KEY_PRESSED,
