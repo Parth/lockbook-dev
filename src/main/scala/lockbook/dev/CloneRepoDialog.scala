@@ -37,9 +37,7 @@ class CloneRepoDialog(gitHelper: GitHelper) {
       Future(gitHelper.cloneRepository(repositoryURL.getText) match {
         case Right(value) =>
           Platform.runLater(() => {
-            val repoCell: RepositoryCell = RepositoryCell.fromGit(value, gitHelper)
-            repoCell.progressMonitor.progressIndicator.setProgress(1)
-            repoList.add(repoCell)
+            repoList.add(RepositoryCell(value, new Label))
             dialog.close()
           })
         case Left(error) =>

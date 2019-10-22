@@ -112,7 +112,7 @@ class UiOrchestrator(
         }
 
         if (!locked && !closing && !isHidden) {
-          repositoryUi.pullAllRepos()
+          repositoryUi.setRepoStatuses()
         }
       })
 

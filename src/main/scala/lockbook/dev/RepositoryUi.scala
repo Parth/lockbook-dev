@@ -25,15 +25,17 @@ class RepositoryUi(
     Future {
       repoList.removeAll(repoList)
       gitHelper.getRepositories
-        .map(RepositoryCell.fromGit(_, gitHelper))
+        .map(RepositoryCell(_, new Label))
         .map(repoList.add)
 
-      pullAllRepos()
+      setRepoStatuses()
     }
 
     listView
       .cellFactoryProperty()
-      .setValue(_ => repositoryCellUi.getListCell(onClick, delete(listView), () => cloneRepoDialog.showDialog(repoList)))
+      .setValue(
+        _ => repositoryCellUi.getListCell(onClick, delete(listView), () => cloneRepoDialog.showDialog(repoList))
+      )
 
     listView.getSelectionModel
       .selectedItemProperty()
@@ -60,10 +62,14 @@ class RepositoryUi(
     list.getItems.remove(repositoryCell)
   }
 
-  def pullAllRepos(): Unit = Future {
+  def setRepoStatuses(): Unit = Future {
     println("pull all repos")
     repoList
       .stream()
-      .forEach(repoCell => println(gitHelper.pull(repoCell.git, repoCell.pullCommand)))
+      .forEach(calculateStatus)
+  }
+
+  def calculateStatus(repocell: RepositoryCell): Unit = {
+
   }
 }

@@ -21,8 +21,7 @@ trait GitHelper {
   def deleteRepo(git: Git): Either[FileError, Unit]
 }
 
-class GitHelperImpl(gitCredentialHelper: GitCredentialHelper, fileHelper: FileHelper)
-    extends GitHelper {
+class GitHelperImpl(gitCredentialHelper: GitCredentialHelper, fileHelper: FileHelper) extends GitHelper {
 
   val repoFolder = s"${App.path}/repos"
 
@@ -127,13 +126,16 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper, fileHelper: FileHe
   override def pull(git: Git, pullCommand: PullCommand): Either[GitError, MergeStatus] = {
     getCredentials(git).flatMap(credentials => {
       try {
-        Right(pullCommand
-          .setCredentialsProvider(credentials)
-          .call().getMergeResult.getMergeStatus)
+        Right(
+          pullCommand
+            .setCredentialsProvider(credentials)
+            .call()
+            .getMergeResult
+            .getMergeStatus
+        )
 
       } catch {
         case e: Exception =>
-          println(e)
           Left(UserCanceled()) // TODO build this out
       }
     })

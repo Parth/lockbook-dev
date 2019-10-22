@@ -3,32 +3,9 @@ package lockbook.dev
 import javafx.geometry.HPos
 import javafx.scene.control._
 import javafx.scene.layout.{ColumnConstraints, GridPane, Priority}
-import org.eclipse.jgit.api.{Git, PullCommand}
+import org.eclipse.jgit.api.Git
 
-case class RepositoryCell(git: Git, pullCommand: PullCommand, progressMonitor: PullProgressMonitor)
-
-object RepositoryCell {
-  def fromGit(git: Git, gitHelper: GitHelper): RepositoryCell = {
-    val ppm = new PullProgressMonitor(getProgressIndicator)
-    RepositoryCell(
-      git = git,
-      pullCommand = gitHelper.pullCommand(git, ppm),
-      progressMonitor = ppm
-    )
-  }
-
-  private def getProgressIndicator: ProgressIndicator = {
-    val progressIndicator = new ProgressIndicator(0)
-    progressIndicator
-      .progressProperty()
-      .addListener((_, _, _) => {
-        if (progressIndicator.getProgress == 1) progressIndicator.setVisible(false)
-        else progressIndicator.setVisible(true)
-      })
-
-    progressIndicator
-  }
-}
+case class RepositoryCell(git: Git, statusLabel: Label)
 
 class RepositoryCellUi(gitHelper: GitHelper) {
 
@@ -74,7 +51,7 @@ class RepositoryCellUi(gitHelper: GitHelper) {
     gridPane.getColumnConstraints.addAll(column1, column2)
 
     gridPane.add(label, 0, 0)
-    gridPane.add(repositoryCell.progressMonitor.progressIndicator, 1, 0)
+    gridPane.add(repositoryCell.statusLabel, 1, 0)
 
     gridPane
   }
