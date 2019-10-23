@@ -1,11 +1,35 @@
 package lockbook.dev
 
+import javafx.application.Platform
 import javafx.geometry.HPos
 import javafx.scene.control._
 import javafx.scene.layout.{ColumnConstraints, GridPane, Priority}
 import org.eclipse.jgit.api.Git
 
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.{ExecutionContext, Future}
+
 case class RepositoryCell(git: Git, statusLabel: Label)
+object RepositoryCell {
+  def calculateStatus(repocell: RepositoryCell, gitHelper: GitHelper): Unit = Future {
+    Future {
+      val pullNeeded = gitHelper.pullNeeded(repocell.git).getOrElse(false) // TODO network?
+      val localDirty = gitHelper.localDirty(repocell.git)
+
+      val status = if (pullNeeded && localDirty) {
+        "Sync"
+      } else if (pullNeeded) {
+        "Pull"
+      } else if (localDirty) {
+        "Push"
+      } else {
+        ""
+      }
+
+      Platform.runLater(() => repocell.statusLabel.setText(status))
+    }
+  }
+}
 
 class RepositoryCellUi(gitHelper: GitHelper) {
 
@@ -28,9 +52,28 @@ class RepositoryCellUi(gitHelper: GitHelper) {
           setGraphic(getCell(item))
           val deleteItem = new MenuItem("Delete")
           val newRepo    = new MenuItem("Clone Repository")
+          val push       = new MenuItem("Push")
+          val pull       = new MenuItem("Pull")
+          val sync       = new MenuItem("Sync")
+
           deleteItem.setOnAction(_ => onDelete(item))
+
           newRepo.setOnAction(_ => onClone())
-          setContextMenu(new ContextMenu(newRepo, deleteItem))
+          push.setOnAction(_ => {
+            gitHelper.commitAndPush("", item.git)
+            RepositoryCell.calculateStatus(item, gitHelper)
+          }) // Default push good settings candidate
+
+          pull.setOnAction(_ => {
+            gitHelper.pull(item.git)
+            RepositoryCell.calculateStatus(item, gitHelper)
+          })
+          sync.setOnAction(_ => {
+            gitHelper.sync(item.git)
+            RepositoryCell.calculateStatus(item, gitHelper)
+          })
+
+          setContextMenu(new ContextMenu(newRepo, pull, push, sync, deleteItem))
         }
       }
     }

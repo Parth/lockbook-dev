@@ -63,13 +63,12 @@ class RepositoryUi(
   }
 
   def setRepoStatuses(): Unit = Future {
-    println("pull all repos")
     repoList
       .stream()
       .forEach(calculateStatus)
   }
 
   def calculateStatus(repocell: RepositoryCell): Unit = {
-    gitHelper.fetch(repocell.git)
+    RepositoryCell.calculateStatus(repocell, gitHelper)
   }
 }
