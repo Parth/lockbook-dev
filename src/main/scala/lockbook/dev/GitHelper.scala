@@ -4,25 +4,27 @@ import java.io.File
 import java.net.URI
 
 import com.jcraft.jsch.{JSch, Session}
+import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.MergeResult.MergeStatus
 import org.eclipse.jgit.api.errors.TransportException
-import org.eclipse.jgit.api.{Git, PullCommand}
-import org.eclipse.jgit.lib.ProgressMonitor
 import org.eclipse.jgit.transport.{JschConfigSessionFactory, OpenSshConfig, UsernamePasswordCredentialsProvider}
 import org.eclipse.jgit.util.FS
 
 trait GitHelper {
   def cloneRepository(uri: String): Either[GitError, Git]
   def getRepositories: List[Git]
-  def commitAndPush(message: String, git: Git): Either[GitError, Unit]
   def getRepoName(git: Git): String
-  def pullCommand(git: Git, progressMonitor: ProgressMonitor): PullCommand
-  def pull(git: Git, pullCommand: PullCommand): Either[GitError, MergeStatus]
+  def commit(message: String, git: Git): Either[GitError, Unit]
+  def push(git: Git): Either[GitError, Unit]
+  def commitAndPush(message: String, git: Git): Either[GitError, Unit]
+  def pull(git: Git): Either[GitError, MergeStatus]
+  def sync(git: Git): Either[GitError, Unit]
   def deleteRepo(git: Git): Either[FileError, Unit]
+  def pullNeeded(git: Git): Either[UserCanceled, Boolean]
+  def localDirty(git: Git): Boolean
 }
 
-class GitHelperImpl(gitCredentialHelper: GitCredentialHelper, fileHelper: FileHelper)
-    extends GitHelper {
+class GitHelperImpl(gitCredentialHelper: GitCredentialHelper, fileHelper: FileHelper) extends GitHelper {
 
   val repoFolder = s"${App.path}/repos"
 
@@ -48,13 +50,20 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper, fileHelper: FileHe
     })
   }
 
-  override def commitAndPush(message: String, git: Git): Either[GitError, Unit] = {
+  override def commit(message: String, git: Git): Either[GitError, Unit] = {
+    try {
+      git.add().addFilepattern(".").call()
+      git.commit().setMessage(message).call()
+      Right(())
+    } catch {
+      case _: Exception => Left(UserCanceled()) // TODO
+    }
+  }
+
+  override def push(git: Git): Either[GitError, Unit] = {
     getCredentials(git)
       .flatMap(credentials => {
         try {
-          git.add().addFilepattern(".").call()
-          git.commit().setMessage(message).call()
-
           git
             .push()
             .setCredentialsProvider(credentials)
@@ -67,6 +76,17 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper, fileHelper: FileHe
       })
   }
 
+  override def commitAndPush(message: String, git: Git): Either[GitError, Unit] = {
+    commit(message, git)
+      .flatMap(_ => push(git))
+  }
+
+  override def sync(git: Git): Either[GitError, Unit] = {
+    commit("", git)
+      .flatMap(_ => pull(git))
+      .flatMap(_ => push(git))
+  }
+
   override def getRepositories: List[Git] = {
     val repos = new File(repoFolder)
     if (repos.exists()) {
@@ -77,12 +97,6 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper, fileHelper: FileHe
     } else {
       List()
     }
-  }
-
-  override def pullCommand(git: Git, progressMonitor: ProgressMonitor): PullCommand = {
-    git
-      .pull()
-      .setProgressMonitor(progressMonitor)
   }
 
   override def deleteRepo(git: Git): Either[FileError, Unit] = {
@@ -124,20 +138,42 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper, fileHelper: FileHe
     new URI(repoUrl)
   }
 
-  override def pull(git: Git, pullCommand: PullCommand): Either[GitError, MergeStatus] = {
+  override def pull(git: Git): Either[GitError, MergeStatus] = {
     getCredentials(git).flatMap(credentials => {
       try {
-        Right(pullCommand
-          .setCredentialsProvider(credentials)
-          .call().getMergeResult.getMergeStatus)
+        Right(
+          git
+            .pull()
+            .setCredentialsProvider(credentials)
+            .call()
+            .getMergeResult
+            .getMergeStatus
+        )
 
       } catch {
         case e: Exception =>
-          println(e)
           Left(UserCanceled()) // TODO build this out
       }
     })
   }
+
+  override def pullNeeded(git: Git): Either[UserCanceled, Boolean] = {
+    getCredentials(git)
+      .flatMap { credentials =>
+        val doRefsMatch = git
+          .fetch()
+          .setCredentialsProvider(credentials)
+          .call()
+          .getAdvertisedRef("HEAD")
+          .getObjectId
+          .getName
+          .equals(git.getRepository.getAllRefs.get("HEAD").getObjectId.getName)
+
+        Right(!doRefsMatch)
+      }
+  }
+
+  override def localDirty(git: Git): Boolean = !git.status().call().isClean
 }
 
 class CustomConfigSessionFactory extends JschConfigSessionFactory {

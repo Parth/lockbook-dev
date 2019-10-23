@@ -1,32 +1,33 @@
 package lockbook.dev
 
+import javafx.application.Platform
 import javafx.geometry.HPos
 import javafx.scene.control._
 import javafx.scene.layout.{ColumnConstraints, GridPane, Priority}
-import org.eclipse.jgit.api.{Git, PullCommand}
+import org.eclipse.jgit.api.Git
 
-case class RepositoryCell(git: Git, pullCommand: PullCommand, progressMonitor: PullProgressMonitor)
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.{ExecutionContext, Future}
 
+case class RepositoryCell(git: Git, statusLabel: Label)
 object RepositoryCell {
-  def fromGit(git: Git, gitHelper: GitHelper): RepositoryCell = {
-    val ppm = new PullProgressMonitor(getProgressIndicator)
-    RepositoryCell(
-      git = git,
-      pullCommand = gitHelper.pullCommand(git, ppm),
-      progressMonitor = ppm
-    )
-  }
+  def calculateStatus(repocell: RepositoryCell, gitHelper: GitHelper): Unit = Future {
+    Future {
+      val pullNeeded = gitHelper.pullNeeded(repocell.git).getOrElse(false) // TODO network?
+      val localDirty = gitHelper.localDirty(repocell.git)
 
-  private def getProgressIndicator: ProgressIndicator = {
-    val progressIndicator = new ProgressIndicator(0)
-    progressIndicator
-      .progressProperty()
-      .addListener((_, _, _) => {
-        if (progressIndicator.getProgress == 1) progressIndicator.setVisible(false)
-        else progressIndicator.setVisible(true)
-      })
+      val status = if (pullNeeded && localDirty) {
+        "Sync"
+      } else if (pullNeeded) {
+        "Pull"
+      } else if (localDirty) {
+        "Push"
+      } else {
+        ""
+      }
 
-    progressIndicator
+      Platform.runLater(() => repocell.statusLabel.setText(status))
+    }
   }
 }
 
@@ -51,9 +52,28 @@ class RepositoryCellUi(gitHelper: GitHelper) {
           setGraphic(getCell(item))
           val deleteItem = new MenuItem("Delete")
           val newRepo    = new MenuItem("Clone Repository")
+          val push       = new MenuItem("Push")
+          val pull       = new MenuItem("Pull")
+          val sync       = new MenuItem("Sync")
+
           deleteItem.setOnAction(_ => onDelete(item))
+
           newRepo.setOnAction(_ => onClone())
-          setContextMenu(new ContextMenu(newRepo, deleteItem))
+          push.setOnAction(_ => {
+            gitHelper.commitAndPush("", item.git)
+            RepositoryCell.calculateStatus(item, gitHelper)
+          }) // Default push good settings candidate
+
+          pull.setOnAction(_ => {
+            gitHelper.pull(item.git)
+            RepositoryCell.calculateStatus(item, gitHelper)
+          })
+          sync.setOnAction(_ => {
+            gitHelper.sync(item.git)
+            RepositoryCell.calculateStatus(item, gitHelper)
+          })
+
+          setContextMenu(new ContextMenu(newRepo, pull, push, sync, deleteItem))
         }
       }
     }
@@ -74,7 +94,7 @@ class RepositoryCellUi(gitHelper: GitHelper) {
     gridPane.getColumnConstraints.addAll(column1, column2)
 
     gridPane.add(label, 0, 0)
-    gridPane.add(repositoryCell.progressMonitor.progressIndicator, 1, 0)
+    gridPane.add(repositoryCell.statusLabel, 1, 0)
 
     gridPane
   }
