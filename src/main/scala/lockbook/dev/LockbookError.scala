@@ -62,6 +62,6 @@ case class UserCanceled() extends GitError {
 // User Input related errors
 trait UserInputErrors extends LockbookError
 
-case class PasswordsDontMatch() extends UserInputErrors {
+case class PassphraseDoNotMatch() extends UserInputErrors {
   val uiMessage = "Passwords do not match."
 }

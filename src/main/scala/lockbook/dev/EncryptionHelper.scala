@@ -12,19 +12,19 @@ case class EncryptedValue(garbage: String)
 case class DecryptedValue(secret: String)
 
 trait EncryptionHelper {
-  def encrypt(value: DecryptedValue, password: Password): Either[CryptoError, EncryptedValue]
-  def decrypt(garbage: EncryptedValue, password: Password): Either[CryptoError, DecryptedValue]
+  def encrypt(value: DecryptedValue, password: Passphrase): Either[CryptoError, EncryptedValue]
+  def decrypt(garbage: EncryptedValue, password: Passphrase): Either[CryptoError, DecryptedValue]
 }
 
 class EncryptionImpl extends EncryptionHelper {
-  def encrypt(value: DecryptedValue, password: Password): Either[CryptoError, EncryptedValue] =
+  def encrypt(value: DecryptedValue, password: Passphrase): Either[CryptoError, EncryptedValue] =
     try {
       Right(EncryptedValue(encryptHelper(value.secret, password.password)))
     } catch {
       case a: NoSuchAlgorithmException => Left(SecureOperationsNotSupported(a))
     }
 
-  def decrypt(garbage: EncryptedValue, password: Password): Either[CryptoError, DecryptedValue] =
+  def decrypt(garbage: EncryptedValue, password: Passphrase): Either[CryptoError, DecryptedValue] =
     try {
       Right(DecryptedValue(decryptHelper(garbage.garbage, password.password)))
     } catch {

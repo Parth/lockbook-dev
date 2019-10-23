@@ -16,14 +16,14 @@ import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
 
 class UiOrchestrator(
-    lockfile: LockfileHelper,
-    unlockUI: UnlockUi,
-    newPasswordUI: NewPasswordUi,
-    repositoryUi: RepositoryUi,
-    fileTreeUi: FileTreeUi,
-    editorUi: EditorUi,
-    stage: Stage,
-    executor: ScheduledThreadPoolExecutor
+                      lockfile: LockfileHelper,
+                      unlockUI: UnlockUi,
+                      newPasswordUI: NewPassphraseUi,
+                      repositoryUi: RepositoryUi,
+                      fileTreeUi: FileTreeUi,
+                      editorUi: EditorUi,
+                      stage: Stage,
+                      executor: ScheduledThreadPoolExecutor
 ) {
 
   private var locked: Boolean  = false // Give this some more thought

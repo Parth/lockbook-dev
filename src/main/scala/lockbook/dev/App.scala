@@ -22,12 +22,12 @@ class App extends Application {
     val file: FileHelper                       = new FileHelperImpl
     val encryption: EncryptionHelper           = new EncryptionImpl
     val lockfile: LockfileHelper               = new LockfileHelperImpl(encryption, file)
-    val password: PasswordHelper               = new PasswordHelperImpl(lockfile, encryption)
+    val password: PassphraseHelper               = new PassphraseHelperImpl(lockfile, encryption)
     val gitCredential: GitCredentialHelperImpl = new GitCredentialHelperImpl(encryption, password, file)
     val git: GitHelper                         = new GitHelperImpl(gitCredential, file)
     val editorHelper: EditorHelperImpl         = new EditorHelperImpl(encryption, password, file)
 
-    val newPasswordUi: NewPasswordUi       = new NewPasswordUi(lockfile, password, encryption)
+    val newPasswordUi: NewPassphraseUi       = new NewPassphraseUi(lockfile, password, encryption)
     val unlockUi: UnlockUi                 = new UnlockUi(password)
     val repositoryCellUi: RepositoryCellUi = new RepositoryCellUi(git)
     val cloneRepoDialog: CloneRepoDialog   = new CloneRepoDialog(git)

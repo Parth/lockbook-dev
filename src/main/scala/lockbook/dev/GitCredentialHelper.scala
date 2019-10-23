@@ -42,9 +42,9 @@ trait GitCredentialHelper {
 }
 
 class GitCredentialHelperImpl(
-    encryptionHelper: EncryptionHelper,
-    passwordHelper: PasswordHelper,
-    fileHelper: FileHelper
+                               encryptionHelper: EncryptionHelper,
+                               passwordHelper: PassphraseHelper,
+                               fileHelper: FileHelper
 ) extends GitCredentialHelper {
 
   val credentialFolder = s"${App.path}/credentials"
@@ -78,7 +78,7 @@ class GitCredentialHelperImpl(
     fileHelper
       .readFile(s"$credentialFolder/$key")
       .map(EncryptedValue)
-      .flatMap(encryptionHelper.decrypt(_, passwordHelper.password))
+      .flatMap(encryptionHelper.decrypt(_, passwordHelper.passphrase))
       .map(_.secret)
       .flatMap(GitCredential.deserialize)
   }
@@ -87,7 +87,7 @@ class GitCredentialHelperImpl(
     val decryptedValue = DecryptedValue(secret = GitCredential.serialize(gitCredential))
 
     encryptionHelper
-      .encrypt(decryptedValue, passwordHelper.password)
+      .encrypt(decryptedValue, passwordHelper.passphrase)
       .map(_.garbage)
       .flatMap(fileHelper.saveToFile(new File(s"$credentialFolder/$key"), _))
   }
