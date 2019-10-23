@@ -70,6 +70,6 @@ class RepositoryUi(
   }
 
   def calculateStatus(repocell: RepositoryCell): Unit = {
-
+    gitHelper.fetch(repocell.git)
   }
 }

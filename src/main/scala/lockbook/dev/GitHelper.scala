@@ -4,10 +4,9 @@ import java.io.File
 import java.net.URI
 
 import com.jcraft.jsch.{JSch, Session}
+import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.MergeResult.MergeStatus
 import org.eclipse.jgit.api.errors.TransportException
-import org.eclipse.jgit.api.{Git, PullCommand}
-import org.eclipse.jgit.lib.ProgressMonitor
 import org.eclipse.jgit.transport.{JschConfigSessionFactory, OpenSshConfig, UsernamePasswordCredentialsProvider}
 import org.eclipse.jgit.util.FS
 
@@ -16,9 +15,9 @@ trait GitHelper {
   def getRepositories: List[Git]
   def commitAndPush(message: String, git: Git): Either[GitError, Unit]
   def getRepoName(git: Git): String
-  def pullCommand(git: Git, progressMonitor: ProgressMonitor): PullCommand
-  def pull(git: Git, pullCommand: PullCommand): Either[GitError, MergeStatus]
+  def pull(git: Git): Either[GitError, MergeStatus]
   def deleteRepo(git: Git): Either[FileError, Unit]
+  def fetch(git: Git): Either[GitError, Unit]
 }
 
 class GitHelperImpl(gitCredentialHelper: GitCredentialHelper, fileHelper: FileHelper) extends GitHelper {
@@ -78,12 +77,6 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper, fileHelper: FileHe
     }
   }
 
-  override def pullCommand(git: Git, progressMonitor: ProgressMonitor): PullCommand = {
-    git
-      .pull()
-      .setProgressMonitor(progressMonitor)
-  }
-
   override def deleteRepo(git: Git): Either[FileError, Unit] = {
     val file = git.getRepository.getWorkTree
     fileHelper.recursiveFileDelete(file)
@@ -123,11 +116,12 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper, fileHelper: FileHe
     new URI(repoUrl)
   }
 
-  override def pull(git: Git, pullCommand: PullCommand): Either[GitError, MergeStatus] = {
+  override def pull(git: Git): Either[GitError, MergeStatus] = {
     getCredentials(git).flatMap(credentials => {
       try {
         Right(
-          pullCommand
+          git
+            .pull()
             .setCredentialsProvider(credentials)
             .call()
             .getMergeResult
@@ -139,6 +133,27 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper, fileHelper: FileHe
           Left(UserCanceled()) // TODO build this out
       }
     })
+  }
+
+  override def fetch(git: Git): Either[GitError, Unit] = {
+    println("fetching")
+    getCredentials(git)
+      .map { credentials =>
+        println(
+          git
+            .fetch()
+            .setCredentialsProvider(credentials)
+            .call()
+            .getAdvertisedRefs
+        )
+
+        println(
+          git.reflog().
+        )
+
+      }
+
+    Right()
   }
 }
 
