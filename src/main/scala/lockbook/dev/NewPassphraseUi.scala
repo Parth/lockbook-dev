@@ -6,17 +6,17 @@ import javafx.scene.layout._
 import javafx.scene.paint.Color
 
 class NewPassphraseUi(
-                       lockfile: LockfileHelper,
-                       passwordHelper: PassphraseHelper,
-                       encryptionHelper: EncryptionHelper
+    lockfile: LockfileHelper,
+    passphraseHelper: PassphraseHelper,
+    encryptionHelper: EncryptionHelper
 ) {
 
   def getView(onDone: => Unit): VBox = {
-    val vBox                 = new VBox
-    val header               = new Label("Set Lockbook Passphrase")
+    val vBox                   = new VBox
+    val header                 = new Label("Set Lockbook Passphrase")
     val passphraseField        = new PasswordField
     val confirmPassphraseField = new PasswordField
-    val attemptInfoArea      = new StackPane
+    val attemptInfoArea        = new StackPane
 
     passphraseField.setPromptText("Enter passphrase")
     confirmPassphraseField.setPromptText("Confirm passphrase")
@@ -34,9 +34,9 @@ class NewPassphraseUi(
       val passphrase1 = passphraseField.getText
       val passphrase2 = confirmPassphraseField.getText
 
-      passwordHelper
+      passphraseHelper
         .passphraseIfMatch(passphrase1, passphrase2)
-        .map(passwordHelper.setPassphrase)
+        .map(passphraseHelper.setPassphrase)
         .flatMap(encryptionHelper.encrypt(DecryptedValue("unlocked"), _))
         .flatMap(lockfile.writeToLockfile) match {
 

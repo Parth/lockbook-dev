@@ -36,7 +36,7 @@ case class SecureOperationsNotSupported(e: NoSuchAlgorithmException) extends Cry
   val uiMessage = s"The current runtime does not support this encryption operation: ${e.getMessage}"
 }
 
-case class WrongPassphrase() extends CryptoError { // TODO rename all instances of password -> passphrase
+case class WrongPassphrase() extends CryptoError {
   val uiMessage = "Decryption failed, incorrect passphrase"
 }
 
@@ -62,6 +62,6 @@ case class UserCanceled() extends GitError {
 // User Input related errors
 trait UserInputErrors extends LockbookError
 
-case class PassphraseDoNotMatch() extends UserInputErrors {
-  val uiMessage = "Passwords do not match."
+case class PassphrasesDoNotMatch() extends UserInputErrors {
+  val uiMessage = "Passphrases do not match."
 }

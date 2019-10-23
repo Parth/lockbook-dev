@@ -12,34 +12,34 @@ case class EncryptedValue(garbage: String)
 case class DecryptedValue(secret: String)
 
 trait EncryptionHelper {
-  def encrypt(value: DecryptedValue, password: Passphrase): Either[CryptoError, EncryptedValue]
-  def decrypt(garbage: EncryptedValue, password: Passphrase): Either[CryptoError, DecryptedValue]
+  def encrypt(value: DecryptedValue, passphrase: Passphrase): Either[CryptoError, EncryptedValue]
+  def decrypt(garbage: EncryptedValue, passphrase: Passphrase): Either[CryptoError, DecryptedValue]
 }
 
 class EncryptionImpl extends EncryptionHelper {
-  def encrypt(value: DecryptedValue, password: Passphrase): Either[CryptoError, EncryptedValue] =
+  def encrypt(value: DecryptedValue, passphrase: Passphrase): Either[CryptoError, EncryptedValue] =
     try {
-      Right(EncryptedValue(encryptHelper(value.secret, password.password)))
+      Right(EncryptedValue(encryptHelper(value.secret, passphrase.passphrase)))
     } catch {
       case a: NoSuchAlgorithmException => Left(SecureOperationsNotSupported(a))
     }
 
-  def decrypt(garbage: EncryptedValue, password: Passphrase): Either[CryptoError, DecryptedValue] =
+  def decrypt(garbage: EncryptedValue, passphrase: Passphrase): Either[CryptoError, DecryptedValue] =
     try {
-      Right(DecryptedValue(decryptHelper(garbage.garbage, password.password)))
+      Right(DecryptedValue(decryptHelper(garbage.garbage, passphrase.passphrase)))
     } catch {
       case _: IllegalArgumentException => Left(NotBase64())
       case a: NoSuchAlgorithmException => Left(SecureOperationsNotSupported(a))
       case _: Throwable                => Left(WrongPassphrase())
     }
 
-  private def encryptHelper(str: String, password: String): String = {
+  private def encryptHelper(str: String, passphrase: String): String = {
     val random = new SecureRandom
     val salt   = new Array[Byte](16)
     random.nextBytes(salt)
 
     val factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1")
-    val spec    = new PBEKeySpec(password.toCharArray, salt, 65536, 256)
+    val spec    = new PBEKeySpec(passphrase.toCharArray, salt, 65536, 256)
     val tmp     = factory.generateSecret(spec)
     val secret  = new SecretKeySpec(tmp.getEncoded, "AES")
     val cipher  = Cipher.getInstance("AES/CBC/PKCS5Padding")
@@ -59,14 +59,14 @@ class EncryptionImpl extends EncryptionHelper {
     new String(Base64.getEncoder.encode(outputStream.toByteArray))
   }
 
-  private def decryptHelper(str: String, password: String): String = {
+  private def decryptHelper(str: String, passphrase: String): String = {
     val ciphertext = Base64.getDecoder.decode(str)
     if (ciphertext.length < 48) return null
     val salt    = util.Arrays.copyOfRange(ciphertext, 0, 16)
     val iv      = util.Arrays.copyOfRange(ciphertext, 16, 32)
     val ct      = util.Arrays.copyOfRange(ciphertext, 32, ciphertext.length)
     val factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1")
-    val spec    = new PBEKeySpec(password.toCharArray, salt, 65536, 256)
+    val spec    = new PBEKeySpec(passphrase.toCharArray, salt, 65536, 256)
     val tmp     = factory.generateSecret(spec)
     val secret  = new SecretKeySpec(tmp.getEncoded, "AES")
     val cipher  = Cipher.getInstance("AES/CBC/PKCS5Padding")

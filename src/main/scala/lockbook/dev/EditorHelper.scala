@@ -8,9 +8,9 @@ trait EditorHelper {
 }
 
 class EditorHelperImpl(
-                        encryptionHelper: EncryptionHelper,
-                        passwordHelper: PassphraseHelper,
-                        fileHelper: FileHelper
+    encryptionHelper: EncryptionHelper,
+    passphraseHelper: PassphraseHelper,
+    fileHelper: FileHelper
 ) extends EditorHelper {
 
   override def getTextFromFile(f: File): Either[LockbookError, String] = {
@@ -18,7 +18,7 @@ class EditorHelperImpl(
       fileHelper
         .readFile(f.getAbsolutePath)
         .map(EncryptedValue)
-        .flatMap(encryptionHelper.decrypt(_, passwordHelper.passphrase))
+        .flatMap(encryptionHelper.decrypt(_, passphraseHelper.passphrase))
         .map(_.secret)
     } else {
       fileHelper.readFile(f.getAbsolutePath)
@@ -29,7 +29,7 @@ class EditorHelperImpl(
 
     val contentToSave: Either[CryptoError, String] = if (originalFile.getName.endsWith("aes")) {
       encryptionHelper
-        .encrypt(DecryptedValue(content), passwordHelper.passphrase)
+        .encrypt(DecryptedValue(content), passphraseHelper.passphrase)
         .map(_.garbage)
     } else {
       Right(content)

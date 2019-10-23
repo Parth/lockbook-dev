@@ -22,13 +22,13 @@ class App extends Application {
     val file: FileHelper                       = new FileHelperImpl
     val encryption: EncryptionHelper           = new EncryptionImpl
     val lockfile: LockfileHelper               = new LockfileHelperImpl(encryption, file)
-    val password: PassphraseHelper               = new PassphraseHelperImpl(lockfile, encryption)
-    val gitCredential: GitCredentialHelperImpl = new GitCredentialHelperImpl(encryption, password, file)
+    val passphrase: PassphraseHelper           = new PassphraseHelperImpl(lockfile, encryption)
+    val gitCredential: GitCredentialHelperImpl = new GitCredentialHelperImpl(encryption, passphrase, file)
     val git: GitHelper                         = new GitHelperImpl(gitCredential, file)
-    val editorHelper: EditorHelperImpl         = new EditorHelperImpl(encryption, password, file)
+    val editorHelper: EditorHelperImpl         = new EditorHelperImpl(encryption, passphrase, file)
 
-    val newPasswordUi: NewPassphraseUi       = new NewPassphraseUi(lockfile, password, encryption)
-    val unlockUi: UnlockUi                 = new UnlockUi(password)
+    val newPassphraseUi: NewPassphraseUi   = new NewPassphraseUi(lockfile, passphrase, encryption)
+    val unlockUi: UnlockUi                 = new UnlockUi(passphrase)
     val repositoryCellUi: RepositoryCellUi = new RepositoryCellUi(git)
     val cloneRepoDialog: CloneRepoDialog   = new CloneRepoDialog(git)
     val repositoryUi: RepositoryUi         = new RepositoryUi(git, repositoryCellUi, cloneRepoDialog)
@@ -36,7 +36,7 @@ class App extends Application {
     val editorUi: EditorUi                 = new EditorUi(editorHelper, git, executor)
 
     val uiOrchestrator =
-      new UiOrchestrator(lockfile, unlockUi, newPasswordUi, repositoryUi, fileTreeUi, editorUi, stage, executor)
+      new UiOrchestrator(lockfile, unlockUi, newPassphraseUi, repositoryUi, fileTreeUi, editorUi, stage, executor)
     uiOrchestrator.showView()
   }
 }

@@ -9,8 +9,8 @@ import javafx.scene.paint.Color
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class UnlockUi(passwordHelper: PassphraseHelper) {
-  def getView(passwordSuccess: => Unit): VBox = {
+class UnlockUi(passphraseHelper: PassphraseHelper) {
+  def getView(passphraseSuccess: => Unit): VBox = {
 
     val vBox                            = new VBox
     val prompt                          = new Label("Enter your passphrase")
@@ -30,18 +30,18 @@ class UnlockUi(passwordHelper: PassphraseHelper) {
       passphraseSuccessNotificationArea
     )
     passphraseField.setOnAction(_ => {
-      passwordAttempt(passphraseField, passphraseSuccessNotificationArea, passwordSuccess)
+      passphraseAttempt(passphraseField, passphraseSuccessNotificationArea, passphraseSuccess)
     })
     vBox
   }
 
-  private def passwordAttempt(
+  private def passphraseAttempt(
       passphraseField: PasswordField,
       passphraseSuccessNotificationArea: StackPane,
       passphraseSuccess: => Unit
   ): Unit = {
     Future {
-      passwordHelper.testAndSetPassphrase(PassphraseAttempt(passphraseField.getText)) match {
+      passphraseHelper.testAndSetPassphrase(PassphraseAttempt(passphraseField.getText)) match {
         case Right(_) =>
           Platform.runLater(() => {
             val correctPassphrase = new Label("Decrypting")
