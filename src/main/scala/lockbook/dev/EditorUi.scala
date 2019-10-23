@@ -36,7 +36,6 @@ class EditorUi(editorHelper: EditorHelper, gitHelper: GitHelper, executor: Sched
     val saveOnIdle   = CancelableAction(executor, FiniteDuration(1, TimeUnit.SECONDS), autoSaveTask)
 
     scheduleAutoSave(textArea, syncLabel, saveOnIdle)
-    handleFocusChanges(textArea, f, saveOnIdle)
     addSyncListener(root, git, syncLabel)
 
     root
@@ -69,16 +68,6 @@ class EditorUi(editorHelper: EditorHelper, gitHelper: GitHelper, executor: Sched
               }
             }
           )
-        }
-      })
-  }
-
-  private def handleFocusChanges(codeArea: CodeArea, f: File, saveTask: CancelableAction): Unit = {
-    codeArea
-      .focusedProperty()
-      .addListener((_, _, focused) => {
-        if (!focused) {
-          saveTask.doNow()
         }
       })
   }

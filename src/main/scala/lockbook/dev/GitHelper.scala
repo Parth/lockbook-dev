@@ -56,7 +56,9 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper, fileHelper: FileHe
       git.commit().setMessage(message).call()
       Right(())
     } catch {
-      case _: Exception => Left(UserCanceled()) // TODO
+      case e: Exception =>
+        println(e)
+        Left(UserCanceled()) // TODO
     }
   }
 
@@ -71,7 +73,9 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper, fileHelper: FileHe
 
           Right(())
         } catch {
-          case _: Exception => Left(UserCanceled()) // TODO build this out
+          case e: Exception =>
+            println(e)
+            Left(UserCanceled()) // TODO build this out
         }
       })
   }
