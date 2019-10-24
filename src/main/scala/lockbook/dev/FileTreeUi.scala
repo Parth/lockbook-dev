@@ -13,7 +13,7 @@ class FileTreeUi(fileHelper: FileHelper) {
     // Setup TreeView
     val treeView = new TreeView[File]
     treeView.setRoot(getViewHelper(git.getRepository.getWorkTree))
-    treeView.setShowRoot(false)
+    treeView.setShowRoot(true)
     treeView.setCellFactory(_ => fileToTreeCell(git, onSelected))
     treeView.getSelectionModel.selectedItemProperty
       .addListener(
@@ -51,7 +51,13 @@ class FileTreeUi(fileHelper: FileHelper) {
           val delete      = new MenuItem("Delete")
           val newFile     = new MenuItem("New File")
           val newFolder   = new MenuItem("New Folder")
-          contextMenu.getItems.addAll(newFolder, newFile, delete)
+
+          val isRoot = super.getTreeView.getRoot.getValue.equals(item)
+          if (!isRoot) {
+            contextMenu.getItems.addAll(newFolder, newFile, delete)
+          } else {
+            contextMenu.getItems.addAll(newFolder, newFile)
+          }
 
           val enclosingFolderNode = if (getTreeItem.getValue.isDirectory) {
             getTreeItem

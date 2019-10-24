@@ -12,8 +12,8 @@ import scala.concurrent.Future
 class UnlockUi(passphraseHelper: PassphraseHelper) {
   def getView(passphraseSuccess: => Unit): VBox = {
 
-    val vBox                            = new VBox
-    val prompt                          = new Label("Enter your passphrase")
+    val vBox                              = new VBox
+    val prompt                            = new Label("Enter your passphrase")
     val passphraseField                   = new PasswordField
     val passphraseSuccessNotificationArea = new StackPane
 

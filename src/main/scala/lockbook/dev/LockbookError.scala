@@ -3,6 +3,8 @@ package lockbook.dev
 import java.io.{File, IOException}
 import java.security.NoSuchAlgorithmException
 
+import org.eclipse.jgit.api.errors.TransportException
+
 sealed trait LockbookError { val uiMessage: String }
 
 // Errors from FileHelper
@@ -51,12 +53,16 @@ case class CouldNotStoreCredentials() extends GitError {
   val uiMessage = "Failed to read stored credentials"
 }
 
-case class InvalidCredentials() extends GitError {
-  val uiMessage = "Saved Credentials were invalid, please retry."
+case class InvalidCredentialsOrNetwork(te: TransportException) extends GitError {
+  val uiMessage = "Credentials were invalid, or Network Unavailable, please retry."
 }
 
 case class UserCanceled() extends GitError {
   val uiMessage = "No git credentials entered"
+}
+
+case class UnknownException(e: Exception) extends GitError {
+  override val uiMessage: String = s"Unknown exception: ${e.getMessage}"
 }
 
 // User Input related errors

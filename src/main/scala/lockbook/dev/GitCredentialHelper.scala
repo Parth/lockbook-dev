@@ -42,9 +42,9 @@ trait GitCredentialHelper {
 }
 
 class GitCredentialHelperImpl(
-                               encryptionHelper: EncryptionHelper,
-                               passwordHelper: PassphraseHelper,
-                               fileHelper: FileHelper
+    encryptionHelper: EncryptionHelper,
+    passwordHelper: PassphraseHelper,
+    fileHelper: FileHelper
 ) extends GitCredentialHelper {
 
   val credentialFolder = s"${App.path}/credentials"

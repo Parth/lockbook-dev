@@ -1,7 +1,7 @@
 package lockbook.dev
 
 import java.io.File
-import java.util.concurrent.{ScheduledThreadPoolExecutor, TimeUnit}
+import java.util.concurrent.{ScheduledFuture, ScheduledThreadPoolExecutor, TimeUnit}
 
 import javafx.application.Platform
 import javafx.scene.Scene
@@ -99,7 +99,12 @@ class UiOrchestrator(
 
   private def addFocusListener(): Unit = {
     val lockWhenBackground =
-      CancelableAction(executor, FiniteDuration(5, TimeUnit.MINUTES), lockTask) // good settings candidate
+      CancelableAction(executor, FiniteDuration(15, TimeUnit.MINUTES), lockTask) // good settings candidate
+
+    var refreshRepos: Option[ScheduledFuture[_]] = Some(
+      executor.scheduleAtFixedRate(refreshStatus, 1, 1, TimeUnit.SECONDS)
+    )
+    println("scheduled1")
 
     stage
       .focusedProperty()
@@ -107,12 +112,18 @@ class UiOrchestrator(
         if (!locked && !closing) {
           lockWhenBackground.cancel()
           if (isHidden) {
+            println("cancelled1")
+            refreshRepos.map(_.cancel(false))
+            refreshRepos = None
             lockWhenBackground.schedule()
           }
         }
 
         if (!locked && !closing && !isHidden) {
-          repositoryUi.setRepoStatuses()
+          if (refreshRepos.isEmpty || refreshRepos.get.isCancelled) {
+            println("scheduled2")
+            refreshRepos = Some(executor.scheduleAtFixedRate(refreshStatus, 1, 1, TimeUnit.SECONDS))
+          }
         }
       })
 
@@ -123,6 +134,9 @@ class UiOrchestrator(
         KeyEvent.KEY_PRESSED,
         (event: KeyEvent) => {
           if (saveKeyCombo.`match`(event)) {
+            println("cancel2")
+            refreshRepos.map(_.cancel(false))
+            refreshRepos = None
             lockWhenBackground.doNow()
           }
         }
@@ -137,4 +151,7 @@ class UiOrchestrator(
     })
   }
 
+  private val refreshStatus = new Runnable {
+    def run(): Unit = repositoryUi.setRepoStatuses()
+  }
 }

@@ -7,32 +7,31 @@ import javafx.scene.layout.{ColumnConstraints, GridPane, Priority}
 import org.eclipse.jgit.api.Git
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 case class RepositoryCell(git: Git, statusLabel: Label)
 object RepositoryCell {
   def calculateStatus(repocell: RepositoryCell, gitHelper: GitHelper): Unit = Future {
-    Future {
-      val pullNeeded = gitHelper.pullNeeded(repocell.git).getOrElse(false) // TODO network?
-      val localDirty = gitHelper.localDirty(repocell.git)
+    val pullNeeded = gitHelper.pullNeeded(repocell.git).getOrElse(false) // TODO network?
+    val localDirty = gitHelper.localDirty(repocell.git)
 
-      val status = if (pullNeeded && localDirty) {
-        "Sync"
-      } else if (pullNeeded) {
-        "Pull"
-      } else if (localDirty) {
-        "Push"
-      } else {
-        ""
-      }
-
-      Platform.runLater(() => repocell.statusLabel.setText(status))
+    val status = if (pullNeeded && localDirty) {
+      "Both"
+    } else if (pullNeeded) {
+      "Pull"
+    } else if (localDirty) {
+      "Push"
+    } else {
+      ""
     }
+
+    Platform.runLater(() => repocell.statusLabel.setText(status))
   }
 }
 
 class RepositoryCellUi(gitHelper: GitHelper) {
 
+  // These particular functions need to be passed in becaues they require both both the list element & list
   def getListCell(
       onClick: Git => Unit,
       onDelete: RepositoryCell => Unit,
@@ -50,31 +49,52 @@ class RepositoryCellUi(gitHelper: GitHelper) {
           setGraphic(null)
         } else {
           setGraphic(getCell(item))
-          val deleteItem = new MenuItem("Delete")
-          val newRepo    = new MenuItem("Clone Repository")
-          val push       = new MenuItem("Push")
-          val pull       = new MenuItem("Pull")
-          val sync       = new MenuItem("Sync")
+          val deleteItem     = new MenuItem("Delete")
+          val newRepo        = new MenuItem("Clone Repository")
+          val push           = new MenuItem("Push")
+          val pull           = new MenuItem("Pull")
+          val commitPullPush = new MenuItem("Commit, Pull & Push")
 
           deleteItem.setOnAction(_ => onDelete(item))
-
           newRepo.setOnAction(_ => onClone())
-          push.setOnAction(_ => {
-            gitHelper.commitAndPush("", item.git)
-            RepositoryCell.calculateStatus(item, gitHelper)
-          }) // Default push good settings candidate
+          push.setOnAction(_ => pushClicked(item))
+          pull.setOnAction(_ => pullClicked(item))
 
-          pull.setOnAction(_ => {
-            gitHelper.pull(item.git)
-            RepositoryCell.calculateStatus(item, gitHelper)
-          })
-          sync.setOnAction(_ => {
-            gitHelper.sync(item.git)
-            RepositoryCell.calculateStatus(item, gitHelper)
-          })
+          commitPullPush.setOnAction(_ => commitPullPushClicked(item))
 
-          setContextMenu(new ContextMenu(newRepo, pull, push, sync, deleteItem))
+          setContextMenu(new ContextMenu(newRepo, pull, push, commitPullPush, deleteItem))
         }
+      }
+    }
+  }
+
+  private def commitPullPushClicked(item: RepositoryCell): Unit = {
+    item.statusLabel.setText("Syncing...")
+    Future {
+      gitHelper.sync(item.git) match {
+        case Left(error) => Platform.runLater(() => AlertUi.showBad("Sync Failed!", error.uiMessage)) // TODO add repo names to these messages
+        case Right(_)    => RepositoryCell.calculateStatus(item, gitHelper)
+      }
+    }
+  }
+
+  private def pushClicked(item: RepositoryCell): Unit = {
+    item.statusLabel.setText("Pushing...")
+    Future {
+      gitHelper.commitAndPush("", item.git) match { // good settings candidate
+        case Left(error) => Platform.runLater(() => AlertUi.showBad("Push Failed!", error.uiMessage))
+        case Right(_) =>
+          RepositoryCell.calculateStatus(item, gitHelper) // TODO ultimately we don't need to do this, it will happen periodically
+      }
+    }
+  }
+
+  private def pullClicked(item: RepositoryCell): Unit = {
+    item.statusLabel.setText("Pulling...")
+    Future {
+      gitHelper.pull(item.git) match {
+        case Left(error) => Platform.runLater(() => AlertUi.showBad("Pull Failed!", error.uiMessage))
+        case Right(_)    => RepositoryCell.calculateStatus(item, gitHelper)
       }
     }
   }

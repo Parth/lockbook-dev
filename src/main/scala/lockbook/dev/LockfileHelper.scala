@@ -7,8 +7,7 @@ trait LockfileHelper {
   def writeToLockfile(value: EncryptedValue): Either[FileError, Unit]
 }
 
-class LockfileHelperImpl(encryptionHelper: EncryptionHelper, fileHelper: FileHelper)
-    extends LockfileHelper {
+class LockfileHelperImpl(encryptionHelper: EncryptionHelper, fileHelper: FileHelper) extends LockfileHelper {
 
   val lockfile = s"${App.path}/lockfile"
 

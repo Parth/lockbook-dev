@@ -17,7 +17,7 @@ class RepositoryUi(
   val repoList: ObservableList[RepositoryCell] = FXCollections.observableArrayList[RepositoryCell]()
 
   def getView(onClick: Git => Unit): BorderPane = {
-    val borderPane = new BorderPane
+    val borderPane = new BorderPane // TODO does this still need to be a borderpane?
     val listView   = new ListView[RepositoryCell]
 
     borderPane.setId("repoList")
@@ -63,12 +63,13 @@ class RepositoryUi(
   }
 
   def setRepoStatuses(): Unit = Future {
+    println("called")
     repoList
       .stream()
       .forEach(calculateStatus)
   }
 
-  def calculateStatus(repocell: RepositoryCell): Unit = {
-    RepositoryCell.calculateStatus(repocell, gitHelper)
+  def calculateStatus(repoCell: RepositoryCell): Unit = {
+    RepositoryCell.calculateStatus(repoCell, gitHelper)
   }
 }

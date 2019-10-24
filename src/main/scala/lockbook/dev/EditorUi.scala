@@ -55,11 +55,11 @@ class EditorUi(editorHelper: EditorHelper, gitHelper: GitHelper, executor: Sched
               if (saveKeyCombo.`match`(event)) {
 
                 // Shortcut is actually matched here
-                label.setText("Pushing changes to github...")
+                label.setText("Pushing changes...")
                 Future {
                   gitHelper.commitAndPush("", git) match {
                     case Left(error) =>
-                      Platform.runLater(() => label.setText(s"Git operation failed: ${error.uiMessage}"))
+                      Platform.runLater(() => AlertUi.showBad("Push Failed", error.uiMessage)) // TODO Does this need to be Platform.runLater?
                     case Right(_) =>
                       Platform.runLater(() => label.setText("Commit & Push Successful"))
                   }
