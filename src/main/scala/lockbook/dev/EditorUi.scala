@@ -189,10 +189,10 @@ class EditorUi(editorHelper: EditorHelper, gitHelper: GitHelper, executor: Sched
     val code = styledText.getText(node.getOpeningMarker.getStartOffset, node.getClosingMarker.getEndOffset)
     val keywords = Set("abstract", "case", "class", "def", "extends", "match")
     var lastEnd = node.getOpeningMarker.getStartOffset
-    code.split(" ").map(w => {
-      if (keywords.contains(w)) styledText.setStyleClass(lastEnd, lastEnd+w.length, "fruity")
+    code.split("(?=\\s+)").map(w => {
+      if (keywords.contains(w.trim)) styledText.setStyleClass(lastEnd, lastEnd+w.length, "fruity")
 
-      lastEnd += w.length+1
+      lastEnd += w.length
     })
   }
 }
