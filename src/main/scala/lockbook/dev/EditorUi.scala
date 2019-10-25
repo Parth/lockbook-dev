@@ -134,26 +134,65 @@ class EditorUi(editorHelper: EditorHelper, gitHelper: GitHelper, executor: Sched
   }
 
   private val nodeVisitor: CodeArea => NodeVisitor = (styledText: CodeArea) =>
-    new NodeVisitor(new VisitHandler[Text](classOf[Text], (node: Text) => {
-      styledText.setStyleClass(node.getStartOffset, node.getEndOffset, "text")
-    }), new VisitHandler[Heading](classOf[Heading], (node: Heading) => {
-      styledText.setStyleClass(node.getOpeningMarker.getStartOffset, node.getText.getEndOffset, s"h${node.getLevel}")
-    }), new VisitHandler[Code](classOf[Code], (node: Code) => {
-      styledText.setStyleClass(node.getOpeningMarker.getStartOffset, node.getClosingMarker.getEndOffset, "code")
-    }), new VisitHandler[Emphasis](classOf[Emphasis], (node: Emphasis) => {
-      styledText.setStyleClass(node.getOpeningMarker.getStartOffset, node.getClosingMarker.getEndOffset, "emphasis")
-    }), new VisitHandler[FencedCodeBlock](classOf[FencedCodeBlock], (node: FencedCodeBlock) => {
-      if (node.getClosingFence.getEndOffset != 0) {
-        styledText.setStyleClass(node.getOpeningMarker.getStartOffset, node.getClosingMarker.getEndOffset, "code-block")
-      }
-    }), new VisitHandler[BlockQuote](classOf[BlockQuote], (node: BlockQuote) => {
-      styledText.setStyleClass(node.getStartOffset, node.getEndOffset, "quote-block")
-    }), new VisitHandler[Link](classOf[Link], (node: Link) => {
-      styledText
-        .setStyleClass(node.getTextOpeningMarker.getStartOffset, node.getLinkClosingMarker.getEndOffset, "link")
-    }), new VisitHandler[BulletListItem](classOf[BulletListItem], (node: BulletListItem) => {
-      styledText.setStyleClass(node.getOpeningMarker.getStartOffset, node.getOpeningMarker.getEndOffset, "bullet")
-    }), new VisitHandler[OrderedListItem](classOf[OrderedListItem], (node: OrderedListItem) => {
-      styledText.setStyleClass(node.getOpeningMarker.getStartOffset, node.getOpeningMarker.getEndOffset, "number")
-    }))
+    new NodeVisitor(
+      new VisitHandler[Text](
+        classOf[Text],
+        (node: Text) =>
+          styledText.setStyleClass(node.getStartOffset, node.getEndOffset, "text")
+      ),
+      new VisitHandler[Heading](
+        classOf[Heading],
+        (node: Heading) =>
+          styledText.setStyleClass(node.getOpeningMarker.getStartOffset, node.getText.getEndOffset, s"h${node.getLevel}")
+      ),
+      new VisitHandler[Code](
+        classOf[Code],
+        (node: Code) =>
+          styledText.setStyleClass(node.getOpeningMarker.getStartOffset, node.getClosingMarker.getEndOffset, "code")
+      ),
+      new VisitHandler[Emphasis](
+        classOf[Emphasis],
+        (node: Emphasis) =>
+          styledText.setStyleClass(node.getOpeningMarker.getStartOffset, node.getClosingMarker.getEndOffset, "emphasis")
+      ),
+      new VisitHandler[FencedCodeBlock](
+        classOf[FencedCodeBlock],
+        (node: FencedCodeBlock) =>
+          if (node.getClosingFence.getEndOffset != 0) {
+            styledText.setStyleClass(node.getOpeningMarker.getStartOffset, node.getClosingMarker.getEndOffset, "code-block")
+            formatCodeBlock(styledText, node)
+          }
+      ),
+      new VisitHandler[BlockQuote](
+        classOf[BlockQuote],
+        (node: BlockQuote) =>
+          styledText.setStyleClass(node.getStartOffset, node.getEndOffset, "quote-block")
+      ),
+      new VisitHandler[Link](
+        classOf[Link],
+        (node: Link) =>
+          styledText.setStyleClass(node.getTextOpeningMarker.getStartOffset, node.getLinkClosingMarker.getEndOffset, "link")
+      ),
+      new VisitHandler[BulletListItem](
+        classOf[BulletListItem],
+        (node: BulletListItem) =>
+          styledText.setStyleClass(node.getOpeningMarker.getStartOffset, node.getOpeningMarker.getEndOffset, "bullet")
+      ),
+      new VisitHandler[OrderedListItem](
+        classOf[OrderedListItem],
+        (node: OrderedListItem) =>
+          styledText.setStyleClass(node.getOpeningMarker.getStartOffset, node.getOpeningMarker.getEndOffset, "number")
+      )
+    )
+
+  private def formatCodeBlock(styledText: CodeArea, node: FencedCodeBlock) = {
+    val code = styledText.getText(node.getOpeningMarker.getStartOffset, node.getClosingMarker.getEndOffset)
+    val keywords = Set("abstract", "case", "class", "def", "extends", "match")
+    var lastEnd = node.getOpeningMarker.getStartOffset
+    code.split(" ").map(w => {
+      if (keywords.contains(w)) styledText.setStyleClass(lastEnd, lastEnd+w.length, "fruity")
+
+      lastEnd += w.length+1
+    })
+  }
 }

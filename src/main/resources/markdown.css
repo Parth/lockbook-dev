@@ -36,6 +36,10 @@
     -fx-font-family: monospace;
 }
 
+.styled-text-area .fruity {
+    -fx-fill: #ff008b;
+}
+
 .styled-text-area .emphasis {
 	-fx-font-weight: bolder;
 }
