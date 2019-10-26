@@ -93,7 +93,7 @@ class UiOrchestrator(
   private def closeRequestListener(): Unit = {
     stage.setOnCloseRequest(_ => {
       closing = true
-      executor.shutdown()
+      executor.shutdownNow()
     })
   }
 
@@ -104,7 +104,6 @@ class UiOrchestrator(
     var refreshRepos: Option[ScheduledFuture[_]] = Some(
       executor.scheduleAtFixedRate(refreshStatus, 1, 1, TimeUnit.SECONDS)
     )
-    println("scheduled1")
 
     stage
       .focusedProperty()
@@ -112,7 +111,6 @@ class UiOrchestrator(
         if (!locked && !closing) {
           lockWhenBackground.cancel()
           if (isHidden) {
-            println("cancelled1")
             refreshRepos.map(_.cancel(false))
             refreshRepos = None
             lockWhenBackground.schedule()
@@ -121,7 +119,6 @@ class UiOrchestrator(
 
         if (!locked && !closing && !isHidden) {
           if (refreshRepos.isEmpty || refreshRepos.get.isCancelled) {
-            println("scheduled2")
             refreshRepos = Some(executor.scheduleAtFixedRate(refreshStatus, 1, 1, TimeUnit.SECONDS))
           }
         }
@@ -134,7 +131,6 @@ class UiOrchestrator(
         KeyEvent.KEY_PRESSED,
         (event: KeyEvent) => {
           if (saveKeyCombo.`match`(event)) {
-            println("cancel2")
             refreshRepos.map(_.cancel(false))
             refreshRepos = None
             lockWhenBackground.doNow()
