@@ -26,7 +26,10 @@ class EncryptionImpl extends EncryptionHelper {
 
   def decrypt(garbage: EncryptedValue, passphrase: Passphrase): Either[CryptoError, DecryptedValue] =
     try {
-      Right(DecryptedValue(decryptHelper(garbage.garbage, passphrase.passphrase)))
+      if (garbage.garbage.isEmpty)
+        Right(DecryptedValue(""))
+      else
+        Right(DecryptedValue(decryptHelper(garbage.garbage, passphrase.passphrase)))
     } catch {
       case _: IllegalArgumentException => Left(NotBase64())
       case a: NoSuchAlgorithmException => Left(SecureOperationsNotSupported(a))
