@@ -2,6 +2,7 @@ package lockbook.dev
 
 import javafx.application.Platform
 import javafx.geometry.HPos
+import javafx.scene.Cursor
 import javafx.scene.control._
 import javafx.scene.layout.{ColumnConstraints, GridPane, Priority}
 import org.eclipse.jgit.api.Git
@@ -69,33 +70,46 @@ class RepositoryCellUi(gitHelper: GitHelper) {
   }
 
   private def commitPullPushClicked(item: RepositoryCell): Unit = {
-    item.statusLabel.setText("Syncing...")
+    item.statusLabel.getScene.setCursor(Cursor.WAIT)
+
     Future {
       gitHelper.sync(item.git) match {
-        case Left(error) => Platform.runLater(() => AlertUi.showBad("Sync Failed!", error.uiMessage)) // TODO add repo names to these messages
-        case Right(_)    => RepositoryCell.calculateStatus(item, gitHelper)
+        case Left(error) =>
+          Platform.runLater(() => AlertUi.showBad("Sync Failed!", error.uiMessage)) // TODO add repo names to these messages
+        case Right(_) =>
       }
+
+      Platform.runLater(() => {
+        item.statusLabel.getScene.setCursor(Cursor.DEFAULT)
+      })
     }
   }
 
   private def pushClicked(item: RepositoryCell): Unit = {
-    item.statusLabel.setText("Pushing...")
+    item.statusLabel.getScene.setCursor(Cursor.WAIT)
     Future {
       gitHelper.commitAndPush("", item.git) match { // good settings candidate
         case Left(error) => Platform.runLater(() => AlertUi.showBad("Push Failed!", error.uiMessage))
         case Right(_) =>
-          RepositoryCell.calculateStatus(item, gitHelper) // TODO ultimately we don't need to do this, it will happen periodically
       }
+
+      Platform.runLater(() => {
+        item.statusLabel.getScene.setCursor(Cursor.DEFAULT)
+      })
     }
   }
 
   private def pullClicked(item: RepositoryCell): Unit = {
-    item.statusLabel.setText("Pulling...")
+    item.statusLabel.getScene.setCursor(Cursor.WAIT)
     Future {
       gitHelper.pull(item.git) match {
         case Left(error) => Platform.runLater(() => AlertUi.showBad("Pull Failed!", error.uiMessage))
-        case Right(_)    => RepositoryCell.calculateStatus(item, gitHelper)
+        case Right(_)    =>
       }
+
+      Platform.runLater(() => {
+        item.statusLabel.getScene.setCursor(Cursor.DEFAULT)
+      })
     }
   }
 
