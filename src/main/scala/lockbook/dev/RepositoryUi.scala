@@ -63,7 +63,6 @@ class RepositoryUi(
   }
 
   def setRepoStatuses(): Unit = Future {
-    println("called")
     repoList
       .stream()
       .forEach(calculateStatus)
