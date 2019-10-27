@@ -12,7 +12,7 @@ object DoInBackgroundWithMouseSpinning {
     Future {
       task() match {
         case Left(error) =>
-          Platform.runLater(() => AlertUi.showBad(s"$name Failed!", error.uiMessage))
+          Platform.runLater(() => DialogUi.showBad(s"$name Failed!", error.uiMessage))
         case Right(_) =>
       }
 

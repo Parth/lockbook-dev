@@ -1,9 +1,8 @@
 package lockbook.dev
 
 import java.io.File
-import java.util.Optional
 
-import javafx.scene.control.{TextInputDialog, _}
+import javafx.scene.control._
 import javafx.scene.layout.BorderPane
 import org.eclipse.jgit.api.Git
 
@@ -108,15 +107,11 @@ class FileTreeUi(fileHelper: FileHelper) {
   private def newFileOrFolderDialogResult(isFile: Boolean): Option[String] = {
     val fileOrFolder = if (isFile) "file" else "folder"
 
-    val dialog = new TextInputDialog
+    val title   = s"Create new $fileOrFolder"
+    val header  = s"Enter $fileOrFolder name"
+    val content = "Name:"
 
-    dialog.setTitle(s"Create new $fileOrFolder")
-    dialog.setHeaderText(s"Enter $fileOrFolder name")
-    dialog.setContentText("Name:")
-
-    val result: Optional[String] = dialog.showAndWait
-
-    if (result.isPresent) Some(result.get()) else None
+    DialogUi.askUserForString(title, header, content)
   }
 
 }

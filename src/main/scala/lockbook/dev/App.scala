@@ -8,6 +8,7 @@ import javafx.stage.Stage
 object App {
   val path: String   = s"${System.getProperty("user.home")}/.lockbook"
   val debug: Boolean = true // TODO utilize this to print out exceptions passed into LockbookError
+  val css: String = "light.css"
 
   def main(args: Array[String]) {
     Application.launch(classOf[App], args: _*)
@@ -15,7 +16,17 @@ object App {
 }
 
 class App extends Application {
+
+  def addCss(stage: Stage): Unit = {
+    stage.sceneProperty().addListener((_, _, newValue) => {
+      if (newValue != null) {
+        newValue.getStylesheets.addAll(App.css, "markdown.css")
+      }
+    })
+  }
+
   override def start(stage: Stage): Unit = {
+    addCss(stage)
 
     val executor: ScheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(2)
 

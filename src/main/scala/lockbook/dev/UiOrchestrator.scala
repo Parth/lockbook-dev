@@ -35,7 +35,6 @@ class UiOrchestrator(
     stage.setFullScreen(false)
     stage.setScene(new Scene(root, 300, 130))
     stage.setTitle("Lockbook Dev")
-    stage.getScene.getStylesheets.add("light.css")
     processLockfileAndShowUi(root, showRepo())
     stage.show()
   }
@@ -63,8 +62,7 @@ class UiOrchestrator(
       )
     )
 
-    stage.getScene.getStylesheets.add("light.css")    // good settings candidate
-    stage.getScene.getStylesheets.add("markdown.css") // good settings candidate
+
     closeRequestListener()
     addFocusListener()
     stage.show()
@@ -90,12 +88,11 @@ class UiOrchestrator(
     }
   }
 
-  private def closeRequestListener(): Unit = {
+  private def closeRequestListener(): Unit =
     stage.setOnCloseRequest(_ => {
       closing = true
       executor.shutdownNow()
     })
-  }
 
   private def addFocusListener(): Unit = {
     val lockWhenBackground =
