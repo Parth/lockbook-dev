@@ -99,10 +99,3 @@
     -fx-background-color: #3d3d3d;
     -fx-text-fill: white;
 }
-
-.dialog-pane {
-        -fx-base: #3d3d3d;
-        -fx-background: #3d3d3d;
-        -fx-focus-color: transparent;
-        -fx-faint-focus-color: transparent;
-}
