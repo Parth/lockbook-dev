@@ -2,7 +2,6 @@ package lockbook.dev
 
 import javafx.application.Platform
 import javafx.geometry.HPos
-import javafx.scene.Cursor
 import javafx.scene.control._
 import javafx.scene.layout.{ColumnConstraints, GridPane, Priority}
 import org.eclipse.jgit.api.Git
@@ -68,49 +67,26 @@ class RepositoryCellUi(gitHelper: GitHelper) {
     }
   }
 
-  private def commitPullPushClicked(item: RepositoryCell): Unit = {
-    item.statusLabel.getScene.setCursor(Cursor.WAIT)
+  private def commitPullPushClicked(item: RepositoryCell): Unit =
+    DoInBackgroundWithMouseSpinning(
+      name = "Commit, Pull, Push",
+      task = () => gitHelper.sync(item.git),
+      item.statusLabel.getScene
+    )
 
-    Future {
-      gitHelper.sync(item.git) match {
-        case Left(error) =>
-          Platform.runLater(() => AlertUi.showBad("Sync Failed!", error.uiMessage)) // TODO add repo names to these messages
-        case Right(_) =>
-      }
+  private def pushClicked(item: RepositoryCell): Unit =
+    DoInBackgroundWithMouseSpinning(
+      name = "Push",
+      task = () => gitHelper.commitAndPush("", item.git),
+      item.statusLabel.getScene
+    )
 
-      Platform.runLater(() => {
-        item.statusLabel.getScene.setCursor(Cursor.DEFAULT)
-      })
-    }
-  }
-
-  private def pushClicked(item: RepositoryCell): Unit = {
-    item.statusLabel.getScene.setCursor(Cursor.WAIT)
-    Future {
-      gitHelper.commitAndPush("", item.git) match { // good settings candidate
-        case Left(error) => Platform.runLater(() => AlertUi.showBad("Push Failed!", error.uiMessage))
-        case Right(_)    =>
-      }
-
-      Platform.runLater(() => {
-        item.statusLabel.getScene.setCursor(Cursor.DEFAULT)
-      })
-    }
-  }
-
-  private def pullClicked(item: RepositoryCell): Unit = {
-    item.statusLabel.getScene.setCursor(Cursor.WAIT)
-    Future {
-      gitHelper.pull(item.git) match {
-        case Left(error) => Platform.runLater(() => AlertUi.showBad("Pull Failed!", error.uiMessage))
-        case Right(_)    =>
-      }
-
-      Platform.runLater(() => {
-        item.statusLabel.getScene.setCursor(Cursor.DEFAULT)
-      })
-    }
-  }
+  private def pullClicked(item: RepositoryCell): Unit =
+    DoInBackgroundWithMouseSpinning(
+      name = "Pull",
+      task = () => gitHelper.pull(item.git),
+      item.statusLabel.getScene
+    )
 
   private def getCell(repositoryCell: RepositoryCell): GridPane = {
     val gridPane = new GridPane
