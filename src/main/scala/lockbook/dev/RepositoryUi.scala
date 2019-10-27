@@ -2,6 +2,7 @@ package lockbook.dev
 
 import javafx.collections.{FXCollections, ObservableList}
 import javafx.scene.control._
+import javafx.scene.input.{KeyCode, KeyCodeCombination, KeyCombination, KeyEvent}
 import javafx.scene.layout._
 import org.eclipse.jgit.api.Git
 
@@ -53,8 +54,35 @@ class RepositoryUi(
       cloneRepoDialog.showDialog(repoList)
     })
 
+    addSyncListener(listView)
+
     borderPane.setCenter(listView)
     borderPane
+  }
+
+  def addSyncListener(value: ListView[RepositoryCell]): Unit = {
+    val saveKeyCombo = new KeyCodeCombination(KeyCode.S, KeyCombination.META_DOWN)
+
+    value
+      .sceneProperty()
+      .addListener((_, _, newValue) => { // When this ListView is attached to a scene
+        if (newValue != null) {
+          newValue.addEventHandler(
+            KeyEvent.KEY_PRESSED,
+            (event: KeyEvent) => { // An event has happened
+              if (saveKeyCombo.`match`(event)) { // Our shortcut is matched
+
+                DoInBackgroundWithMouseSpinning( // Push is performed in background
+                  name = "Pushing changes",
+                  task = () => gitHelper.commitAndPush("", value.getSelectionModel.getSelectedItem.git),
+                  value.getScene
+                )
+
+              }
+            }
+          )
+        }
+      })
   }
 
   def delete(list: ListView[RepositoryCell])(repositoryCell: RepositoryCell): Unit = {
