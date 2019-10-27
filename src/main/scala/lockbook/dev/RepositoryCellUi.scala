@@ -12,22 +12,21 @@ import scala.concurrent.Future
 
 case class RepositoryCell(git: Git, statusLabel: Label)
 object RepositoryCell {
-  def calculateStatus(repocell: RepositoryCell, gitHelper: GitHelper): Unit = Future {
-    val pullNeeded = gitHelper.pullNeeded(repocell.git).getOrElse(false) // TODO network?
-    val localDirty = gitHelper.localDirty(repocell.git)
+  def calculateStatus(repocell: RepositoryCell, gitHelper: GitHelper): Unit =
+    Future {
+      val maybePullNeeded = gitHelper.pullNeeded(repocell.git)
+      val pullNeeded      = maybePullNeeded.getOrElse(false)
+      val localDirty      = gitHelper.localDirty(repocell.git)
 
-    val status = if (pullNeeded && localDirty) {
-      "Both"
-    } else if (pullNeeded) {
-      "Pull"
-    } else if (localDirty) {
-      "Push"
-    } else {
-      ""
+      val status =
+        if (maybePullNeeded.isLeft) "Error"
+        else if (pullNeeded && localDirty) "Both"
+        else if (pullNeeded) "Pull"
+        else if (localDirty) "Push"
+        else ""
+
+      Platform.runLater(() => repocell.statusLabel.setText(status))
     }
-
-    Platform.runLater(() => repocell.statusLabel.setText(status))
-  }
 }
 
 class RepositoryCellUi(gitHelper: GitHelper) {
@@ -90,7 +89,7 @@ class RepositoryCellUi(gitHelper: GitHelper) {
     Future {
       gitHelper.commitAndPush("", item.git) match { // good settings candidate
         case Left(error) => Platform.runLater(() => AlertUi.showBad("Push Failed!", error.uiMessage))
-        case Right(_) =>
+        case Right(_)    =>
       }
 
       Platform.runLater(() => {

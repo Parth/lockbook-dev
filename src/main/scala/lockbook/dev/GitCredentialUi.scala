@@ -31,7 +31,7 @@ object GitCredentialUi {
     grid.add(new Label("Password:"), 0, 1)
     grid.add(password, 1, 1)
 
-    val loginButton = dialog.getDialogPane.lookupButton(loginButtonType)
+    dialog.getDialogPane.lookupButton(loginButtonType)
 
     dialog.getDialogPane.setContent(grid)
 
