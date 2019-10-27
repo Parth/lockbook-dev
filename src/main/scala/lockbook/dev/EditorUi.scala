@@ -9,7 +9,6 @@ import com.vladsch.flexmark.util.ast.{Document, NodeVisitor, VisitHandler}
 import javafx.application.Platform
 import javafx.geometry.Pos
 import javafx.scene.control._
-import javafx.scene.input.{KeyCode, KeyCodeCombination, KeyCombination, KeyEvent}
 import javafx.scene.layout.BorderPane
 import org.eclipse.jgit.api.Git
 import org.fxmisc.richtext.CodeArea
@@ -36,40 +35,8 @@ class EditorUi(editorHelper: EditorHelper, gitHelper: GitHelper, executor: Sched
     val saveOnIdle   = CancelableAction(executor, FiniteDuration(1, TimeUnit.SECONDS), autoSaveTask)
 
     scheduleAutoSave(textArea, syncLabel, saveOnIdle)
-    addSyncListener(root, git, syncLabel)
 
     root
-  }
-
-  private def addSyncListener(root: BorderPane, git: Git, label: Label): Unit = {
-    val saveKeyCombo = new KeyCodeCombination(KeyCode.S, KeyCombination.META_DOWN)
-
-    // Add shortcut listener when we're mounted to a scene
-    root
-      .sceneProperty()
-      .addListener((_, _, newv) => {
-        if (newv != null) {
-          newv.addEventHandler(
-            KeyEvent.KEY_PRESSED,
-            (event: KeyEvent) => {
-              if (saveKeyCombo.`match`(event)) {
-
-                // Shortcut is actually matched here
-                label.setText("Pushing changes...")
-                Future {
-                  gitHelper.commitAndPush("", git) match {
-                    case Left(error) =>
-                      Platform.runLater(() => AlertUi.showBad("Push Failed", error.uiMessage)) // TODO Does this need to be Platform.runLater?
-                    case Right(_) =>
-                      Platform.runLater(() => label.setText("Commit & Push Successful"))
-                  }
-                }
-
-              }
-            }
-          )
-        }
-      })
   }
 
   private def loadFile(git: Git, f: File, root: BorderPane, text: CodeArea, syncLabel: Label): Future[Unit] = Future {
