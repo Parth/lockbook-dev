@@ -63,7 +63,7 @@ class GitCredentialHelperImpl(
     }
   }
 
-  private def getPasswordFromUser(key: String): Either[UserCanceled, GitCredential] = synchronized {
+  private def getPasswordFromUser(key: String): Either[UserCanceled, GitCredential] = {
     deleteStoredCredentials(key) // If decryption failed on this password, delete it
 
     // This is required because, this function is not called from JavaFX thread, so we need to Platform.runLater, which is async
