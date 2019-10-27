@@ -137,7 +137,10 @@ class EditorUi(editorHelper: EditorHelper, gitHelper: GitHelper, executor: Sched
     new NodeVisitor(new VisitHandler[Text](classOf[Text], (node: Text) => {
       styledText.setStyleClass(node.getStartOffset, node.getEndOffset, "text")
     }), new VisitHandler[Heading](classOf[Heading], (node: Heading) => {
-      styledText.setStyleClass(node.getOpeningMarker.getStartOffset, node.getText.getEndOffset, s"h${node.getLevel}")
+      if (node.isAtxHeading)
+        styledText.setStyleClass(node.getOpeningMarker.getStartOffset, node.getText.getEndOffset, s"h${node.getLevel}")
+      else if (node.isSetextHeading)
+        styledText.setStyleClass(node.getText.getStartOffset, node.getClosingMarker.getEndOffset, s"h${node.getLevel}")
     }), new VisitHandler[Code](classOf[Code], (node: Code) => {
       styledText.setStyleClass(node.getOpeningMarker.getStartOffset, node.getClosingMarker.getEndOffset, "code")
     }), new VisitHandler[Emphasis](classOf[Emphasis], (node: Emphasis) => {

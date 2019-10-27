@@ -56,6 +56,7 @@ class FileTreeUi(fileHelper: FileHelper) {
           if (!isRoot) {
             contextMenu.getItems.addAll(newFolder, newFile, delete)
           } else {
+            getTreeItem.setExpanded(true)
             contextMenu.getItems.addAll(newFolder, newFile)
           }
 
