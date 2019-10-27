@@ -97,9 +97,9 @@ class FileTreeUi(fileHelper: FileHelper) {
 
         val newTreeItem = new TreeItem[File](newFile)
         enclosingFolderNode.getChildren.add(newTreeItem)
+        enclosingFolderNode.setExpanded(true)
 
-        val location = treeView.getRow(newTreeItem)
-        treeView.getSelectionModel.select(location)
+        treeView.getSelectionModel.select(newTreeItem)
 
       case None =>
     }
