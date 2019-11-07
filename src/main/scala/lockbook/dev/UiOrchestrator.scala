@@ -35,7 +35,7 @@ class UiOrchestrator(
     stage.setFullScreen(false)
     stage.setScene(new Scene(root, 300, 130))
     stage.setTitle("Lockbook Dev")
-    stage.getScene.getStylesheets.add("light.css")
+    stage.getScene.getStylesheets.add(SettingsHelper.getSettings.theme)
     processLockfileAndShowUi(root, showRepo())
     stage.show()
   }
