@@ -7,16 +7,27 @@ import net.liftweb.json.DefaultFormats
 
 import scala.io.Source
 
-case class Settings(
+case class Settings( // make members of settings optional
     theme: String,
     autoLockTime: Int
 )
 
-object SettingsHelper { // Maybe make Settings into an object
+trait SettingsHelper {
+  def constructJson: Unit
+  def getSettings: Settings
+}
+
+object SettingsHelper {
+  def fromFile: Settings = { // read file, turn it into a case class
+
+  }
+}
+
+class SettingsHelperImpl(settings: Settings) { // Maybe make Settings into an object
 
   val jsonFile = s"${App.path}/lockbook.json"
 
-  def constructJson: Unit = {
+  def constructJson: Unit = { //
     val jsonString = """
       {
         "theme": "light.css"
@@ -29,7 +40,7 @@ object SettingsHelper { // Maybe make Settings into an object
     pw.close
   }
 
-  def getSettings: Settings = {
+  def getSettings: Settings = { // everytime you should access the settings file
     try {
       val stream = Source.fromFile(new File(jsonFile))
       implicit val formats = DefaultFormats
