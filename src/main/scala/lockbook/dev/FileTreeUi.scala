@@ -4,6 +4,8 @@ import java.io.File
 
 import javafx.scene.control._
 import javafx.scene.layout.BorderPane
+import javafx.scene.paint.Paint
+import javafx.scene.shape.Rectangle
 import org.eclipse.jgit.api.Git
 
 class FileTreeUi(fileHelper: FileHelper) {
@@ -75,6 +77,16 @@ class FileTreeUi(fileHelper: FileHelper) {
 
           setContextMenu(contextMenu)
           setText(item.getName)
+          if (isVisible) {
+            val r = new Rectangle(5, 5)
+            val iconColor = item.getName match {
+              case name if name.endsWith(".aes") => "hotpink"
+              case name if name.endsWith(".md")  => "aqua"
+              case _                             => "black"
+            }
+            r.setFill(Paint.valueOf(iconColor))
+            setGraphic(r)
+          }
         } else {
           setText("")
         }
