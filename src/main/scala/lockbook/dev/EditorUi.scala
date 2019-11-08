@@ -106,13 +106,13 @@ class EditorUi(editorHelper: EditorHelper, gitHelper: GitHelper, executor: Sched
     new NodeVisitor(
       new VisitHandler[Text](
         classOf[Text],
-        (node: Text) =>
-          styledText.setStyleClass(node.getStartOffset, node.getEndOffset, "text")
+        (node: Text) => styledText.setStyleClass(node.getStartOffset, node.getEndOffset, "text")
       ),
       new VisitHandler[Heading](
         classOf[Heading],
         (node: Heading) =>
-          styledText.setStyleClass(node.getOpeningMarker.getStartOffset, node.getText.getEndOffset, s"h${node.getLevel}")
+          styledText
+            .setStyleClass(node.getOpeningMarker.getStartOffset, node.getText.getEndOffset, s"h${node.getLevel}")
       ),
       new VisitHandler[Code](
         classOf[Code],
@@ -128,19 +128,20 @@ class EditorUi(editorHelper: EditorHelper, gitHelper: GitHelper, executor: Sched
         classOf[FencedCodeBlock],
         (node: FencedCodeBlock) =>
           if (node.getClosingFence.getEndOffset != 0) {
-            styledText.setStyleClass(node.getOpeningMarker.getStartOffset, node.getClosingMarker.getEndOffset, "code-block")
+            styledText
+              .setStyleClass(node.getOpeningMarker.getStartOffset, node.getClosingMarker.getEndOffset, "code-block")
             formatCodeBlock(styledText, node)
           }
       ),
       new VisitHandler[BlockQuote](
         classOf[BlockQuote],
-        (node: BlockQuote) =>
-          styledText.setStyleClass(node.getStartOffset, node.getEndOffset, "quote-block")
+        (node: BlockQuote) => styledText.setStyleClass(node.getStartOffset, node.getEndOffset, "quote-block")
       ),
       new VisitHandler[Link](
         classOf[Link],
         (node: Link) =>
-          styledText.setStyleClass(node.getTextOpeningMarker.getStartOffset, node.getLinkClosingMarker.getEndOffset, "link")
+          styledText
+            .setStyleClass(node.getTextOpeningMarker.getStartOffset, node.getLinkClosingMarker.getEndOffset, "link")
       ),
       new VisitHandler[BulletListItem](
         classOf[BulletListItem],
@@ -154,18 +155,18 @@ class EditorUi(editorHelper: EditorHelper, gitHelper: GitHelper, executor: Sched
       )
     )
 
-  private def styleThing(styledText: CodeArea, m: Match, bs: Int, styleClass: String) = {
+  private def styleThing(styledText: CodeArea, m: Match, bs: Int, styleClass: String): Unit = {
     val start = bs + (m.start + m.group(1).length)
-    val end = bs + m.end)
+    val end   = bs + m.end
     styledText.setStyleClass(start, end, styleClass)
   }
 
-  private def formatCodeBlock(styledText: CodeArea, node: FencedCodeBlock) = {
-    val code = styledText.getText(node.getOpeningMarker.getStartOffset, node.getClosingMarker.getEndOffset)
-    val keywords = Set("abstract", "case", "class", "def", "extends", "match", "var", "val", "for").mkString("|")
+  private def formatCodeBlock(styledText: CodeArea, node: FencedCodeBlock): Unit = {
+    val code       = styledText.getText(node.getOpeningMarker.getStartOffset, node.getClosingMarker.getEndOffset)
+    val keywords   = Set("abstract", "case", "class", "def", "extends", "match", "var", "val", "for").mkString("|")
     val blockStart = node.getOpeningMarker.getStartOffset
 
-    s"(\\s)(${keywords})".r.findAllMatchIn(code).foreach(m => styleThing(styledText, m, blockStart, "scala-keyword"))
+    s"(\\s)($keywords)".r.findAllMatchIn(code).foreach(m => styleThing(styledText, m, blockStart, "scala-keyword"))
     "(: )(\\w+)".r.findAllMatchIn(code).foreach(m => styleThing(styledText, m, blockStart, "scala-class"))
     "(class )(\\w+)".r.findAllMatchIn(code).foreach(m => styleThing(styledText, m, blockStart, "scala-class"))
     "(\\[)(\\w+)".r.findAllMatchIn(code).foreach(m => styleThing(styledText, m, blockStart, "scala-class"))
