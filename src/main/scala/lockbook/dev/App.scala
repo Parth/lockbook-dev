@@ -26,6 +26,7 @@ class App extends Application {
     val gitCredential: GitCredentialHelperImpl = new GitCredentialHelperImpl(encryption, password, file)
     val git: GitHelper                         = new GitHelperImpl(gitCredential, file)
     val editorHelper: EditorHelperImpl         = new EditorHelperImpl(encryption, password, file)
+    val settingHelper: SettingHelper           = new SettingHelperImpl(SettingHelper.fromFile)
 
     val newPasswordUi: NewPasswordUi       = new NewPasswordUi(lockfile, password, encryption)
     val unlockUi: UnlockUi                 = new UnlockUi(password)

@@ -3,18 +3,25 @@ package lockbook.dev
 import java.io.{File, PrintWriter}
 
 import net.liftweb.json
-import net.liftweb.json.DefaultFormats
+import net.liftweb.json.DefaultFormats // don't use this thing search for typesafe scala library for this 
 
 import scala.io.Source
 
 case class Settings( // make members of settings optional
-    theme: String,
-    autoLockTime: Int
+    theme: Option[String],
+    autoLockTime: Option[Int]
 )
 
-trait SettingsHelper {
-  def constructJson: Unit
-  def getSettings: Settings
+trait SettingsHelper { // Trait level should not return any options to anyone 
+  def getTheme: String
+}
+
+class SettingHelperImpl(setting: Setting) extends SettingHelper { // This file is where all the default values will live
+    override def getTheme: String = setting.theme.getOrElse("default.css")
+    override def getTheme: String = setting.theme.getOrElse("default.css")
+    override def getTheme: String = setting.theme.getOrElse("default.css")
+    override def getTheme: String = setting.theme.getOrElse("default.css")
+    override def getTheme: String = setting.theme.getOrElse("default.css")
 }
 
 object SettingsHelper {
@@ -27,7 +34,7 @@ class SettingsHelperImpl(settings: Settings) { // Maybe make Settings into an ob
 
   val jsonFile = s"${App.path}/lockbook.json"
 
-  def constructJson: Unit = { //
+  def constructJson: Unit = { // default values 
     val jsonString = """
       {
         "theme": "light.css"
