@@ -16,6 +16,8 @@ import org.fxmisc.richtext.CodeArea
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
+import scala.util.matching.Regex
+import scala.util.matching.Regex.Match
 class EditorUi(editorHelper: EditorHelper, gitHelper: GitHelper, executor: ScheduledThreadPoolExecutor) {
 
   val parser: Parser = Parser.builder().build()
@@ -101,29 +103,75 @@ class EditorUi(editorHelper: EditorHelper, gitHelper: GitHelper, executor: Sched
   }
 
   private val nodeVisitor: CodeArea => NodeVisitor = (styledText: CodeArea) =>
-    new NodeVisitor(new VisitHandler[Text](classOf[Text], (node: Text) => {
-      styledText.setStyleClass(node.getStartOffset, node.getEndOffset, "text")
-    }), new VisitHandler[Heading](classOf[Heading], (node: Heading) => {
-      if (node.isAtxHeading)
-        styledText.setStyleClass(node.getOpeningMarker.getStartOffset, node.getText.getEndOffset, s"h${node.getLevel}")
-      else if (node.isSetextHeading)
-        styledText.setStyleClass(node.getText.getStartOffset, node.getClosingMarker.getEndOffset, s"h${node.getLevel}")
-    }), new VisitHandler[Code](classOf[Code], (node: Code) => {
-      styledText.setStyleClass(node.getOpeningMarker.getStartOffset, node.getClosingMarker.getEndOffset, "code")
-    }), new VisitHandler[Emphasis](classOf[Emphasis], (node: Emphasis) => {
-      styledText.setStyleClass(node.getOpeningMarker.getStartOffset, node.getClosingMarker.getEndOffset, "emphasis")
-    }), new VisitHandler[FencedCodeBlock](classOf[FencedCodeBlock], (node: FencedCodeBlock) => {
-      if (node.getClosingFence.getEndOffset != 0) {
-        styledText.setStyleClass(node.getOpeningMarker.getStartOffset, node.getClosingMarker.getEndOffset, "code-block")
-      }
-    }), new VisitHandler[BlockQuote](classOf[BlockQuote], (node: BlockQuote) => {
-      styledText.setStyleClass(node.getStartOffset, node.getEndOffset, "quote-block")
-    }), new VisitHandler[Link](classOf[Link], (node: Link) => {
-      styledText
-        .setStyleClass(node.getTextOpeningMarker.getStartOffset, node.getLinkClosingMarker.getEndOffset, "link")
-    }), new VisitHandler[BulletListItem](classOf[BulletListItem], (node: BulletListItem) => {
-      styledText.setStyleClass(node.getOpeningMarker.getStartOffset, node.getOpeningMarker.getEndOffset, "bullet")
-    }), new VisitHandler[OrderedListItem](classOf[OrderedListItem], (node: OrderedListItem) => {
-      styledText.setStyleClass(node.getOpeningMarker.getStartOffset, node.getOpeningMarker.getEndOffset, "number")
-    }))
+    new NodeVisitor(
+      new VisitHandler[Text](
+        classOf[Text],
+        (node: Text) => styledText.setStyleClass(node.getStartOffset, node.getEndOffset, "text")
+      ),
+      new VisitHandler[Heading](
+        classOf[Heading],
+        (node: Heading) =>
+          styledText
+            .setStyleClass(node.getOpeningMarker.getStartOffset, node.getText.getEndOffset, s"h${node.getLevel}")
+      ),
+      new VisitHandler[Code](
+        classOf[Code],
+        (node: Code) =>
+          styledText.setStyleClass(node.getOpeningMarker.getStartOffset, node.getClosingMarker.getEndOffset, "code")
+      ),
+      new VisitHandler[Emphasis](
+        classOf[Emphasis],
+        (node: Emphasis) =>
+          styledText.setStyleClass(node.getOpeningMarker.getStartOffset, node.getClosingMarker.getEndOffset, "emphasis")
+      ),
+      new VisitHandler[FencedCodeBlock](
+        classOf[FencedCodeBlock],
+        (node: FencedCodeBlock) =>
+          if (node.getClosingFence.getEndOffset != 0) {
+            styledText
+              .setStyleClass(node.getOpeningMarker.getStartOffset, node.getClosingMarker.getEndOffset, "code-block")
+            formatCodeBlock(styledText, node)
+          }
+      ),
+      new VisitHandler[BlockQuote](
+        classOf[BlockQuote],
+        (node: BlockQuote) => styledText.setStyleClass(node.getStartOffset, node.getEndOffset, "quote-block")
+      ),
+      new VisitHandler[Link](
+        classOf[Link],
+        (node: Link) =>
+          styledText
+            .setStyleClass(node.getTextOpeningMarker.getStartOffset, node.getLinkClosingMarker.getEndOffset, "link")
+      ),
+      new VisitHandler[BulletListItem](
+        classOf[BulletListItem],
+        (node: BulletListItem) =>
+          styledText.setStyleClass(node.getOpeningMarker.getStartOffset, node.getOpeningMarker.getEndOffset, "bullet")
+      ),
+      new VisitHandler[OrderedListItem](
+        classOf[OrderedListItem],
+        (node: OrderedListItem) =>
+          styledText.setStyleClass(node.getOpeningMarker.getStartOffset, node.getOpeningMarker.getEndOffset, "number")
+      )
+    )
+
+  private def styleThing(styledText: CodeArea, m: Match, bs: Int, styleClass: String): Unit = {
+    val start = bs + (m.start + m.group(1).length)
+    val end   = bs + m.end
+    styledText.setStyleClass(start, end, styleClass)
+  }
+
+  private def formatCodeBlock(styledText: CodeArea, node: FencedCodeBlock): Unit = {
+    val code       = styledText.getText(node.getOpeningMarker.getStartOffset, node.getClosingMarker.getEndOffset)
+    val keywords   = Set("abstract", "case", "class", "def", "extends", "match", "var", "val", "for").mkString("|")
+    val blockStart = node.getOpeningMarker.getStartOffset
+
+    s"(\\s)($keywords)".r.findAllMatchIn(code).foreach(m => styleThing(styledText, m, blockStart, "scala-keyword"))
+    "(: )(\\w+)".r.findAllMatchIn(code).foreach(m => styleThing(styledText, m, blockStart, "scala-class"))
+    "(class )(\\w+)".r.findAllMatchIn(code).foreach(m => styleThing(styledText, m, blockStart, "scala-class"))
+    "(\\[)(\\w+)".r.findAllMatchIn(code).foreach(m => styleThing(styledText, m, blockStart, "scala-class"))
+    "(def )(\\w+)".r.findAllMatchIn(code).foreach(m => styleThing(styledText, m, blockStart, "scala-method"))
+    "(\\.)(\\w+)".r.findAllMatchIn(code).foreach(m => styleThing(styledText, m, blockStart, "scala-func"))
+    "(```)(scala)".r.findAllMatchIn(code).foreach(m => styleThing(styledText, m, blockStart, "scala"))
+  }
 }

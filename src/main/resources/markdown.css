@@ -31,9 +31,33 @@
 }
 
 .styled-text-area .code {
-	-fx-font-weight: bold;
-    -fx-fill: #DB2B39;
+    -fx-fill: #F8F8F2;
     -fx-font-family: monospace;
+}
+
+.styled-text-area .scala-class {
+    -fx-font-family: monospace;
+    -fx-fill: #AE81FF;
+}
+
+.styled-text-area .scala-method {
+    -fx-font-family: monospace;
+    -fx-fill: #66D9EF;
+}
+
+.styled-text-area .scala-func {
+    -fx-font-family: monospace;
+    -fx-fill: #66D9EF;
+}
+
+.styled-text-area .scala-keyword {
+    -fx-font-family: monospace;
+    -fx-fill: #FD971F;
+}
+
+.styled-text-area .scala {
+    -fx-font-family: monospace;
+    -fx-fill: #F92672;
 }
 
 .styled-text-area .emphasis {
@@ -42,7 +66,7 @@
 
 .styled-text-area .code-block {
     -fx-font-family: monospace;
-    -fx-fill: rgb(69, 237, 108);
+    -fx-fill: #F8F8F2
 }
 
 .styled-text-area .bullet {
