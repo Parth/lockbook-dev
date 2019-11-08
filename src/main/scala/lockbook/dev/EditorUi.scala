@@ -17,6 +17,8 @@ import org.fxmisc.richtext.CodeArea
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
+import scala.util.matching.Regex
+import scala.util.matching.Regex.Match
 class EditorUi(editorHelper: EditorHelper, gitHelper: GitHelper, executor: ScheduledThreadPoolExecutor) {
 
   val parser: Parser = Parser.builder().build()
@@ -185,14 +187,23 @@ class EditorUi(editorHelper: EditorHelper, gitHelper: GitHelper, executor: Sched
       )
     )
 
+  private def styleThing(styledText: CodeArea, m: Match, bs: Int, styleClass: String) = {
+    val start = bs + (m.start + m.group(1).length)
+    val end = bs + m.end)
+    styledText.setStyleClass(start, end, styleClass)
+  }
+
   private def formatCodeBlock(styledText: CodeArea, node: FencedCodeBlock) = {
     val code = styledText.getText(node.getOpeningMarker.getStartOffset, node.getClosingMarker.getEndOffset)
-    val keywords = Set("abstract", "case", "class", "def", "extends", "match")
-    var lastEnd = node.getOpeningMarker.getStartOffset
-    code.split("(?=\\s+)").map(w => {
-      if (keywords.contains(w.trim)) styledText.setStyleClass(lastEnd, lastEnd+w.length, "fruity")
+    val keywords = Set("abstract", "case", "class", "def", "extends", "match", "var", "val", "for").mkString("|")
+    val blockStart = node.getOpeningMarker.getStartOffset
 
-      lastEnd += w.length
-    })
+    s"(\\s)(${keywords})".r.findAllMatchIn(code).foreach(m => styleThing(styledText, m, blockStart, "scala-keyword"))
+    "(: )(\\w+)".r.findAllMatchIn(code).foreach(m => styleThing(styledText, m, blockStart, "scala-class"))
+    "(class )(\\w+)".r.findAllMatchIn(code).foreach(m => styleThing(styledText, m, blockStart, "scala-class"))
+    "(\\[)(\\w+)".r.findAllMatchIn(code).foreach(m => styleThing(styledText, m, blockStart, "scala-class"))
+    "(def )(\\w+)".r.findAllMatchIn(code).foreach(m => styleThing(styledText, m, blockStart, "scala-method"))
+    "(\\.)(\\w+)".r.findAllMatchIn(code).foreach(m => styleThing(styledText, m, blockStart, "scala-func"))
+    "(```)(scala)".r.findAllMatchIn(code).foreach(m => styleThing(styledText, m, blockStart, "scala"))
   }
 }
