@@ -35,7 +35,6 @@ class UiOrchestrator(
     stage.setFullScreen(false)
     stage.setScene(new Scene(root, 300, 130))
     stage.setTitle("Lockbook Dev")
-    stage.getScene.getStylesheets.add("light.css")
     processLockfileAndShowUi(root, showRepo())
     stage.show()
   }
@@ -63,8 +62,7 @@ class UiOrchestrator(
       )
     )
 
-    stage.getScene.getStylesheets.add("light.css")    // good settings candidate
-    stage.getScene.getStylesheets.add("markdown.css") // good settings candidate
+
     closeRequestListener()
     addFocusListener()
     stage.show()
@@ -90,12 +88,11 @@ class UiOrchestrator(
     }
   }
 
-  private def closeRequestListener(): Unit = {
+  private def closeRequestListener(): Unit =
     stage.setOnCloseRequest(_ => {
       closing = true
-      executor.shutdown()
+      executor.shutdownNow()
     })
-  }
 
   private def addFocusListener(): Unit = {
     val lockWhenBackground =
@@ -104,7 +101,6 @@ class UiOrchestrator(
     var refreshRepos: Option[ScheduledFuture[_]] = Some(
       executor.scheduleAtFixedRate(refreshStatus, 1, 1, TimeUnit.SECONDS)
     )
-    println("scheduled1")
 
     stage
       .focusedProperty()
@@ -112,7 +108,6 @@ class UiOrchestrator(
         if (!locked && !closing) {
           lockWhenBackground.cancel()
           if (isHidden) {
-            println("cancelled1")
             refreshRepos.map(_.cancel(false))
             refreshRepos = None
             lockWhenBackground.schedule()
@@ -121,7 +116,6 @@ class UiOrchestrator(
 
         if (!locked && !closing && !isHidden) {
           if (refreshRepos.isEmpty || refreshRepos.get.isCancelled) {
-            println("scheduled2")
             refreshRepos = Some(executor.scheduleAtFixedRate(refreshStatus, 1, 1, TimeUnit.SECONDS))
           }
         }
@@ -134,7 +128,6 @@ class UiOrchestrator(
         KeyEvent.KEY_PRESSED,
         (event: KeyEvent) => {
           if (saveKeyCombo.`match`(event)) {
-            println("cancel2")
             refreshRepos.map(_.cancel(false))
             refreshRepos = None
             lockWhenBackground.doNow()

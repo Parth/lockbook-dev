@@ -8,16 +8,16 @@ import org.eclipse.jgit.api.errors.TransportException
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
 
 trait GitHelper {
-  def cloneRepository(uri: String): Either[GitError, Git]
+  def cloneRepository(uri: String): Either[LockbookError, Git]
   def getRepositories: List[Git]
   def getRepoName(git: Git): String
-  def commit(message: String, git: Git): Either[GitError, Unit]
-  def push(git: Git): Either[GitError, Unit]
-  def commitAndPush(message: String, git: Git): Either[GitError, Unit]
-  def pull(git: Git): Either[GitError, Unit]
-  def sync(git: Git): Either[GitError, Unit]
+  def commit(message: String, git: Git): Either[LockbookError, Unit]
+  def push(git: Git): Either[LockbookError, Unit]
+  def commitAndPush(message: String, git: Git): Either[LockbookError, Unit]
+  def pull(git: Git): Either[LockbookError, Unit]
+  def sync(git: Git): Either[LockbookError, Unit]
   def deleteRepo(git: Git): Either[FileError, Unit]
-  def pullNeeded(git: Git): Either[GitError, Boolean]
+  def pullNeeded(git: Git): Either[LockbookError, Boolean]
   def localDirty(git: Git): Boolean
 }
 
@@ -25,28 +25,34 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper, fileHelper: FileHe
 
   val repoFolder = s"${App.path}/repos"
 
-  override def cloneRepository(uri: String): Either[GitError, Git] = {
-    getCredentials(new URI(uri)).flatMap(credentials => {
+  override def cloneRepository(uri: String): Either[LockbookError, Git] = {
+    val destination = new File(s"$repoFolder/${uriToFolder(uri)}")
+
+    getCredentials(new URI(uri), askUser = true).flatMap(credentials => {
       try {
         Right(
           Git
             .cloneRepository()
             .setURI(uri)
-            .setDirectory(new File(s"$repoFolder/${uriToFolder(uri)}"))
+            .setDirectory(destination)
             .setCredentialsProvider(credentials)
             .call()
         )
       } catch {
         case te: TransportException =>
+          // Cleanup
           gitCredentialHelper.deleteStoredCredentials(new URI(uri).getHost)
-          Left(InvalidCredentialsOrNetwork(te))
+          fileHelper.recursiveFileDelete(destination)
+
+          // Report error
+          Left(TransportExceptionError(te))
         case e: Exception =>
           Left(UnknownException(e))
       }
     })
   }
 
-  override def commit(message: String, git: Git): Either[GitError, Unit] = {
+  override def commit(message: String, git: Git): Either[LockbookError, Unit] = {
     try {
       git.add().addFilepattern(".").call()
       git.commit().setMessage(message).call()
@@ -57,8 +63,8 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper, fileHelper: FileHe
     }
   }
 
-  override def push(git: Git): Either[GitError, Unit] = {
-    getCredentials(git)
+  override def push(git: Git): Either[LockbookError, Unit] = {
+    getCredentials(git, askUser = true)
       .flatMap(credentials => {
         try {
           git
@@ -69,19 +75,19 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper, fileHelper: FileHe
           Right(())
         } catch {
           case te: TransportException =>
-            Left(InvalidCredentialsOrNetwork(te))
+            Left(TransportExceptionError(te))
           case e: Exception =>
             Left(UnknownException(e))
         }
       })
   }
 
-  override def commitAndPush(message: String, git: Git): Either[GitError, Unit] = {
+  override def commitAndPush(message: String, git: Git): Either[LockbookError, Unit] = {
     commit(message, git)
       .flatMap(_ => push(git))
   }
 
-  override def sync(git: Git): Either[GitError, Unit] = {
+  override def sync(git: Git): Either[LockbookError, Unit] = {
     commit("", git)
       .flatMap(_ => pull(git))
       .flatMap(_ => push(git))
@@ -104,16 +110,13 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper, fileHelper: FileHe
     fileHelper.recursiveFileDelete(file)
   }
 
-  private def getCredentials(git: Git): Either[UserCanceled, UsernamePasswordCredentialsProvider] =
-    getCredentials(getRepoURI(git))
+  private def getCredentials(git: Git, askUser: Boolean): Either[LockbookError, UsernamePasswordCredentialsProvider] =
+    getCredentials(getRepoURI(git), askUser)
 
-  private def getCredentials(
-      uri: URI
-  ): Either[UserCanceled, UsernamePasswordCredentialsProvider] = {
+  private def getCredentials(uri: URI, askUser: Boolean): Either[LockbookError, UsernamePasswordCredentialsProvider] =
     gitCredentialHelper
-      .getCredentials(uri.getHost)
+      .getCredentials(uri.getHost, askUser)
       .map(c => new UsernamePasswordCredentialsProvider(c.username, c.password))
-  }
 
   def uriToFolder(uri: String): String = {
     val folderName = uri.split("/").last
@@ -138,8 +141,8 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper, fileHelper: FileHe
     new URI(repoUrl)
   }
 
-  override def pull(git: Git): Either[GitError, Unit] = {
-    getCredentials(git).flatMap(credentials => {
+  override def pull(git: Git): Either[LockbookError, Unit] = {
+    getCredentials(git, askUser = true).flatMap(credentials => {
       try {
         Right(
           git
@@ -149,15 +152,15 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper, fileHelper: FileHe
         )
       } catch {
         case te: TransportException =>
-          Left(InvalidCredentialsOrNetwork(te))
+          Left(TransportExceptionError(te))
         case e: Exception =>
           Left(UnknownException(e))
       }
     })
   }
 
-  override def pullNeeded(git: Git): Either[GitError, Boolean] = {
-    getCredentials(git)
+  override def pullNeeded(git: Git): Either[LockbookError, Boolean] = {
+    getCredentials(git, askUser = false)
       .flatMap { credentials =>
         try {
           val doRefsMatch = git
@@ -172,7 +175,7 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper, fileHelper: FileHe
           Right(!doRefsMatch)
         } catch {
           case te: TransportException =>
-            Left(InvalidCredentialsOrNetwork(te))
+            Left(TransportExceptionError(te))
           case e: Exception =>
             Left(UnknownException(e))
         }

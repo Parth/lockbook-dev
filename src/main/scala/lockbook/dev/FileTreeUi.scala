@@ -1,9 +1,8 @@
 package lockbook.dev
 
 import java.io.File
-import java.util.Optional
 
-import javafx.scene.control.{TextInputDialog, _}
+import javafx.scene.control._
 import javafx.scene.layout.BorderPane
 import org.eclipse.jgit.api.Git
 
@@ -56,10 +55,11 @@ class FileTreeUi(fileHelper: FileHelper) {
           if (!isRoot) {
             contextMenu.getItems.addAll(newFolder, newFile, delete)
           } else {
+            getTreeItem.setExpanded(true)
             contextMenu.getItems.addAll(newFolder, newFile)
           }
 
-          val enclosingFolderNode = if (getTreeItem.getValue.isDirectory) {
+          val enclosingFolderNode: TreeItem[File] = if (getTreeItem.getValue.isDirectory) {
             getTreeItem
           } else {
             getTreeItem.getParent
@@ -70,42 +70,8 @@ class FileTreeUi(fileHelper: FileHelper) {
             getTreeItem.getParent.getChildren.remove(getTreeItem)
           })
 
-          // TODO consolidate this code more
-          newFile.setOnAction(_ => {
-            val parentDirectory = if (!item.isDirectory) item.getParentFile else item
-            newFileOrFolderDialogResult(true).map(name => s"${parentDirectory.getAbsolutePath}/$name") match {
-              case Some(newFileName) =>
-                val newFile = new File(newFileName)
-                newFile.createNewFile()
-
-                val newTreeItem = new TreeItem[File](newFile)
-                enclosingFolderNode.getChildren.add(newTreeItem)
-
-                val location = getTreeView.getRow(newTreeItem)
-                getTreeView.getSelectionModel.select(location)
-
-              case None =>
-            }
-          })
-
-          newFolder.setOnAction(_ => {
-            val parentDirectory = if (!item.isDirectory) item.getParentFile else item
-            newFileOrFolderDialogResult(false).map(name => s"${parentDirectory.getAbsolutePath}/$name/") match {
-              case Some(newFileName) =>
-                val newFile = new File(newFileName)
-                newFile.mkdirs()
-
-                println(newFile.isDirectory)
-
-                val newTreeItem = new TreeItem[File](newFile)
-                enclosingFolderNode.getChildren.add(newTreeItem)
-
-                val location = getTreeView.getRow(newTreeItem)
-                getTreeView.getSelectionModel.select(location)
-
-              case None =>
-            }
-          })
+          newFile.setOnAction(_ => insertFileOrFolder(item, isFile = true, enclosingFolderNode, getTreeView))
+          newFolder.setOnAction(_ => insertFileOrFolder(item, isFile = false, enclosingFolderNode, getTreeView))
 
           setContextMenu(contextMenu)
           setText(item.getName)
@@ -115,18 +81,37 @@ class FileTreeUi(fileHelper: FileHelper) {
       }
     }
 
+  private def insertFileOrFolder(
+      item: File,
+      isFile: Boolean,
+      enclosingFolderNode: TreeItem[File],
+      treeView: TreeView[File]
+  ): Unit = {
+    val parentDirectory = if (!item.isDirectory) item.getParentFile else item
+    newFileOrFolderDialogResult(isFile).map(name => s"${parentDirectory.getAbsolutePath}/$name") match {
+      case Some(newFileName) =>
+        val newFile = new File(newFileName)
+        if (isFile) newFile.createNewFile()
+        else newFile.mkdirs()
+
+        val newTreeItem = new TreeItem[File](newFile)
+        enclosingFolderNode.getChildren.add(newTreeItem)
+        enclosingFolderNode.setExpanded(true)
+
+        treeView.getSelectionModel.select(newTreeItem)
+
+      case None =>
+    }
+  }
+
   private def newFileOrFolderDialogResult(isFile: Boolean): Option[String] = {
     val fileOrFolder = if (isFile) "file" else "folder"
 
-    val dialog = new TextInputDialog
+    val title   = s"Create new $fileOrFolder"
+    val header  = s"Enter $fileOrFolder name"
+    val content = "Name:"
 
-    dialog.setTitle(s"Create new $fileOrFolder")
-    dialog.setHeaderText(s"Enter $fileOrFolder name")
-    dialog.setContentText("Name:")
-
-    val result: Optional[String] = dialog.showAndWait
-
-    if (result.isPresent) Some(result.get()) else None
+    DialogUi.askUserForString(title, header, content)
   }
 
 }
