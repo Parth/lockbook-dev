@@ -8,7 +8,8 @@ import javafx.stage.Stage
 object App {
   val path: String   = s"${System.getProperty("user.home")}/.lockbook"
   val debug: Boolean = true // TODO utilize this to print out exceptions passed into LockbookError
-  val css: String = "light.css"
+  val css: String = "light.css" // good settings candidate
+  // right click -> find usages
 
   def main(args: Array[String]) {
     Application.launch(classOf[App], args: _*)
