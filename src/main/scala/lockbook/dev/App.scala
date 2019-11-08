@@ -32,12 +32,12 @@ class App extends Application {
     val executor: ScheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(2)
 
     val file: FileHelper                       = new FileHelperImpl
+    val settingHelper: SettingHelper           = new SettingHelperImpl(SettingHelper.fromFile(file))
     val encryption: EncryptionHelper           = new EncryptionImpl
     val lockfile: LockfileHelper               = new LockfileHelperImpl(encryption, file)
     val passphrase: PassphraseHelper           = new PassphraseHelperImpl(lockfile, encryption)
     val gitCredential: GitCredentialHelperImpl = new GitCredentialHelperImpl(encryption, passphrase, file)
     val git: GitHelper                         = new GitHelperImpl(gitCredential, file)
-    val settingHelper: SettingHelper           = new SettingHelperImpl(SettingHelper.fromFile)
     val editorHelper: EditorHelperImpl         = new EditorHelperImpl(encryption, passphrase, file)
 
     val newPassphraseUi: NewPassphraseUi   = new NewPassphraseUi(lockfile, passphrase, encryption)

@@ -25,7 +25,7 @@ class SettingHelperImpl(setting: Setting) extends SettingHelper { // This file i
 }
 
 object SettingsHelper {
-  def fromFile: Settings = { // read file, turn it into a case class
+  def fromFile(fileHelper: FileHelper): Settings = { // read file, turn it into a case class
 
   }
 }
@@ -49,7 +49,7 @@ class SettingsHelperImpl(settings: Settings) { // Maybe make Settings into an ob
 
   def getSettings: Settings = { // everytime you should access the settings file
     try {
-      val stream = Source.fromFile(new File(jsonFile))
+      val stream = Source.fromFile(new File(jsonFile)) // use filehelper
       implicit val formats = DefaultFormats
       json.parse(stream.mkString).extract[Settings]
     } catch {
