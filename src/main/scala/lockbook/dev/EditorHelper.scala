@@ -9,7 +9,7 @@ trait EditorHelper {
 
 class EditorHelperImpl(
     encryptionHelper: EncryptionHelper,
-    passwordHelper: PasswordHelper,
+    passphraseHelper: PassphraseHelper,
     fileHelper: FileHelper
 ) extends EditorHelper {
 
@@ -18,7 +18,7 @@ class EditorHelperImpl(
       fileHelper
         .readFile(f.getAbsolutePath)
         .map(EncryptedValue)
-        .flatMap(encryptionHelper.decrypt(_, passwordHelper.password))
+        .flatMap(encryptionHelper.decrypt(_, passphraseHelper.passphrase))
         .map(_.secret)
     } else {
       fileHelper.readFile(f.getAbsolutePath)
@@ -29,7 +29,7 @@ class EditorHelperImpl(
 
     val contentToSave: Either[CryptoError, String] = if (originalFile.getName.endsWith("aes")) {
       encryptionHelper
-        .encrypt(DecryptedValue(content), passwordHelper.password)
+        .encrypt(DecryptedValue(content), passphraseHelper.passphrase)
         .map(_.garbage)
     } else {
       Right(content)

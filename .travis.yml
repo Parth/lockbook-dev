@@ -18,7 +18,7 @@ jobs:
           on:
               tags: false
           name: Lockbook 0.$TRAVIS_BUILD_NUMBER
-          body: $TRAVIS_COMMIT - $TRAVIS_COMMIT_MESSAGE - $(date +'%d.%m.%Y %R')
+          body: "$TRAVIS_COMMIT - $(date +'%d.%m.%Y %R')"
 
     - stage: build
       name: "Dist Linux"
@@ -34,4 +34,4 @@ jobs:
           on:
               tags: false
           name: Lockbook 0.$TRAVIS_BUILD_NUMBER
-          body: $TRAVIS_COMMIT - $TRAVIS_COMMIT_MESSAGE - $(date +'%d.%m.%Y %R')
+          body: "$TRAVIS_COMMIT - $(date +'%d.%m.%Y %R')"

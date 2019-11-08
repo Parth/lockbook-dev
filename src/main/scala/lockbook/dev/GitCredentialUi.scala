@@ -12,6 +12,7 @@ object GitCredentialUi {
     val dialog = new Dialog[Either[UserCanceled, GitCredential]]
     dialog.setTitle("Login Dialog")
     dialog.setHeaderText(s"Enter credentials for $credentialName")
+    dialog.getDialogPane.getStylesheets.add(App.css)
 
     val loginButtonType = new ButtonType("Login", ButtonData.OK_DONE)
     dialog.getDialogPane.getButtonTypes.addAll(loginButtonType, ButtonType.CANCEL)
@@ -31,7 +32,7 @@ object GitCredentialUi {
     grid.add(new Label("Password:"), 0, 1)
     grid.add(password, 1, 1)
 
-    val loginButton = dialog.getDialogPane.lookupButton(loginButtonType)
+    dialog.getDialogPane.lookupButton(loginButtonType)
 
     dialog.getDialogPane.setContent(grid)
 

@@ -8,6 +8,8 @@ import javafx.stage.Stage
 object App {
   val path: String   = s"${System.getProperty("user.home")}/.lockbook"
   val debug: Boolean = true // TODO utilize this to print out exceptions passed into LockbookError
+  val css: String = "light.css" // good settings candidate
+  // right click -> find usages
 
   def main(args: Array[String]) {
     Application.launch(classOf[App], args: _*)
@@ -15,21 +17,31 @@ object App {
 }
 
 class App extends Application {
+
+  def addCss(stage: Stage): Unit = {
+    stage.sceneProperty().addListener((_, _, newValue) => {
+      if (newValue != null) {
+        newValue.getStylesheets.addAll(App.css, "markdown.css")
+      }
+    })
+  }
+
   override def start(stage: Stage): Unit = {
+    addCss(stage)
 
     val executor: ScheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(2)
 
     val file: FileHelper                       = new FileHelperImpl
     val encryption: EncryptionHelper           = new EncryptionImpl
     val lockfile: LockfileHelper               = new LockfileHelperImpl(encryption, file)
-    val password: PasswordHelper               = new PasswordHelperImpl(lockfile, encryption)
-    val gitCredential: GitCredentialHelperImpl = new GitCredentialHelperImpl(encryption, password, file)
+    val passphrase: PassphraseHelper           = new PassphraseHelperImpl(lockfile, encryption)
+    val gitCredential: GitCredentialHelperImpl = new GitCredentialHelperImpl(encryption, passphrase, file)
     val git: GitHelper                         = new GitHelperImpl(gitCredential, file)
-    val editorHelper: EditorHelperImpl         = new EditorHelperImpl(encryption, password, file)
     val settingHelper: SettingHelper           = new SettingHelperImpl(SettingHelper.fromFile)
+    val editorHelper: EditorHelperImpl         = new EditorHelperImpl(encryption, passphrase, file)
 
-    val newPasswordUi: NewPasswordUi       = new NewPasswordUi(lockfile, password, encryption)
-    val unlockUi: UnlockUi                 = new UnlockUi(password)
+    val newPassphraseUi: NewPassphraseUi   = new NewPassphraseUi(lockfile, passphrase, encryption)
+    val unlockUi: UnlockUi                 = new UnlockUi(passphrase)
     val repositoryCellUi: RepositoryCellUi = new RepositoryCellUi(git)
     val cloneRepoDialog: CloneRepoDialog   = new CloneRepoDialog(git)
     val repositoryUi: RepositoryUi         = new RepositoryUi(git, repositoryCellUi, cloneRepoDialog)
@@ -37,7 +49,7 @@ class App extends Application {
     val editorUi: EditorUi                 = new EditorUi(editorHelper, git, executor)
 
     val uiOrchestrator =
-      new UiOrchestrator(lockfile, unlockUi, newPasswordUi, repositoryUi, fileTreeUi, editorUi, stage, executor)
+      new UiOrchestrator(lockfile, unlockUi, newPassphraseUi, repositoryUi, fileTreeUi, editorUi, stage, executor)
     uiOrchestrator.showView()
   }
 }

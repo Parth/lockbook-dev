@@ -3,58 +3,70 @@ package lockbook.dev
 import java.io.File
 import java.net.URI
 
-import com.jcraft.jsch.{JSch, Session}
-import org.eclipse.jgit.api.MergeResult.MergeStatus
+import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.errors.TransportException
-import org.eclipse.jgit.api.{Git, PullCommand}
-import org.eclipse.jgit.lib.ProgressMonitor
-import org.eclipse.jgit.transport.{JschConfigSessionFactory, OpenSshConfig, UsernamePasswordCredentialsProvider}
-import org.eclipse.jgit.util.FS
+import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
 
 trait GitHelper {
-  def cloneRepository(uri: String): Either[GitError, Git]
+  def cloneRepository(uri: String): Either[LockbookError, Git]
   def getRepositories: List[Git]
-  def commitAndPush(message: String, git: Git): Either[GitError, Unit]
   def getRepoName(git: Git): String
-  def pullCommand(git: Git, progressMonitor: ProgressMonitor): PullCommand
-  def pull(git: Git, pullCommand: PullCommand): Either[GitError, MergeStatus]
+  def commit(message: String, git: Git): Either[LockbookError, Unit]
+  def push(git: Git): Either[LockbookError, Unit]
+  def commitAndPush(message: String, git: Git): Either[LockbookError, Unit]
+  def pull(git: Git): Either[LockbookError, Unit]
+  def sync(git: Git): Either[LockbookError, Unit]
   def deleteRepo(git: Git): Either[FileError, Unit]
+  def pullNeeded(git: Git): Either[LockbookError, Boolean]
+  def localDirty(git: Git): Boolean
 }
 
-class GitHelperImpl(gitCredentialHelper: GitCredentialHelper, fileHelper: FileHelper)
-    extends GitHelper {
+class GitHelperImpl(gitCredentialHelper: GitCredentialHelper, fileHelper: FileHelper) extends GitHelper {
 
   val repoFolder = s"${App.path}/repos"
 
-  override def cloneRepository(uri: String): Either[GitError, Git] = {
-    getCredentials(new URI(uri)).flatMap(credentials => {
+  override def cloneRepository(uri: String): Either[LockbookError, Git] = {
+    val destination = new File(s"$repoFolder/${uriToFolder(uri)}")
+
+    getCredentials(new URI(uri), askUser = true).flatMap(credentials => {
       try {
         Right(
           Git
             .cloneRepository()
             .setURI(uri)
-            .setDirectory(new File(s"$repoFolder/${uriToFolder(uri)}"))
+            .setDirectory(destination)
             .setCredentialsProvider(credentials)
             .call()
         )
       } catch {
-        case _: TransportException =>
+        case te: TransportException =>
+          // Cleanup
           gitCredentialHelper.deleteStoredCredentials(new URI(uri).getHost)
-          Left(InvalidCredentials())
-        case _: Exception =>
-          // TODO
-          Left(InvalidCredentials())
+          fileHelper.recursiveFileDelete(destination)
+
+          // Report error
+          Left(TransportExceptionError(te))
+        case e: Exception =>
+          Left(UnknownException(e))
       }
     })
   }
 
-  override def commitAndPush(message: String, git: Git): Either[GitError, Unit] = {
-    getCredentials(git)
+  override def commit(message: String, git: Git): Either[LockbookError, Unit] = {
+    try {
+      git.add().addFilepattern(".").call()
+      git.commit().setMessage(message).call()
+      Right(())
+    } catch {
+      case e: Exception =>
+        Left(UnknownException(e))
+    }
+  }
+
+  override def push(git: Git): Either[LockbookError, Unit] = {
+    getCredentials(git, askUser = true)
       .flatMap(credentials => {
         try {
-          git.add().addFilepattern(".").call()
-          git.commit().setMessage(message).call()
-
           git
             .push()
             .setCredentialsProvider(credentials)
@@ -62,9 +74,23 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper, fileHelper: FileHe
 
           Right(())
         } catch {
-          case _: Exception => Left(UserCanceled()) // TODO build this out
+          case te: TransportException =>
+            Left(TransportExceptionError(te))
+          case e: Exception =>
+            Left(UnknownException(e))
         }
       })
+  }
+
+  override def commitAndPush(message: String, git: Git): Either[LockbookError, Unit] = {
+    commit(message, git)
+      .flatMap(_ => push(git))
+  }
+
+  override def sync(git: Git): Either[LockbookError, Unit] = {
+    commit("", git)
+      .flatMap(_ => pull(git))
+      .flatMap(_ => push(git))
   }
 
   override def getRepositories: List[Git] = {
@@ -79,27 +105,18 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper, fileHelper: FileHe
     }
   }
 
-  override def pullCommand(git: Git, progressMonitor: ProgressMonitor): PullCommand = {
-    git
-      .pull()
-      .setProgressMonitor(progressMonitor)
-  }
-
   override def deleteRepo(git: Git): Either[FileError, Unit] = {
     val file = git.getRepository.getWorkTree
     fileHelper.recursiveFileDelete(file)
   }
 
-  private def getCredentials(git: Git): Either[UserCanceled, UsernamePasswordCredentialsProvider] =
-    getCredentials(getRepoURI(git))
+  private def getCredentials(git: Git, askUser: Boolean): Either[LockbookError, UsernamePasswordCredentialsProvider] =
+    getCredentials(getRepoURI(git), askUser)
 
-  private def getCredentials(
-      uri: URI
-  ): Either[UserCanceled, UsernamePasswordCredentialsProvider] = {
+  private def getCredentials(uri: URI, askUser: Boolean): Either[LockbookError, UsernamePasswordCredentialsProvider] =
     gitCredentialHelper
-      .getCredentials(uri.getHost)
+      .getCredentials(uri.getHost, askUser)
       .map(c => new UsernamePasswordCredentialsProvider(c.username, c.password))
-  }
 
   def uriToFolder(uri: String): String = {
     val folderName = uri.split("/").last
@@ -124,29 +141,46 @@ class GitHelperImpl(gitCredentialHelper: GitCredentialHelper, fileHelper: FileHe
     new URI(repoUrl)
   }
 
-  override def pull(git: Git, pullCommand: PullCommand): Either[GitError, MergeStatus] = {
-    getCredentials(git).flatMap(credentials => {
+  override def pull(git: Git): Either[LockbookError, Unit] = {
+    getCredentials(git, askUser = true).flatMap(credentials => {
       try {
-        Right(pullCommand
-          .setCredentialsProvider(credentials)
-          .call().getMergeResult.getMergeStatus)
-
+        Right(
+          git
+            .pull()
+            .setCredentialsProvider(credentials)
+            .call()
+        )
       } catch {
+        case te: TransportException =>
+          Left(TransportExceptionError(te))
         case e: Exception =>
-          println(e)
-          Left(UserCanceled()) // TODO build this out
+          Left(UnknownException(e))
       }
     })
   }
-}
 
-class CustomConfigSessionFactory extends JschConfigSessionFactory {
-  override protected def getJSch(hc: OpenSshConfig.Host, fs: FS): JSch = {
-    val jsch = super.getJSch(hc, fs)
-    jsch.removeAllIdentity()
-    jsch.addIdentity("~/.ssh/id_rsa")
-    jsch
+  override def pullNeeded(git: Git): Either[LockbookError, Boolean] = {
+    getCredentials(git, askUser = false)
+      .flatMap { credentials =>
+        try {
+          val doRefsMatch = git
+            .fetch()
+            .setCredentialsProvider(credentials)
+            .call()
+            .getAdvertisedRef("HEAD")
+            .getObjectId
+            .getName
+            .equals(git.getRepository.getAllRefs.get("HEAD").getObjectId.getName)
+
+          Right(!doRefsMatch)
+        } catch {
+          case te: TransportException =>
+            Left(TransportExceptionError(te))
+          case e: Exception =>
+            Left(UnknownException(e))
+        }
+      }
   }
 
-  override def configure(hc: OpenSshConfig.Host, session: Session): Unit = {}
+  override def localDirty(git: Git): Boolean = !git.status().call().isClean // TODO Handle failure?
 }

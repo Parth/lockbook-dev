@@ -1,7 +1,7 @@
 package lockbook.dev
 
 import java.io.File
-import java.util.concurrent.{ScheduledThreadPoolExecutor, TimeUnit}
+import java.util.concurrent.{ScheduledFuture, ScheduledThreadPoolExecutor, TimeUnit}
 
 import javafx.application.Platform
 import javafx.scene.Scene
@@ -18,7 +18,7 @@ import scala.concurrent.duration.FiniteDuration
 class UiOrchestrator(
     lockfile: LockfileHelper,
     unlockUI: UnlockUi,
-    newPasswordUI: NewPasswordUi,
+    newPassphraseUI: NewPassphraseUi,
     repositoryUi: RepositoryUi,
     fileTreeUi: FileTreeUi,
     editorUi: EditorUi,
@@ -63,8 +63,7 @@ class UiOrchestrator(
       )
     )
 
-    stage.getScene.getStylesheets.add("light.css")    // good settings candidate
-    stage.getScene.getStylesheets.add("markdown.css") // good settings candidate
+
     closeRequestListener()
     addFocusListener()
     stage.show()
@@ -85,21 +84,24 @@ class UiOrchestrator(
           Platform.runLater(() => root.getChildren.add(unlockUI.getView(onDone)))
 
         case Left(_) =>
-          Platform.runLater(() => root.getChildren.add(newPasswordUI.getView(onDone)))
+          Platform.runLater(() => root.getChildren.add(newPassphraseUI.getView(onDone)))
       }
     }
   }
 
-  private def closeRequestListener(): Unit = {
+  private def closeRequestListener(): Unit =
     stage.setOnCloseRequest(_ => {
       closing = true
-      executor.shutdown()
+      executor.shutdownNow()
     })
-  }
 
   private def addFocusListener(): Unit = {
     val lockWhenBackground =
-      CancelableAction(executor, FiniteDuration(5, TimeUnit.MINUTES), lockTask) // good settings candidate
+      CancelableAction(executor, FiniteDuration(15, TimeUnit.MINUTES), lockTask) // good settings candidate
+
+    var refreshRepos: Option[ScheduledFuture[_]] = Some(
+      executor.scheduleAtFixedRate(refreshStatus, 1, 1, TimeUnit.SECONDS)
+    )
 
     stage
       .focusedProperty()
@@ -107,12 +109,16 @@ class UiOrchestrator(
         if (!locked && !closing) {
           lockWhenBackground.cancel()
           if (isHidden) {
+            refreshRepos.map(_.cancel(false))
+            refreshRepos = None
             lockWhenBackground.schedule()
           }
         }
 
         if (!locked && !closing && !isHidden) {
-          repositoryUi.pullAllRepos()
+          if (refreshRepos.isEmpty || refreshRepos.get.isCancelled) {
+            refreshRepos = Some(executor.scheduleAtFixedRate(refreshStatus, 1, 1, TimeUnit.SECONDS))
+          }
         }
       })
 
@@ -123,6 +129,8 @@ class UiOrchestrator(
         KeyEvent.KEY_PRESSED,
         (event: KeyEvent) => {
           if (saveKeyCombo.`match`(event)) {
+            refreshRepos.map(_.cancel(false))
+            refreshRepos = None
             lockWhenBackground.doNow()
           }
         }
@@ -137,4 +145,7 @@ class UiOrchestrator(
     })
   }
 
+  private val refreshStatus = new Runnable {
+    def run(): Unit = repositoryUi.setRepoStatuses()
+  }
 }

@@ -9,13 +9,15 @@ import javafx.scene.paint.Color
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class UnlockUi(passwordHelper: PasswordHelper) {
-  def getView(passwordSuccess: => Unit): VBox = {
+class UnlockUi(passphraseHelper: PassphraseHelper) {
+  def getView(passphraseSuccess: => Unit): VBox = {
 
-    val vBox                            = new VBox
-    val prompt                          = new Label("Enter your passphrase")
-    val passwordField                   = new PasswordField
-    val passwordSuccessNotificationArea = new StackPane
+    val vBox                              = new VBox
+    val prompt                            = new Label("Enter your passphrase")
+    val passphraseField                   = new PasswordField
+    val passphraseSuccessNotificationArea = new StackPane
+
+    passphraseField.setPromptText("Enter passphrase")
 
     vBox.setPadding(new Insets(20))
     vBox.setAlignment(Pos.BASELINE_CENTER)
@@ -24,43 +26,43 @@ class UnlockUi(passwordHelper: PasswordHelper) {
 
     vBox.getChildren.addAll(
       prompt,
-      passwordField,
-      passwordSuccessNotificationArea
+      passphraseField,
+      passphraseSuccessNotificationArea
     )
-    passwordField.setOnAction(_ => {
-      passwordAttempt(passwordField, passwordSuccessNotificationArea, passwordSuccess)
+    passphraseField.setOnAction(_ => {
+      passphraseAttempt(passphraseField, passphraseSuccessNotificationArea, passphraseSuccess)
     })
     vBox
   }
 
-  private def passwordAttempt(
-      passwordField: PasswordField,
-      passwordSuccessNotificationArea: StackPane,
-      passwordSuccess: => Unit
+  private def passphraseAttempt(
+      passphraseField: PasswordField,
+      passphraseSuccessNotificationArea: StackPane,
+      passphraseSuccess: => Unit
   ): Unit = {
     Future {
-      passwordHelper.testAndSetPassword(PasswordAttempt(passwordField.getText)) match {
+      passphraseHelper.testAndSetPassphrase(PassphraseAttempt(passphraseField.getText)) match {
         case Right(_) =>
           Platform.runLater(() => {
-            val correctPassword = new Label("Decrypting")
+            val correctPassphrase = new Label("Decrypting")
 
-            correctPassword.setTextFill(Color.rgb(21, 117, 84))
-            passwordSuccessNotificationArea.getChildren.removeAll(
-              passwordSuccessNotificationArea.getChildren
+            correctPassphrase.setTextFill(Color.rgb(21, 117, 84))
+            passphraseSuccessNotificationArea.getChildren.removeAll(
+              passphraseSuccessNotificationArea.getChildren
             )
 
-            passwordSuccessNotificationArea.getChildren.add(correctPassword)
-            passwordSuccess
+            passphraseSuccessNotificationArea.getChildren.add(correctPassphrase)
+            passphraseSuccess
           })
 
         case Left(error) =>
           Platform.runLater(() => {
-            val wrongPassword = new Label(error.uiMessage)
-            wrongPassword.setTextFill(Color.rgb(210, 39, 30))
-            passwordSuccessNotificationArea.getChildren.removeAll(
-              passwordSuccessNotificationArea.getChildren
+            val wrongPassphrase = new Label(error.uiMessage)
+            wrongPassphrase.setTextFill(Color.rgb(210, 39, 30))
+            passphraseSuccessNotificationArea.getChildren.removeAll(
+              passphraseSuccessNotificationArea.getChildren
             )
-            passwordSuccessNotificationArea.getChildren.add(wrongPassword)
+            passphraseSuccessNotificationArea.getChildren.add(wrongPassphrase)
           })
       }
     }

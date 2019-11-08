@@ -1,37 +1,36 @@
 package lockbook.dev
 
+import javafx.application.Platform
 import javafx.geometry.HPos
 import javafx.scene.control._
 import javafx.scene.layout.{ColumnConstraints, GridPane, Priority}
-import org.eclipse.jgit.api.{Git, PullCommand}
+import org.eclipse.jgit.api.Git
 
-case class RepositoryCell(git: Git, pullCommand: PullCommand, progressMonitor: PullProgressMonitor)
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
+case class RepositoryCell(git: Git, statusLabel: Label)
 object RepositoryCell {
-  def fromGit(git: Git, gitHelper: GitHelper): RepositoryCell = {
-    val ppm = new PullProgressMonitor(getProgressIndicator)
-    RepositoryCell(
-      git = git,
-      pullCommand = gitHelper.pullCommand(git, ppm),
-      progressMonitor = ppm
-    )
-  }
+  def calculateStatus(repocell: RepositoryCell, gitHelper: GitHelper): Unit =
+    Future {
+      val maybePullNeeded = gitHelper.pullNeeded(repocell.git)
+      val pullNeeded      = maybePullNeeded.getOrElse(false)
+      val localDirty      = gitHelper.localDirty(repocell.git)
 
-  private def getProgressIndicator: ProgressIndicator = {
-    val progressIndicator = new ProgressIndicator(0)
-    progressIndicator
-      .progressProperty()
-      .addListener((_, _, _) => {
-        if (progressIndicator.getProgress == 1) progressIndicator.setVisible(false)
-        else progressIndicator.setVisible(true)
-      })
+      val status =
+        if (maybePullNeeded.isLeft) "Error"
+        else if (pullNeeded && localDirty) "Both"
+        else if (pullNeeded) "Pull"
+        else if (localDirty) "Push"
+        else ""
 
-    progressIndicator
-  }
+      Platform.runLater(() => repocell.statusLabel.setText(status))
+    }
 }
 
 class RepositoryCellUi(gitHelper: GitHelper) {
 
+  // These particular functions need to be passed in becaues they require both both the list element & list
   def getListCell(
       onClick: Git => Unit,
       onDelete: RepositoryCell => Unit,
@@ -49,15 +48,45 @@ class RepositoryCellUi(gitHelper: GitHelper) {
           setGraphic(null)
         } else {
           setGraphic(getCell(item))
-          val deleteItem = new MenuItem("Delete")
-          val newRepo    = new MenuItem("Clone Repository")
+          val deleteItem     = new MenuItem("Delete")
+          val newRepo        = new MenuItem("Clone Repository")
+          val push           = new MenuItem("Push")
+          val pull           = new MenuItem("Pull")
+          val commitPullPush = new MenuItem("Commit, Pull & Push")
+
           deleteItem.setOnAction(_ => onDelete(item))
           newRepo.setOnAction(_ => onClone())
-          setContextMenu(new ContextMenu(newRepo, deleteItem))
+          push.setOnAction(_ => pushClicked(item))
+          pull.setOnAction(_ => pullClicked(item))
+
+          commitPullPush.setOnAction(_ => commitPullPushClicked(item))
+
+          setContextMenu(new ContextMenu(newRepo, pull, push, commitPullPush, deleteItem))
         }
       }
     }
   }
+
+  private def commitPullPushClicked(item: RepositoryCell): Unit =
+    DoInBackgroundWithMouseSpinning(
+      name = "Commit, Pull, Push",
+      task = () => gitHelper.sync(item.git),
+      item.statusLabel.getScene
+    )
+
+  private def pushClicked(item: RepositoryCell): Unit =
+    DoInBackgroundWithMouseSpinning(
+      name = "Push",
+      task = () => gitHelper.commitAndPush("", item.git),
+      item.statusLabel.getScene
+    )
+
+  private def pullClicked(item: RepositoryCell): Unit =
+    DoInBackgroundWithMouseSpinning(
+      name = "Pull",
+      task = () => gitHelper.pull(item.git),
+      item.statusLabel.getScene
+    )
 
   private def getCell(repositoryCell: RepositoryCell): GridPane = {
     val gridPane = new GridPane
@@ -74,7 +103,7 @@ class RepositoryCellUi(gitHelper: GitHelper) {
     gridPane.getColumnConstraints.addAll(column1, column2)
 
     gridPane.add(label, 0, 0)
-    gridPane.add(repositoryCell.progressMonitor.progressIndicator, 1, 0)
+    gridPane.add(repositoryCell.statusLabel, 1, 0)
 
     gridPane
   }
