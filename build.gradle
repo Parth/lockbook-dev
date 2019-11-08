@@ -19,7 +19,9 @@ dependencies {
     implementation 'com.vladsch.flexmark:flexmark-all:0.50.26' // For interpreting markdown 
     implementation 'org.fxmisc.richtext:richtextfx:0.10.1' // For rich text editing
     implementation 'org.scala-lang:scala-library:2.12.8' // For Scala
-    implementation 'net.liftweb:lift-json_2.12:3.4.0' // Lift json
+    implementation 'io.circe:circe-core_2.13:0.12.0' // Circe for json
+    implementation 'io.circe:circe-generic_2.13:0.12.0' // Circe for json
+    implementation 'io.circe:circe-parser_2.13:0.12.0' // Circe for json
 }
 
 application {

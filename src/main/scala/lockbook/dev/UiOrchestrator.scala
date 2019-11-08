@@ -17,6 +17,7 @@ import scala.concurrent.duration.FiniteDuration
 
 class UiOrchestrator(
     lockfile: LockfileHelper,
+    settingsHelper: SettingsHelper,
     unlockUI: UnlockUi,
     newPassphraseUI: NewPassphraseUi,
     repositoryUi: RepositoryUi,
@@ -35,7 +36,7 @@ class UiOrchestrator(
     stage.setFullScreen(false)
     stage.setScene(new Scene(root, 300, 130))
     stage.setTitle("Lockbook Dev")
-    stage.getScene.getStylesheets.add(SettingsHelper.getSettings.theme)
+    stage.getScene.getStylesheets.add(settingsHelper.getTheme)
     processLockfileAndShowUi(root, showRepo())
     stage.show()
   }

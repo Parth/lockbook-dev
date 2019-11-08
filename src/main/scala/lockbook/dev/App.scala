@@ -32,7 +32,7 @@ class App extends Application {
     val executor: ScheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(2)
 
     val file: FileHelper                       = new FileHelperImpl
-    val settingHelper: SettingHelper           = new SettingHelperImpl(SettingHelper.fromFile(file))
+    val settingsHelper: SettingsHelper         = new SettingsHelperImpl(SettingsHelper.fromFile(file))
     val encryption: EncryptionHelper           = new EncryptionImpl
     val lockfile: LockfileHelper               = new LockfileHelperImpl(encryption, file)
     val passphrase: PassphraseHelper           = new PassphraseHelperImpl(lockfile, encryption)
@@ -49,7 +49,7 @@ class App extends Application {
     val editorUi: EditorUi                 = new EditorUi(editorHelper, git, executor)
 
     val uiOrchestrator =
-      new UiOrchestrator(lockfile, unlockUi, newPassphraseUi, repositoryUi, fileTreeUi, editorUi, stage, executor)
+      new UiOrchestrator(lockfile, settingsHelper, unlockUi, newPassphraseUi, repositoryUi, fileTreeUi, editorUi, stage, executor)
     uiOrchestrator.showView()
   }
 }
