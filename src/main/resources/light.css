@@ -1,17 +1,17 @@
 .root {
-    -fx-base: #3d3d3d;
-    -fx-background: #3d3d3d;
+    -fx-base: #2f2f37;
+    -fx-background: #2f2f37;
     -fx-focus-color: transparent;
     -fx-faint-focus-color: transparent;
 }
 
 .tree-view {
     -fx-background-insets: 0;
-    -fx-background-color: rgb(30, 30, 30);
+    -fx-background-color: #242429;
 }
 
 .tree-cell {
-    -fx-background-color: rgb(30, 30, 30);
+    -fx-background-color: #242429;
     -fx-text-fill: #ffffff;
 }
 
@@ -36,7 +36,7 @@
 }
 
 .split-pane > .split-pane-divider {
-    -fx-background-color: rgb(30, 30, 30);
+    -fx-background-color: #2f2f37;
     -fx-padding: 0 0.1px, 0, 0.1px;
 }
 
@@ -52,14 +52,14 @@
 .list-view {
     -fx-background-insets: 0;
     -fx-padding: 0;
-    -fx-control-inner-background: rgb(45, 45, 45);
-    -fx-control-inner-background-alt: rgb(45, 45, 45);
+    -fx-control-inner-background: #2f2f37;
+    -fx-control-inner-background-alt: #2f2f37;
 }
 
 .list-cell {
     -fx-focus-color: transparent;
     -fx-background-insets: 0, 0, 0, 0;
-    -fx-border-color: rgb(45, 45, 45);
+    -fx-border-color: #2f2f37;
 }
 
 .list-cell:filled:selected {
@@ -79,12 +79,12 @@
 }
 
 #repoList {
-    -fx-background-color: rgb(45, 45, 45);
+    -fx-background-color: #2f2f37;
 }
 
 .password-field {
     -fx-background-insets: 0;
-    -fx-background-color: transparent, #2a2a2a, transparent, #2a2a2a;
+    -fx-background-color: transparent, #1F1F24, transparent, #1F1F24;
     -fx-background-radius: 0, 0, 0, 0;
     -fx-text-inner-color: white;
 

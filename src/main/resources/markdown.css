@@ -1,5 +1,5 @@
 .styled-text-area {
-    -fx-background-color: rgb(20, 20, 20);
+    -fx-background-color: #1F1F24;
     -fx-fill: white;
 }
 
@@ -27,41 +27,16 @@
 .styled-text-area .h5,
 .styled-text-area .h6 {
 	-fx-font-weight: bold;
-	-fx-fill: rgb(200, 118, 50);
+	-fx-fill: #5DD8FF;
+}
+
+.styled-text-area .emphasis {
+	-fx-font-weight: bolder;
 }
 
 .styled-text-area .code {
     -fx-fill: #F8F8F2;
     -fx-font-family: monospace;
-}
-
-.styled-text-area .scala-class {
-    -fx-font-family: monospace;
-    -fx-fill: #AE81FF;
-}
-
-.styled-text-area .scala-method {
-    -fx-font-family: monospace;
-    -fx-fill: #66D9EF;
-}
-
-.styled-text-area .scala-func {
-    -fx-font-family: monospace;
-    -fx-fill: #66D9EF;
-}
-
-.styled-text-area .scala-keyword {
-    -fx-font-family: monospace;
-    -fx-fill: #FD971F;
-}
-
-.styled-text-area .scala {
-    -fx-font-family: monospace;
-    -fx-fill: #F92672;
-}
-
-.styled-text-area .emphasis {
-	-fx-font-weight: bolder;
 }
 
 .styled-text-area .code-block {
@@ -85,4 +60,33 @@
 
 .styled-text-area .link {
     -fx-fill: #1E91D6;
+}
+.styled-text-area .scala-class {
+    -fx-font-family: monospace;
+    -fx-fill: #41A1C0;
+}
+
+.styled-text-area .scala-method {
+    -fx-font-family: monospace;
+    -fx-fill: #A167E6;
+}
+
+.styled-text-area .scala-func {
+    -fx-font-family: monospace;
+    -fx-fill: #67B7A4;
+}
+
+.styled-text-area .scala-keyword {
+    -fx-font-family: monospace;
+    -fx-fill: #FC5FA3;
+}
+
+.styled-text-area .scala-value {
+    -fx-font-family: monospace;
+    -fx-fill: #D0BF69;
+}
+
+.styled-text-area .scala {
+    -fx-font-family: monospace;
+    -fx-fill: #F92672;
 }
