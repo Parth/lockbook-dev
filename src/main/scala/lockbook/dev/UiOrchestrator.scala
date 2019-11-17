@@ -5,8 +5,8 @@ import java.util.concurrent.{ScheduledFuture, ScheduledThreadPoolExecutor, TimeU
 
 import javafx.application.Platform
 import javafx.scene.Scene
-import javafx.scene.control.SplitPane
-import javafx.scene.input.{KeyCode, KeyCodeCombination, KeyCombination, KeyEvent}
+import javafx.scene.control.{Menu, MenuBar, MenuItem, SplitPane}
+import javafx.scene.input.{KeyCode, KeyCodeCombination, KeyCombination, KeyEvent, MouseEvent}
 import javafx.scene.layout.StackPane
 import javafx.stage.{Screen, Stage}
 import org.eclipse.jgit.api.Git
@@ -18,6 +18,7 @@ import scala.concurrent.duration.FiniteDuration
 class UiOrchestrator(
     lockfile: LockfileHelper,
     settingsHelper: SettingsHelper,
+    settingsUi: SettingsUi,
     unlockUI: UnlockUi,
     newPassphraseUI: NewPassphraseUi,
     repositoryUi: RepositoryUi,
@@ -41,6 +42,21 @@ class UiOrchestrator(
     stage.show()
   }
 
+  private def getMenuUi(): MenuBar = {
+    val menuBar         = new MenuBar
+    val fileMenu        = new Menu("File")
+    val settingsItem    = new MenuItem("Settings")
+
+    settingsItem.setOnAction(_ => {
+      settingsUi.getView
+    })
+
+    fileMenu.getItems.add(settingsItem)
+    menuBar.getMenus.add(fileMenu)
+
+    menuBar
+  }
+
   private def showRepo(): Unit = {
     stage.close()
     locked = false
@@ -53,7 +69,7 @@ class UiOrchestrator(
     root.setDividerPositions(0.15, 0.3)
     root.getItems.setAll(repoStackPane, fileStackPane, editorStackPane)
     repoStackPane.getChildren.setAll(
-      repositoryUi.getView(showFileUi(fileStackPane, editorStackPane))
+      repositoryUi.getView(getMenuUi(), showFileUi(fileStackPane, editorStackPane))
     )
 
     stage.setScene(
@@ -63,7 +79,6 @@ class UiOrchestrator(
         Screen.getPrimary.getVisualBounds.getHeight * 0.8
       )
     )
-
 
     closeRequestListener()
     addFocusListener()
@@ -78,12 +93,14 @@ class UiOrchestrator(
     container.getChildren.setAll(editorUi.getView(git, f))
   }
 
+
+
   private def processLockfileAndShowUi(root: StackPane, onDone: => Unit): Unit = {
     Future {
       lockfile.getLockfile match {
         case Right(_) =>
-          Platform.runLater(() => root.getChildren.add(unlockUI.getView(onDone)))
-
+          Platform.runLater(() =>
+            root.getChildren.add(unlockUI.getView(onDone)))
         case Left(_) =>
           Platform.runLater(() => root.getChildren.add(newPassphraseUI.getView(onDone)))
       }

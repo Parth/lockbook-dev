@@ -8,7 +8,7 @@ import javafx.stage.Stage
 object App {
   val path: String   = s"${System.getProperty("user.home")}/.lockbook"
   val debug: Boolean = true // TODO utilize this to print out exceptions passed into LockbookError
-  val css: String = "light.css" // good settings candidate
+  val css: String    = "light.css" // good settings candidate
   // right click -> find usages
 
   def main(args: Array[String]) {
@@ -19,11 +19,13 @@ object App {
 class App extends Application {
 
   def addCss(stage: Stage): Unit = {
-    stage.sceneProperty().addListener((_, _, newValue) => {
-      if (newValue != null) {
-        newValue.getStylesheets.addAll(App.css, "markdown.css")
-      }
-    })
+    stage
+      .sceneProperty()
+      .addListener((_, _, newValue) => {
+        if (newValue != null) {
+          newValue.getStylesheets.addAll(App.css, "markdown.css")
+        }
+      })
   }
 
   override def start(stage: Stage): Unit = {
@@ -41,6 +43,7 @@ class App extends Application {
     val editorHelper: EditorHelperImpl         = new EditorHelperImpl(encryption, passphrase, file)
 
     val newPassphraseUi: NewPassphraseUi   = new NewPassphraseUi(lockfile, passphrase, encryption)
+    val settingsUi: SettingsUi             = new SettingsUi(settingsHelper)
     val unlockUi: UnlockUi                 = new UnlockUi(passphrase)
     val repositoryCellUi: RepositoryCellUi = new RepositoryCellUi(git)
     val cloneRepoDialog: CloneRepoDialog   = new CloneRepoDialog(git)
@@ -49,7 +52,18 @@ class App extends Application {
     val editorUi: EditorUi                 = new EditorUi(editorHelper, git, executor)
 
     val uiOrchestrator =
-      new UiOrchestrator(lockfile, settingsHelper, unlockUi, newPassphraseUi, repositoryUi, fileTreeUi, editorUi, stage, executor)
+      new UiOrchestrator(
+        lockfile,
+        settingsHelper,
+        settingsUi,
+        unlockUi,
+        newPassphraseUi,
+        repositoryUi,
+        fileTreeUi,
+        editorUi,
+        stage,
+        executor
+      )
     uiOrchestrator.showView()
   }
 }

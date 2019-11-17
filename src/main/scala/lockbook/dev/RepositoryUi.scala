@@ -17,7 +17,7 @@ class RepositoryUi(
 
   val repoList: ObservableList[RepositoryCell] = FXCollections.observableArrayList[RepositoryCell]()
 
-  def getView(onClick: Git => Unit): BorderPane = {
+  def getView(menuBar: MenuBar, onClick: Git => Unit): BorderPane = {
     val borderPane = new BorderPane // TODO does this still need to be a BorderPane?
     val listView   = new ListView[RepositoryCell]
 
@@ -59,6 +59,7 @@ class RepositoryUi(
     addSyncListener(listView)
 
     borderPane.setCenter(listView)
+    borderPane.setTop(menuBar)
     borderPane
   }
 
