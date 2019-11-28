@@ -7,6 +7,10 @@ import org.eclipse.jgit.api.errors.TransportException
 
 sealed trait LockbookError { val uiMessage: String }
 
+case class DecodingError(raw: String, e: io.circe.Error)  extends LockbookError {
+  override val uiMessage: String =  s"$raw, could not be decoded, $e"
+}
+
 // Errors from FileHelper
 trait FileError extends LockbookError
 case class FileTooBig(f: File, oom: OutOfMemoryError) extends FileError {

@@ -1,31 +1,53 @@
 package lockbook.dev
 
-import javafx.collections.{FXCollections, ObservableList}
-import javafx.geometry.{Insets, Pos}
-import javafx.scene.Scene
-import javafx.scene.control.{ComboBox, Label}
-import javafx.scene.layout.{BorderPane, VBox}
-import javafx.stage.Stage
+import java.util.Optional
+
+import javafx.collections.FXCollections
+import javafx.geometry.Insets
+import javafx.scene.Node
+import javafx.scene.control.Alert.AlertType
+import javafx.scene.control._
+import javafx.scene.layout.GridPane
 
 class SettingsUi(settingsHelper: SettingsHelper) {
 
-  def getView: Unit = {
-    val stage           = new Stage
-    val vBox            = new VBox
-    val label = new Label("Settings")
-    val stylesBox       = new ComboBox[String](FXCollections.observableArrayList(Light.fileName))
-    stylesBox.set
-    val autoLockTimeBox = new ComboBox[Int](FXCollections.observableArrayList(ShortLockTime.time))
+  def getView(): Unit = { //use graphbox
 
-    vBox.getChildren.addAll(label, stylesBox, autoLockTimeBox)
-    vBox.setAlignment(Pos.BASELINE_CENTER)
-    vBox.setPadding(new Insets(20))
-    vBox.setSpacing(10)
+    val applyButton  = new ButtonType("Apply", ButtonBar.ButtonData.APPLY)
+    val cancelButton = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE)
+    val alert        = new Alert(AlertType.CONFIRMATION, null, applyButton, cancelButton)
 
-    val borderPane = new BorderPane(vBox)
+    val gridPane = new GridPane
 
-    stage.setScene(new Scene(borderPane))
-    stage.setTitle("Settings")
-    stage.showAndWait()
+    getViewHelper(alert, gridPane)
+
+    val result: Optional[ButtonType] = alert.showAndWait()
+    if (result.get() == applyButton) setSettings(alert.getDialogPane.getContent) else println(result.get())
   }
+
+  def getViewHelper(alert: Alert, gridPane: GridPane): Unit = {
+    val stylesBox       = new ComboBox[String](FXCollections.observableArrayList(Light.fileName))
+    val autoLockTimeBox = new ComboBox[Int](FXCollections.observableArrayList(5))
+
+    alert.setTitle("Settings")
+    alert.setHeaderText("Settings")
+    alert.setGraphic(null)
+
+    gridPane.setHgap(10)
+    gridPane.setVgap(10)
+    gridPane.setPadding(new Insets(10))
+
+    gridPane.add(new Label("Styles"), 0, 1)
+    gridPane.add(stylesBox, 1, 1)
+    gridPane.add(new Label("Auto Lock Time"), 0, 2)
+    gridPane.add(autoLockTimeBox, 1, 2)
+
+    alert.getDialogPane.getStylesheets.add("light.css")
+    alert.getDialogPane.setContent(gridPane)
+  }
+
+  def setSettings(node: Node): Unit = {
+    node.
+  }
+
 }
