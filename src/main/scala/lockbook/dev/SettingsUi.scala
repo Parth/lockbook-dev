@@ -47,7 +47,7 @@ class SettingsUi(settingsHelper: SettingsHelper) {
   }
 
   def setSettings(node: Node): Unit = {
-    node.
+
   }
 
 }
