@@ -24,7 +24,6 @@ class SettingsUi(settingsHelper: SettingsHelper, fileHelper: FileHelper) {
     getViewHelper(dialog, gridPane)
 
     val result: Optional[Settings] = dialog.showAndWait()
-    println("Result: " + result)
     if (result.isPresent) {
       SettingsHelper.constructJson(result.get(), fileHelper)
     }
