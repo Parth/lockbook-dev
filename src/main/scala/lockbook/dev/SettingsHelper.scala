@@ -1,7 +1,11 @@
 package lockbook.dev
 
+import java.io.File
+
+import io.circe.Json
 import io.circe.generic.auto._
 import io.circe.parser._
+import io.circe.syntax._
 
 case class Settings(
     theme: Option[String],
@@ -32,6 +36,12 @@ object SettingsHelper {
       case Right(settings) => Right(settings)
     }
 
+  def constructJson(settings: Settings, fileHelper: FileHelper): Unit = {
+    val jsonFile = new File(jsonPath)
+    if(!jsonFile.exists()) jsonFile.createNewFile()
+    val jsonString      = settings.asJson.noSpaces
+    fileHelper.saveToFile(jsonFile, jsonString)
+  }
 }
 
 class SettingsHelperImpl(setting: Settings) extends SettingsHelper {

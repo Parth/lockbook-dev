@@ -43,7 +43,7 @@ class App extends Application {
     val editorHelper: EditorHelperImpl         = new EditorHelperImpl(encryption, passphrase, file)
 
     val newPassphraseUi: NewPassphraseUi   = new NewPassphraseUi(lockfile, passphrase, encryption)
-    val settingsUi: SettingsUi             = new SettingsUi(settingsHelper)
+    val settingsUi: SettingsUi             = new SettingsUi(settingsHelper, file)
     val unlockUi: UnlockUi                 = new UnlockUi(passphrase)
     val repositoryCellUi: RepositoryCellUi = new RepositoryCellUi(git)
     val cloneRepoDialog: CloneRepoDialog   = new CloneRepoDialog(git)

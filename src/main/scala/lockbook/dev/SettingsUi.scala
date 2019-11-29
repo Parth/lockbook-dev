@@ -4,34 +4,42 @@ import java.util.Optional
 
 import javafx.collections.FXCollections
 import javafx.geometry.Insets
-import javafx.scene.Node
-import javafx.scene.control.Alert.AlertType
+import javafx.scene.control.ButtonBar.ButtonData
 import javafx.scene.control._
 import javafx.scene.layout.GridPane
 
-class SettingsUi(settingsHelper: SettingsHelper) {
+class SettingsUi(settingsHelper: SettingsHelper, fileHelper: FileHelper) {
 
   def getView(): Unit = { //use graphbox
 
-    val applyButton  = new ButtonType("Apply", ButtonBar.ButtonData.APPLY)
-    val cancelButton = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE)
-    val alert        = new Alert(AlertType.CONFIRMATION, null, applyButton, cancelButton)
+    val dialog: Dialog[Settings] = new Dialog[Settings]()
+
+    dialog.getDialogPane.getButtonTypes.addAll(
+      ButtonType.APPLY,
+      ButtonType.CANCEL
+    )
 
     val gridPane = new GridPane
 
-    getViewHelper(alert, gridPane)
+    getViewHelper(dialog, gridPane)
 
-    val result: Optional[ButtonType] = alert.showAndWait()
-    if (result.get() == applyButton) setSettings(alert.getDialogPane.getContent) else println(result.get())
+    val result: Optional[Settings] = dialog.showAndWait()
+    println("Result: " + result)
+    if (result.isPresent) {
+      SettingsHelper.constructJson(result.get(), fileHelper)
+    }
   }
 
-  def getViewHelper(alert: Alert, gridPane: GridPane): Unit = {
+  def getViewHelper(dialog: Dialog[Settings], gridPane: GridPane): Unit = {
     val stylesBox       = new ComboBox[String](FXCollections.observableArrayList(Light.fileName))
-    val autoLockTimeBox = new ComboBox[Int](FXCollections.observableArrayList(5))
+    val autoLockTimeBox = new ComboBox[Int](FXCollections.observableArrayList(5, 2))
 
-    alert.setTitle("Settings")
-    alert.setHeaderText("Settings")
-    alert.setGraphic(null)
+    stylesBox.getSelectionModel.selectFirst() // can shorten this for future settings; make loop
+    autoLockTimeBox.getSelectionModel.selectFirst()
+
+    dialog.setTitle("Settings")
+    dialog.setHeaderText("Settings")
+    dialog.setGraphic(null)
 
     gridPane.setHgap(10)
     gridPane.setVgap(10)
@@ -42,11 +50,17 @@ class SettingsUi(settingsHelper: SettingsHelper) {
     gridPane.add(new Label("Auto Lock Time"), 0, 2)
     gridPane.add(autoLockTimeBox, 1, 2)
 
-    alert.getDialogPane.getStylesheets.add("light.css")
-    alert.getDialogPane.setContent(gridPane)
-  }
+    dialog.getDialogPane.getStylesheets.add("light.css")
+    dialog.getDialogPane.setContent(gridPane)
 
-  def setSettings(node: Node): Unit = {
+
+    dialog.setResultConverter(
+      dialogButton => {
+        if (dialogButton == ButtonType.APPLY)
+          new Settings(Some(stylesBox.getValue), Some(autoLockTimeBox.getValue))
+        else null
+      }
+    )
 
   }
 
