@@ -50,7 +50,7 @@ class SettingsUi(settingsHelper: SettingsHelper, fileHelper: FileHelper) {
     gridPane.add(new Label("Auto Lock Time"), 0, 2)
     gridPane.add(autoLockTimeBox, 1, 2)
 
-    dialog.getDialogPane.getStylesheets.add("light.css")
+    dialog.getDialogPane.getStylesheets.add(settingsHelper.getTheme)
     dialog.getDialogPane.setContent(gridPane)
 
 
