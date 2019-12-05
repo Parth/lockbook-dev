@@ -12,7 +12,7 @@ import scala.concurrent.duration.FiniteDuration
 
 class SettingsUi(settingsHelper: SettingsHelper, fileHelper: FileHelper) {
 
-  def addView(): Unit = {
+  def showView(): Unit = {
 
     val dialog: Dialog[Settings] = new Dialog[Settings]()
 
@@ -22,7 +22,7 @@ class SettingsUi(settingsHelper: SettingsHelper, fileHelper: FileHelper) {
     )
 
     val gridPane = new GridPane
-    addViewHelper(dialog, gridPane)
+    showViewHelper(dialog, gridPane)
 
     val result: Optional[Settings] = dialog.showAndWait()
     if (result.isPresent) {
@@ -30,7 +30,7 @@ class SettingsUi(settingsHelper: SettingsHelper, fileHelper: FileHelper) {
     }
   }
 
-  def addViewHelper(dialog: Dialog[Settings], gridPane: GridPane): Unit = {
+  def showViewHelper(dialog: Dialog[Settings], gridPane: GridPane): Unit = {
     val stylesBox       = new ComboBox[String](FXCollections.observableArrayList(Light.fileName))
     val autoLockTimeBox = new ComboBox[Int](FXCollections.observableArrayList(30, 60, 90, 120))
 

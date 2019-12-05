@@ -50,7 +50,7 @@ class UiOrchestrator(
     val settingsItem = new MenuItem("Settings")
 
     settingsItem.setOnAction(_ => {
-      settingsUi.addView
+      settingsUi.showView
     })
 
     fileMenu.getItems.add(settingsItem)
