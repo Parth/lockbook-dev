@@ -25,7 +25,7 @@ object SettingsHelper {
       .readFile(jsonPath)
       .flatMap(decodeSettings) match {
       case Left(error) =>
-        println(error)
+        println(s"Could read settings: $error")
         Settings(None, None)
       case Right(settings) => settings
     }

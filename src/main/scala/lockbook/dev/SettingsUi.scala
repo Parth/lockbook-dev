@@ -8,9 +8,11 @@ import javafx.scene.control.ButtonBar.ButtonData
 import javafx.scene.control._
 import javafx.scene.layout.GridPane
 
+import scala.concurrent.duration.FiniteDuration
+
 class SettingsUi(settingsHelper: SettingsHelper, fileHelper: FileHelper) {
 
-  def getView(): Unit = { //use graphbox
+  def addView(): Unit = {
 
     val dialog: Dialog[Settings] = new Dialog[Settings]()
 
@@ -20,8 +22,7 @@ class SettingsUi(settingsHelper: SettingsHelper, fileHelper: FileHelper) {
     )
 
     val gridPane = new GridPane
-
-    getViewHelper(dialog, gridPane)
+    addViewHelper(dialog, gridPane)
 
     val result: Optional[Settings] = dialog.showAndWait()
     if (result.isPresent) {
@@ -29,12 +30,12 @@ class SettingsUi(settingsHelper: SettingsHelper, fileHelper: FileHelper) {
     }
   }
 
-  def getViewHelper(dialog: Dialog[Settings], gridPane: GridPane): Unit = {
+  def addViewHelper(dialog: Dialog[Settings], gridPane: GridPane): Unit = {
     val stylesBox       = new ComboBox[String](FXCollections.observableArrayList(Light.fileName))
-    val autoLockTimeBox = new ComboBox[Int](FXCollections.observableArrayList(5, 2))
+    val autoLockTimeBox = new ComboBox[Int](FXCollections.observableArrayList(30, 60, 90, 120))
 
-    stylesBox.getSelectionModel.selectFirst() // can shorten this for future settings; make loop
-    autoLockTimeBox.getSelectionModel.selectFirst()
+    stylesBox.getSelectionModel.select(settingsHelper.getTheme) // can shorten this for future settings; make loop
+    autoLockTimeBox.getSelectionModel.select(settingsHelper.getAutoLockTime)
 
     dialog.setTitle("Settings")
     dialog.setHeaderText("Settings")
@@ -60,7 +61,6 @@ class SettingsUi(settingsHelper: SettingsHelper, fileHelper: FileHelper) {
         else null
       }
     )
-
   }
 
 }
