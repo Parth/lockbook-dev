@@ -16,7 +16,6 @@ import org.fxmisc.richtext.CodeArea
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
-import scala.util.matching.Regex
 import scala.util.matching.Regex.Match
 class EditorUi(editorHelper: EditorHelper, gitHelper: GitHelper, executor: ScheduledThreadPoolExecutor) {
 
@@ -87,8 +86,16 @@ class EditorUi(editorHelper: EditorHelper, gitHelper: GitHelper, executor: Sched
   }
 
   private def renderMarkdownTask(codeArea: CodeArea): () => Unit = () => {
+    val startTime        = System.currentTimeMillis()
     val parsed: Document = parser.parse(codeArea.getText())
-    Platform.runLater(() => nodeVisitor(codeArea).visit(parsed))
+    val parseFinishTime  = System.currentTimeMillis()
+
+    Platform.runLater(() => {
+      nodeVisitor(codeArea).visit(parsed)
+      val documentUpdateFinishTime = System.currentTimeMillis()
+
+      println(s"Document Length: ${codeArea.getText().length}, Total time: ${documentUpdateFinishTime-startTime}, Parse time: ${parseFinishTime-startTime}, Render time: ${documentUpdateFinishTime-parseFinishTime}")
+    })
   }
 
   private def doMarkdown(text: CodeArea): Unit = {
