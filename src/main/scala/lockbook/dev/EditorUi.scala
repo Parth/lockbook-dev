@@ -91,10 +91,17 @@ class EditorUi(editorHelper: EditorHelper, gitHelper: GitHelper, executor: Sched
     val parseFinishTime  = System.currentTimeMillis()
 
     Platform.runLater(() => {
+      val documentUpdateStarted = System.currentTimeMillis()
       nodeVisitor(codeArea).visit(parsed)
-      val documentUpdateFinishTime = System.currentTimeMillis()
-
-      println(s"Document Length: ${codeArea.getText().length}, Total time: ${documentUpdateFinishTime-startTime}, Parse time: ${parseFinishTime-startTime}, Render time: ${documentUpdateFinishTime-parseFinishTime}")
+      val allDone = System.currentTimeMillis()
+      println(
+        s"" +
+          s"Document Length: ${codeArea.getText().length},\t" +
+          s"Total time: ${allDone - startTime},\t" +
+          s"String -> AST: ${parseFinishTime - startTime},\t" +
+          s"Future Overhead: ${documentUpdateStarted - parseFinishTime},\t" +
+          s"Document update: ${allDone - documentUpdateStarted}"
+      )
     })
   }
 
