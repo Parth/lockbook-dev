@@ -4,17 +4,14 @@ import java.util.Optional
 
 import javafx.collections.FXCollections
 import javafx.geometry.Insets
-import javafx.scene.control.ButtonBar.ButtonData
 import javafx.scene.control._
 import javafx.scene.layout.GridPane
-
-import scala.concurrent.duration.FiniteDuration
 
 class SettingsUi(settingsHelper: SettingsHelper, fileHelper: FileHelper) {
 
   def showView(): Unit = {
 
-    val dialog: Dialog[Settings] = new Dialog[Settings]()
+    val dialog: Dialog[LockbookSettings] = new Dialog[LockbookSettings]()
 
     dialog.getDialogPane.getButtonTypes.addAll(
       ButtonType.APPLY,
@@ -24,20 +21,27 @@ class SettingsUi(settingsHelper: SettingsHelper, fileHelper: FileHelper) {
     val gridPane = new GridPane
     showViewHelper(dialog, gridPane)
 
-    val result: Optional[Settings] = dialog.showAndWait()
+    val result: Optional[LockbookSettings] = dialog.showAndWait()
     if (result.isPresent) {
       SettingsHelper.constructJson(result.get(), fileHelper)
     }
   }
 
-  def showViewHelper(dialog: Dialog[Settings], gridPane: GridPane): Unit = {
+  private def showViewHelper(dialog: Dialog[LockbookSettings], gridPane: GridPane): Unit = {
     val stylesBox       = new ComboBox[String](FXCollections.observableArrayList(Light.fileName))
-    val autoLockTimeBox = new ComboBox[Int](FXCollections.observableArrayList(30, 60, 90, 120))
+    val autoLockTimeBox = new TextField()
 
     stylesBox.getSelectionModel.select(settingsHelper.getTheme) // can shorten this for future settings; make loop
-    autoLockTimeBox.getSelectionModel.select(settingsHelper.getAutoLockTime)
+    autoLockTimeBox.setText(settingsHelper.getAutoLockTime.asInstanceOf[String])
 
-    dialog.setTitle("Settings")
+    autoLockTimeBox.setOnKeyReleased(
+      _ =>
+        if (!autoLockTimeBox.getText.matches("""\d*""")) {
+          autoLockTimeBox.setText(autoLockTimeBox.getText.replaceAll("""\D+""", ""))
+        }
+    )
+
+    dialog.setTitle("Settings") // use settingshelper across, then advanced capabil.
     dialog.setHeaderText("Settings")
     dialog.setGraphic(null)
 
@@ -53,11 +57,13 @@ class SettingsUi(settingsHelper: SettingsHelper, fileHelper: FileHelper) {
     dialog.getDialogPane.getStylesheets.add(settingsHelper.getTheme)
     dialog.getDialogPane.setContent(gridPane)
 
-
     dialog.setResultConverter(
       dialogButton => {
         if (dialogButton == ButtonType.APPLY)
-          new Settings(Some(stylesBox.getValue), Some(autoLockTimeBox.getValue))
+          LockbookSettings(
+            Some(stylesBox.getValue.asInstanceOf[Theme]),
+            Some(autoLockTimeBox.getText.asInstanceOf[AutoLockTime])
+          )
         else null
       }
     )

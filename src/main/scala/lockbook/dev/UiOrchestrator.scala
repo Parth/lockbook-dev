@@ -32,12 +32,12 @@ class UiOrchestrator(
   private var closing: Boolean = false
 
   def showView(): Unit = {
-    val borderPane           = new BorderPane // revert back to root
+    val root           = new BorderPane // revert back to root
     val stackPane: StackPane = new StackPane
-    borderPane.setCenter(stackPane)
+    root.setCenter(stackPane)
     stage.setMaximized(false)
     stage.setFullScreen(false)
-    stage.setScene(new Scene(borderPane, 300, 130))
+    stage.setScene(new Scene(root, 300, 130))
     stage.setTitle("Lockbook Dev")
     stage.getScene.getStylesheets.add("light.css")
     processLockfileAndShowUi(stackPane, showRepo())
@@ -118,7 +118,7 @@ class UiOrchestrator(
 
   private def addFocusListener(): Unit = {
     val lockWhenBackground =
-      CancelableAction(executor, FiniteDuration(15, TimeUnit.MINUTES), lockTask) // good settings candidate
+      CancelableAction(executor, FiniteDuration(settingsHelper.getAutoLockTime, TimeUnit.MINUTES), lockTask) // good settings candidate
 
     var refreshRepos: Option[ScheduledFuture[_]] = Some(
       executor.scheduleAtFixedRate(refreshStatus, 1, 1, TimeUnit.SECONDS)
