@@ -28,7 +28,7 @@ class SettingsUi(settingsHelper: SettingsHelper, fileHelper: FileHelper) {
   }
 
   private def showViewHelper(dialog: Dialog[LockbookSettings], gridPane: GridPane): Unit = {
-    val stylesBox       = new ComboBox[String](FXCollections.observableArrayList(Light.fileName))
+    val stylesBox       = new ComboBox[Theme](FXCollections.observableArrayList(Light)) // TODO change type to theme
     val autoLockTimeBox = new TextField()
 
     stylesBox.getSelectionModel.select(settingsHelper.getTheme) // can shorten this for future settings; make loop
@@ -54,7 +54,7 @@ class SettingsUi(settingsHelper: SettingsHelper, fileHelper: FileHelper) {
     gridPane.add(new Label("Auto Lock Time"), 0, 2)
     gridPane.add(autoLockTimeBox, 1, 2)
 
-    dialog.getDialogPane.getStylesheets.add(settingsHelper.getTheme)
+    dialog.getDialogPane.getStylesheets.add(settingsHelper.getTheme.fileName)
     dialog.getDialogPane.setContent(gridPane)
 
     dialog.setResultConverter(
