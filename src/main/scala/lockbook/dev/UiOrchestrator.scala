@@ -118,7 +118,11 @@ class UiOrchestrator(
 
   private def addFocusListener(): Unit = {
     val lockWhenBackground =
-      CancelableAction(executor, FiniteDuration(settingsHelper.getAutoLockTime, TimeUnit.MINUTES), lockTask) // good settings candidate
+      settingsHelper.getAutoLock.time match { // TODO make this better
+        case Some(time) => CancelableAction(executor, time, lockTask)
+        case None => CancelableAction(executor, FiniteDuration(1, TimeUnit.SECONDS),() => Unit)
+      }
+       // good settings candidate
 
     var refreshRepos: Option[ScheduledFuture[_]] = Some(
       executor.scheduleAtFixedRate(refreshStatus, 1, 1, TimeUnit.SECONDS)

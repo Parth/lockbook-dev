@@ -1,19 +1,22 @@
 package lockbook.dev
 
-import java.util.concurrent.TimeUnit
-
 import scala.concurrent.duration.FiniteDuration
 
 case class LockbookSettings(
     theme: Option[Theme],
-    autoLockTime: Option[AutoLockTime] // change variable name to autoLock
+    autoLockTime: Option[AutoLock] // change variable name to autoLock
 )
 
 sealed trait Settings
 
-trait Theme extends Settings { val fileName: String }
-case object Light extends Theme {
-  override val fileName: String = "light.css"
+trait Theme extends Settings {
+  val fileName: String
+  val themeName: String
 }
 
-case class AutoLockTime(time : Option[FiniteDuration]) extends Settings // remove default value, implement somewhere else
+case object Light extends Theme {
+  override val fileName: String = "light.css"
+  override val themeName: String = "Light"
+}
+
+case class AutoLock(time: Option[FiniteDuration]) extends Settings // remove default value, implement somewhere else

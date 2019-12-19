@@ -32,7 +32,7 @@ class SettingsUi(settingsHelper: SettingsHelper, fileHelper: FileHelper) {
     val autoLockTimeBox = new TextField()
 
     stylesBox.getSelectionModel.select(settingsHelper.getTheme) // can shorten this for future settings; make loop
-    autoLockTimeBox.setText(settingsHelper.getAutoLockTime.asInstanceOf[String])
+    autoLockTimeBox.setText(settingsHelper.getAutoLock.asInstanceOf[String])
 
     autoLockTimeBox.setOnKeyReleased(
       _ =>
@@ -62,7 +62,7 @@ class SettingsUi(settingsHelper: SettingsHelper, fileHelper: FileHelper) {
         if (dialogButton == ButtonType.APPLY)
           LockbookSettings(
             Some(stylesBox.getValue.asInstanceOf[Theme]),
-            Some(autoLockTimeBox.getText.asInstanceOf[AutoLockTime])
+            Some(autoLockTimeBox.getText.asInstanceOf[AutoLock])
           )
         else null
       }
