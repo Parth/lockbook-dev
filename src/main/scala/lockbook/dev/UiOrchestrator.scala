@@ -120,7 +120,7 @@ class UiOrchestrator(
     val lockWhenBackground =
       settingsHelper.getAutoLock.time match { // TODO make this better
         case Some(time) => CancelableAction(executor, time, lockTask)
-        case None => CancelableAction(executor, FiniteDuration(1, TimeUnit.SECONDS),() => Unit)
+        case None => CancelableAction(executor, FiniteDuration(1, TimeUnit.SECONDS), () => ())
       }
        // good settings candidate
 

@@ -3,7 +3,6 @@ package lockbook.dev
 import java.io.File
 import java.util.concurrent.TimeUnit
 
-import io.circe.generic.auto._
 import io.circe.parser._
 import io.circe.syntax._
 import io.circe.{Decoder, Encoder, HCursor, Json}
@@ -30,7 +29,9 @@ object SettingsHelper {
 
   private def decodeSettings(s: String): Either[DecodingError, LockbookSettings] = {
 
-    implicit val decodeAutoLock: Decoder[AutoLock] = Decoder.decode
+    implicit val decodeAutoLock: Decoder[AutoLock] = Decoder.decodeLong.emap {
+      case value: Long => Right(AutoLock(Some(FiniteDuration(value, TimeUnit.MINUTES))))
+    }
 
     implicit val decodeTheme: Decoder[Theme] = Decoder.decodeString.emap {
       case Light.themeName => Right(Light)
@@ -55,21 +56,20 @@ object SettingsHelper {
 
   def constructJson(settings: LockbookSettings, fileHelper: FileHelper): Unit = {
 
-    implicit val encodeAutoLock: Encoder[AutoLock] = Encoder.forProduct1("finiteDuration")(u => (u.time.get))
-
     implicit val encodeLockbookSettings: Encoder[LockbookSettings] = new Encoder[LockbookSettings] {
       final def apply(a: LockbookSettings): Json = Json.obj(
-        ("theme", Json.fromString(a.theme.get.fileName)),
-        ("autoLock", Option.asJson)
+        ("theme", Json.fromString(a.theme.getOrElse(Light).themeName)),
+        ("autoLock", Json.fromLong(a.autoLockTime.getOrElse(AutoLock(Some(FiniteDuration(5, TimeUnit.MINUTES)))).time.get.toMinutes))
       )
-
     }
 
     val jsonFile = new File(jsonPath)
-    if (!jsonFile.exists()) jsonFile.createNewFile()
+    if (!jsonFile.exists()) {
+      jsonFile.createNewFile()
+
+    }
     fileHelper.saveToFile(jsonFile, settings.asJson.noSpaces)
   }
-
 }
 
 class SettingsHelperImpl(settings: LockbookSettings) extends SettingsHelper { //und better
