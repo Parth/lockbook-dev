@@ -56,7 +56,7 @@ object SettingsHelper {
 
   def constructJson(settings: LockbookSettings, fileHelper: FileHelper): Unit = { // TODO: Becoming convoluted, sort and optimize
 
-    implicit val encodeLockbookSettings: Encoder[LockbookSettings] = new Encoder[LockbookSettings] {
+    implicit val encodeLockbookSettings: Encoder[LockbookSettings] = new Encoder[LockbookSettings] { // does not correctly add None to json
       final def apply(a: LockbookSettings): Json = Json.obj(
         ("theme", Json.fromString(a.theme.getOrElse(Light).themeName)),
         ("autoLock", Json.fromLong(a.autoLockTime.getOrElse(AutoLock(Some(FiniteDuration(5, TimeUnit.MINUTES)))).time.get.toMinutes))
