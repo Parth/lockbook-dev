@@ -27,7 +27,7 @@ object SettingsHelper {
       case Right(settings) => settings
     }
 
-  private def decodeSettings(s: String): Either[DecodingError, LockbookSettings] = {
+  private def decodeSettings(s: String): Either[DecodingError, LockbookSettings] = { // TODO: Becoming convoluted, sort and optimize
 
     implicit val decodeAutoLock: Decoder[AutoLock] = Decoder.decodeLong.emap {
       case value: Long => Right(AutoLock(Some(FiniteDuration(value, TimeUnit.MINUTES))))
@@ -54,7 +54,7 @@ object SettingsHelper {
     }
   }
 
-  def constructJson(settings: LockbookSettings, fileHelper: FileHelper): Unit = {
+  def constructJson(settings: LockbookSettings, fileHelper: FileHelper): Unit = { // TODO: Becoming convoluted, sort and optimize
 
     implicit val encodeLockbookSettings: Encoder[LockbookSettings] = new Encoder[LockbookSettings] {
       final def apply(a: LockbookSettings): Json = Json.obj(
@@ -66,7 +66,6 @@ object SettingsHelper {
     val jsonFile = new File(jsonPath)
     if (!jsonFile.exists()) {
       jsonFile.createNewFile()
-
     }
     fileHelper.saveToFile(jsonFile, settings.asJson.noSpaces)
   }

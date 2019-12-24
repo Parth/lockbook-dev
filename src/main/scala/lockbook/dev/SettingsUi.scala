@@ -38,7 +38,7 @@ class SettingsUi(settingsHelper: SettingsHelper, fileHelper: FileHelper) {
     val autoLockIntField = new TextField()
     val autoLockCheckBox  = new control.CheckBox()
 
-    stylesBox.getSelectionModel.select(settingsHelper.getTheme)
+    stylesBox.getSelectionModel.select(settingsHelper.getTheme) // TODO: Optimize
       if (settingsHelper.getAutoLock.time.isEmpty) {
         autoLockCheckBox.setSelected(true)
         autoLockIntField.setDisable(true)
@@ -77,7 +77,7 @@ class SettingsUi(settingsHelper: SettingsHelper, fileHelper: FileHelper) {
         if (dialogButton == ButtonType.APPLY)
           LockbookSettings(
             Some(stylesBox.getValue),
-            Some(AutoLock(Some(FiniteDuration(autoLockIntField.getText.toInt, TimeUnit.MINUTES))))
+            Some(AutoLock(Some(FiniteDuration(autoLockIntField.getText.toInt, TimeUnit.MINUTES)))) // TODO: Optimize
           )
         else null
       }
