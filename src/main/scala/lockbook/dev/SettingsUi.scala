@@ -34,19 +34,17 @@ class SettingsUi(settingsHelper: SettingsHelper, fileHelper: FileHelper) {
   }
 
   private def showViewHelper(dialog: Dialog[LockbookSettings], gridPane: GridPane): Unit = {
-    val stylesBox         = new ComboBox[Theme](FXCollections.observableArrayList(Light)) // TODO change type to theme
+    val stylesBox        = new ComboBox[Theme](FXCollections.observableArrayList(Light)) // TODO change type to theme
     val autoLockIntField = new TextField()
-    val autoLockCheckBox  = new control.CheckBox()
+    val autoLockCheckBox = new control.CheckBox()
 
     stylesBox.getSelectionModel.select(settingsHelper.getTheme) // TODO: Optimize
-      if (settingsHelper.getAutoLock.time.isEmpty) {
-        autoLockCheckBox.setSelected(true)
-        autoLockIntField.setDisable(true)
-      } else {
-        autoLockIntField.setText(settingsHelper.getAutoLock.time.get.toMinutes.toString)
-      }
-
-
+    if (settingsHelper.getAutoLock.time.isEmpty) {
+      autoLockCheckBox.setSelected(true)
+      autoLockIntField.setDisable(true)
+    } else {
+      autoLockIntField.setText(settingsHelper.getAutoLock.time.get.toMinutes.toString)
+    }
 
     autoLockIntField.setOnKeyReleased(
       _ =>
@@ -77,7 +75,10 @@ class SettingsUi(settingsHelper: SettingsHelper, fileHelper: FileHelper) {
         if (dialogButton == ButtonType.APPLY)
           LockbookSettings(
             Some(stylesBox.getValue),
-            Some(AutoLock(Some(FiniteDuration(autoLockIntField.getText.toInt, TimeUnit.MINUTES)))) // TODO: Optimize
+            Some(
+              if (autoLockCheckBox.isSelected) AutoLock(None)
+              else AutoLock(Some(FiniteDuration(autoLockIntField.getText.toInt, TimeUnit.MINUTES)))
+            ) // TODO: Optimize
           )
         else null
       }

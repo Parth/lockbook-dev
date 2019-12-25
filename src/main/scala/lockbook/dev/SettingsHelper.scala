@@ -29,8 +29,13 @@ object SettingsHelper {
 
   private def decodeSettings(s: String): Either[DecodingError, LockbookSettings] = { // TODO: Becoming convoluted, sort and optimize
 
-    implicit val decodeAutoLock: Decoder[AutoLock] = Decoder.decodeLong.emap {
-      case value: Long => Right(AutoLock(Some(FiniteDuration(value, TimeUnit.MINUTES))))
+    implicit val decodeFiniteDuration: Decoder[FiniteDuration] = Decoder.decodeLong.emap {
+      case value => Right(FiniteDuration(value, TimeUnit.MINUTES))
+    }
+
+    implicit val decodeAutoLock: Decoder[AutoLock] = Decoder.decodeOption[FiniteDuration].emap {
+      case Some(value) => Right(AutoLock(Some(value)))
+      case None => Right(AutoLock(None))
     }
 
     implicit val decodeTheme: Decoder[Theme] = Decoder.decodeString.emap {
@@ -56,10 +61,21 @@ object SettingsHelper {
 
   def constructJson(settings: LockbookSettings, fileHelper: FileHelper): Unit = { // TODO: Becoming convoluted, sort and optimize
 
+    implicit val encodeFiniteDuration: Encoder[FiniteDuration] = new Encoder[FiniteDuration] {
+      override def apply(a: FiniteDuration): Json = a.toMinutes.asInstanceOf[Json]
+    }
+
+    implicit val encodeAutoLock: Encoder[AutoLock] = new Encoder[AutoLock] {
+      override def apply(a: AutoLock): Json = {
+        if (a.time.isEmpty) Json.fromString(None.toString)
+        else Json.fromLong(a.time.get.toMinutes)
+      }
+    }
+
     implicit val encodeLockbookSettings: Encoder[LockbookSettings] = new Encoder[LockbookSettings] { // does not correctly add None to json
       final def apply(a: LockbookSettings): Json = Json.obj(
         ("theme", Json.fromString(a.theme.getOrElse(Light).themeName)),
-        ("autoLock", Json.fromLong(a.autoLockTime.getOrElse(AutoLock(Some(FiniteDuration(5, TimeUnit.MINUTES)))).time.get.toMinutes))
+        ("autoLock", a.autoLockTime.asJson)
       )
     }
 
