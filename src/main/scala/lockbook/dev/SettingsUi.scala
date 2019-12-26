@@ -15,8 +15,6 @@ class SettingsUi(settingsHelper: SettingsHelper, fileHelper: FileHelper) {
 
   def showView(): Unit = {
 
-    println("Got here")
-
     val dialog: Dialog[LockbookSettings] = new Dialog[LockbookSettings]()
 
     dialog.getDialogPane.getButtonTypes.addAll(
@@ -46,6 +44,12 @@ class SettingsUi(settingsHelper: SettingsHelper, fileHelper: FileHelper) {
       autoLockIntField.setText(settingsHelper.getAutoLock.time.get.toMinutes.toString)
     }
 
+    autoLockCheckBox.setOnAction(
+      _ =>
+        if (autoLockCheckBox.isSelected) autoLockIntField.setDisable(true)
+        else autoLockIntField.setDisable(false)
+    )
+
     autoLockIntField.setOnKeyReleased(
       _ =>
         if (!autoLockIntField.getText.matches("""\d*""")) {
@@ -66,6 +70,7 @@ class SettingsUi(settingsHelper: SettingsHelper, fileHelper: FileHelper) {
     gridPane.add(new Label("Auto Lock Time"), 0, 2)
     gridPane.add(autoLockIntField, 1, 2)
     gridPane.add(autoLockCheckBox, 2, 2)
+    gridPane.add(new Label("Restart to have settings take effect"), 0, 3)
 
     dialog.getDialogPane.getStylesheets.add(settingsHelper.getTheme.fileName)
     dialog.getDialogPane.setContent(gridPane)
