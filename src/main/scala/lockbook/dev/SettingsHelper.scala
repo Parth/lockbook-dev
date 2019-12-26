@@ -29,13 +29,9 @@ object SettingsHelper {
 
   private def decodeSettings(s: String): Either[DecodingError, LockbookSettings] = { // TODO: Becoming convoluted, sort and optimize
 
-    implicit val decodeFiniteDuration: Decoder[FiniteDuration] = Decoder.decodeLong.emap {
-      case value => Right(FiniteDuration(value, TimeUnit.MINUTES))
-    }
-
-    implicit val decodeAutoLock: Decoder[AutoLock] = Decoder.decodeOption[FiniteDuration].emap {
-      case Some(value) => Right(AutoLock(Some(value)))
-      case None => Right(AutoLock(None))
+    implicit val decodeAutoLock: Decoder[AutoLock] = Decoder.decodeString.emap {
+      case "None" => Right(AutoLock(None))
+      case value  => Right(AutoLock(Some(FiniteDuration(value.asInstanceOf[Long], TimeUnit.MINUTES))))
     }
 
     implicit val decodeTheme: Decoder[Theme] = Decoder.decodeString.emap {
@@ -72,17 +68,16 @@ object SettingsHelper {
       }
     }
 
-    implicit val encodeLockbookSettings: Encoder[LockbookSettings] = new Encoder[LockbookSettings] { // does not correctly add None to json
-      final def apply(a: LockbookSettings): Json = Json.obj(
-        ("theme", Json.fromString(a.theme.getOrElse(Light).themeName)),
-        ("autoLock", a.autoLockTime.asJson)
-      )
-    }
+    implicit val encodeLockbookSettings: Encoder[LockbookSettings] =
+      new Encoder[LockbookSettings] { // does not correctly add None to json
+        final def apply(a: LockbookSettings): Json = Json.obj(
+          ("theme", Json.fromString(a.theme.getOrElse(Light).themeName)),
+          ("autoLock", a.autoLockTime.asJson)
+        )
+      }
 
     val jsonFile = new File(jsonPath)
-    if (!jsonFile.exists()) {
-      jsonFile.createNewFile()
-    }
+    if (!jsonFile.exists()) jsonFile.createNewFile()
     fileHelper.saveToFile(jsonFile, settings.asJson.noSpaces)
   }
 }
