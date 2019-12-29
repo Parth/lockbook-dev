@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit
 import javafx.collections.FXCollections
 import javafx.geometry.Insets
 import javafx.scene.control
-import javafx.scene.control._
+import javafx.scene.control.{TextFormatter, _}
 import javafx.scene.layout.GridPane
 
 import scala.concurrent.duration.FiniteDuration
@@ -26,13 +26,14 @@ class SettingsUi(settingsHelper: SettingsHelper, fileHelper: FileHelper) {
     showViewHelper(dialog, gridPane)
 
     val result: Optional[LockbookSettings] = dialog.showAndWait()
+
     if (result.isPresent) {
       SettingsHelper.constructJson(result.get(), fileHelper)
     }
   }
 
   private def showViewHelper(dialog: Dialog[LockbookSettings], gridPane: GridPane): Unit = {
-    val stylesBox        = new ComboBox[Theme](FXCollections.observableArrayList(Light)) // TODO change type to theme
+    val stylesBox        = new ComboBox[Theme](FXCollections.observableArrayList(Light))
     val autoLockIntField = new TextField()
     val autoLockCheckBox = new control.CheckBox()
 
@@ -50,12 +51,14 @@ class SettingsUi(settingsHelper: SettingsHelper, fileHelper: FileHelper) {
         else autoLockIntField.setDisable(false)
     )
 
-    autoLockIntField.setOnKeyReleased(
-      _ =>
-        if (!autoLockIntField.getText.matches("""\d*""")) {
-          autoLockIntField.setText(autoLockIntField.getText.replaceAll("""\D+""", ""))
-        }
-    )
+    autoLockIntField.setTextFormatter(new TextFormatter[String]((change: TextFormatter.Change) => {
+      change.setText(change.getText.replaceAll("""\D+""", ""))
+
+      if (autoLockIntField.getText.length > 1)
+        change.setText("")
+
+      change
+    }))
 
     dialog.setTitle("Settings") // use settingshelper across, then advanced capabil.
     dialog.setHeaderText("Settings")
@@ -81,13 +84,12 @@ class SettingsUi(settingsHelper: SettingsHelper, fileHelper: FileHelper) {
           LockbookSettings(
             Some(stylesBox.getValue),
             Some(
-              if (autoLockCheckBox.isSelected) AutoLock(None)
+              if (autoLockCheckBox.isSelected || autoLockIntField.getText.isEmpty) AutoLock(None)
               else AutoLock(Some(FiniteDuration(autoLockIntField.getText.toInt, TimeUnit.MINUTES)))
-            ) // TODO: Optimize
+            )
           )
         else null
       }
     )
   }
-
 }

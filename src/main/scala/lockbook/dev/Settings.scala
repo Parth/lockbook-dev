@@ -15,7 +15,7 @@ trait Theme extends Settings {
 }
 
 case object Light extends Theme {
-  override val fileName: String = "light.css"
+  override val fileName: String  = "light.css"
   override val themeName: String = "Light"
 }
 
