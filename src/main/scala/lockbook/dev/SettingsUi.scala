@@ -52,8 +52,9 @@ class SettingsUi(settingsHelper: SettingsHelper, fileHelper: FileHelper) {
     )
 
     autoLockIntField.setTextFormatter(new TextFormatter[String]((change: TextFormatter.Change) => {
+      if(autoLockIntField.getText.length == 0 && change.getText == "0")
+       change.setText("")
       change.setText(change.getText.replaceAll("""\D+""", ""))
-
       if (autoLockIntField.getText.length > 1)
         change.setText("")
 
