@@ -8,39 +8,39 @@ import javafx.stage.Stage
 object App {
   val path: String   = s"${System.getProperty("user.home")}/.lockbook"
   val debug: Boolean = true // TODO utilize this to print out exceptions passed into LockbookError
-  val css: String    = "light.css" // good settings candidate
-  // right click -> find usages
+  val css: String    = "light.css"
 
-  def main(args: Array[String]) {
+  def main(args: Array[String]) =
     Application.launch(classOf[App], args: _*)
-  }
 }
 
 class App extends Application {
 
-  def addCss(stage: Stage): Unit = {
+  def addCss(stage: Stage, settingsHelper: SettingsHelper): Unit =
     stage
       .sceneProperty()
       .addListener((_, _, newValue) => {
         if (newValue != null) {
-          newValue.getStylesheets.addAll(App.css, "markdown.css")
+          newValue.getStylesheets.addAll(settingsHelper.getTheme.fileName, "markdown.css")
         }
       })
-  }
 
   override def start(stage: Stage): Unit = {
-    addCss(stage)
 
     val executor: ScheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(2)
 
-    val file: FileHelper                       = new FileHelperImpl
-    val settingsHelper: SettingsHelper         = new SettingsHelperImpl(SettingsHelper.fromFile(file))
-    val encryption: EncryptionHelper           = new EncryptionImpl
-    val lockfile: LockfileHelper               = new LockfileHelperImpl(encryption, file)
-    val passphrase: PassphraseHelper           = new PassphraseHelperImpl(lockfile, encryption)
-    val gitCredential: GitCredentialHelperImpl = new GitCredentialHelperImpl(encryption, passphrase, file)
-    val git: GitHelper                         = new GitHelperImpl(gitCredential, file)
-    val editorHelper: EditorHelperImpl         = new EditorHelperImpl(encryption, passphrase, file)
+    val file: FileHelper               = new FileHelperImpl
+    val settingsHelper: SettingsHelper = new SettingsHelperImpl(SettingsHelper.fromFile(file))
+
+    addCss(stage, settingsHelper)
+
+    val encryption: EncryptionHelper = new EncryptionImpl
+    val lockfile: LockfileHelper     = new LockfileHelperImpl(encryption, file)
+    val passphrase: PassphraseHelper = new PassphraseHelperImpl(lockfile, encryption)
+    val gitCredential: GitCredentialHelperImpl =
+      new GitCredentialHelperImpl(encryption, passphrase, settingsHelper, file)
+    val git: GitHelper                 = new GitHelperImpl(gitCredential, file)
+    val editorHelper: EditorHelperImpl = new EditorHelperImpl(encryption, passphrase, file)
 
     val newPassphraseUi: NewPassphraseUi   = new NewPassphraseUi(lockfile, passphrase, encryption)
     val settingsUi: SettingsUi             = new SettingsUi(settingsHelper, file)

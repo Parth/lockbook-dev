@@ -45,6 +45,7 @@ trait GitCredentialHelper { // TODO consider splitting this out into ui based & 
 class GitCredentialHelperImpl(
     encryptionHelper: EncryptionHelper,
     passwordHelper: PassphraseHelper,
+    settingsHelper: SettingsHelper,
     fileHelper: FileHelper
 ) extends GitCredentialHelper {
 

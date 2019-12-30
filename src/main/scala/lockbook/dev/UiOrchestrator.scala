@@ -32,7 +32,7 @@ class UiOrchestrator(
   private var closing: Boolean = false
 
   def showView(): Unit = {
-    val root           = new BorderPane // revert back to root
+    val root                 = new BorderPane // revert back to root
     val stackPane: StackPane = new StackPane
     root.setCenter(stackPane)
     stage.setMaximized(false)
@@ -120,9 +120,9 @@ class UiOrchestrator(
     val lockWhenBackground =
       settingsHelper.getAutoLock.time match { // TODO make this better
         case Some(time) => CancelableAction(executor, time, lockTask)
-        case None => CancelableAction(executor, FiniteDuration(1, TimeUnit.SECONDS), () => ())
+        case None       => CancelableAction(executor, FiniteDuration(1, TimeUnit.SECONDS), () => ())
       }
-       // good settings candidate
+    // good settings candidate
 
     var refreshRepos: Option[ScheduledFuture[_]] = Some(
       executor.scheduleAtFixedRate(refreshStatus, 1, 1, TimeUnit.SECONDS)

@@ -37,7 +37,7 @@ class SettingsUi(settingsHelper: SettingsHelper, fileHelper: FileHelper) {
     val autoLockIntField = new TextField()
     val autoLockCheckBox = new control.CheckBox()
 
-    stylesBox.getSelectionModel.select(settingsHelper.getTheme) // TODO: Optimize
+    stylesBox.getSelectionModel.select(settingsHelper.getTheme) // TODO: Make autolockIntField appear after lockbookCheckBox is unchecked, intuitive
     if (settingsHelper.getAutoLock.time.isEmpty) {
       autoLockCheckBox.setSelected(true)
       autoLockIntField.setDisable(true)

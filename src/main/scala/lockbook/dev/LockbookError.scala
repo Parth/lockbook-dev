@@ -7,8 +7,8 @@ import org.eclipse.jgit.api.errors.TransportException
 
 sealed trait LockbookError { val uiMessage: String }
 
-case class DecodingError(raw: String, e: io.circe.Error)  extends LockbookError {
-  override val uiMessage: String =  s"$raw, could not be decoded, $e"
+case class DecodingError(raw: String, e: io.circe.Error) extends LockbookError {
+  override val uiMessage: String = s"$raw, could not be decoded, $e"
 }
 
 case class UnableToFindSetting(raw: String) extends LockbookError {
