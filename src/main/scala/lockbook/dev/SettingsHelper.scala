@@ -21,8 +21,8 @@ object SettingsHelper {
     fileHelper
       .readFile(jsonPath)
       .flatMap(decodeSettings) match {
-      case Left(tempError) =>
-        if(new File(jsonPath).exists()) println(s"Could not read settings: $tempError")
+      case Left(error) =>
+        println(error)
         LockbookSettings(None, None)
       case Right(settings) => settings
     }
@@ -70,7 +70,7 @@ object SettingsHelper {
 
     implicit val encodeAutoLock: Encoder[AutoLock] = new Encoder[AutoLock] {
       override def apply(a: AutoLock): Json = {
-        if (a.time.isEmpty) Json.fromString(None.toString)
+        if (a.time.isEmpty) Json.fromString("None")
         else Json.fromString(a.time.get.toMinutes.toString)
       }
     }

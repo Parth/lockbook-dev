@@ -47,15 +47,15 @@ class SettingsUi(settingsHelper: SettingsHelper, fileHelper: FileHelper) {
 
     autoLockCheckBox.setOnAction(
       _ =>
-        if (autoLockCheckBox.isSelected) autoLockIntField.setDisable(true)
-        else autoLockIntField.setDisable(false)
+        autoLockIntField.setDisable(
+          if (autoLockCheckBox.isSelected) true
+          else false
+        )
     )
 
     autoLockIntField.setTextFormatter(new TextFormatter[String]((change: TextFormatter.Change) => {
-      if(autoLockIntField.getText.length == 0 && change.getText == "0")
-       change.setText("")
       change.setText(change.getText.replaceAll("""\D+""", ""))
-      if (autoLockIntField.getText.length > 1)
+      if (autoLockIntField.getText.length > 1 || autoLockIntField.getText.length == 0 && change.getText == "0")
         change.setText("")
 
       change
@@ -84,7 +84,7 @@ class SettingsUi(settingsHelper: SettingsHelper, fileHelper: FileHelper) {
         if (dialogButton == ButtonType.APPLY)
           LockbookSettings(
             Some(stylesBox.getValue),
-            Some(
+            Some( // can simplify
               if (autoLockCheckBox.isSelected || autoLockIntField.getText.isEmpty) AutoLock(None)
               else AutoLock(Some(FiniteDuration(autoLockIntField.getText.toInt, TimeUnit.MINUTES)))
             )
