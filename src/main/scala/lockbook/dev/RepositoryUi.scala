@@ -12,6 +12,7 @@ import scala.concurrent.Future
 class RepositoryUi(
     gitHelper: GitHelper,
     repositoryCellUi: RepositoryCellUi,
+    dialogUi: DialogUi,
     cloneRepoDialog: CloneRepoDialog
 ) {
 
@@ -75,6 +76,7 @@ class RepositoryUi(
               if (saveKeyCombo.`match`(event)) { // Our shortcut is matched
 
                 DoInBackgroundWithMouseSpinning( // Push is performed in background
+                  dialogUi,
                   name = "Pushing changes",
                   task = () => gitHelper.commitAndPush("", value.getSelectionModel.getSelectedItem.git),
                   value.getScene

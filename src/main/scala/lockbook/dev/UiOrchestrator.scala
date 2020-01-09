@@ -39,7 +39,7 @@ class UiOrchestrator(
     stage.setFullScreen(false)
     stage.setScene(new Scene(root, 300, 130))
     stage.setTitle("Lockbook Dev")
-    stage.getScene.getStylesheets.add("light.css")
+    stage.getScene.getStylesheets.add(settingsHelper.getTheme.fileName)
     processLockfileAndShowUi(stackPane, showRepo())
     stage.show()
   }
@@ -50,7 +50,8 @@ class UiOrchestrator(
     val settingsItem = new MenuItem("Settings")
 
     settingsItem.setOnAction(_ => {
-      settingsUi.showView
+      settingsUi.
+        showView()
     })
 
     fileMenu.getItems.add(settingsItem)

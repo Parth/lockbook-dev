@@ -6,13 +6,13 @@ import javafx.scene.control.ButtonBar.ButtonData
 import javafx.scene.control._
 import javafx.scene.layout.GridPane
 
-object GitCredentialUi {
+class GitCredentialUi(settingsHelper: SettingsHelper) {
   def getView(credentialName: String): Dialog[Either[UserCanceled, GitCredential]] = {
 
     val dialog = new Dialog[Either[UserCanceled, GitCredential]]
     dialog.setTitle("Login Dialog")
     dialog.setHeaderText(s"Enter credentials for $credentialName")
-    dialog.getDialogPane.getStylesheets.add(App.css)
+    dialog.getDialogPane.getStylesheets.add(settingsHelper.getTheme.fileName)
 
     val loginButtonType = new ButtonType("Login", ButtonData.OK_DONE)
     dialog.getDialogPane.getButtonTypes.addAll(loginButtonType, ButtonType.CANCEL)

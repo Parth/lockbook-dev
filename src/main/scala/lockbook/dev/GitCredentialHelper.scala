@@ -71,8 +71,10 @@ class GitCredentialHelperImpl(
     val p: Promise[Either[UserCanceled, GitCredential]] =
       Promise[Either[UserCanceled, GitCredential]]()
 
+    val gitCredentialUi = new GitCredentialUi(settingsHelper)
+
     Platform.runLater(() => {
-      p.success(GitCredentialUi.getView(key).showAndWait().get())
+      p.success(gitCredentialUi.getView(key).showAndWait().get())
     })
 
     Await.result(p.future, Duration.Inf) match {
