@@ -1,7 +1,7 @@
 plugins {
     id 'scala'
     id 'org.openjfx.javafxplugin' version '0.0.8'
-    id 'org.beryx.runtime' version '1.7.0' // Used to create portable JRE images & Dists
+    id 'org.beryx.runtime' version '1.8.0' // Used to create portable JRE images & Dists
 }
 
 javafx {
