@@ -4,7 +4,7 @@ import scala.concurrent.duration.FiniteDuration
 
 case class LockbookSettings(
     theme: Option[Theme],
-    autoLockTime: Option[AutoLock] // change variable name to autoLock
+    autoLockTime: Option[AutoLock]
 )
 
 sealed trait Settings
@@ -19,4 +19,4 @@ case object Light extends Theme {
   override val themeName: String = "Light"
 }
 
-case class AutoLock(time: Option[FiniteDuration]) extends Settings // remove default value, implement somewhere else
+case class AutoLock(time: Option[FiniteDuration]) extends Settings
