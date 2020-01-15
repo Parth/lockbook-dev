@@ -3,7 +3,7 @@ install: true
 language: generic
 
 jobs:
-    include:
+  include:
     - stage: build
       name: "Dist macOS"
       os: osx
@@ -11,14 +11,14 @@ jobs:
       osx_image: xcode11
       script: ./ci/dist_mac_os.sh
       deploy:
-          provider: releases
-          api_key: $RELEASE_TOKEN
-          file: build/jpackage/lockbook-macos.tar.gz
-          skip_cleanup: true
-          on:
-              tags: false
-          name: Lockbook 0.$TRAVIS_BUILD_NUMBER
-          body: "$TRAVIS_COMMIT - $(date +'%d.%m.%Y %R')"
+        provider: releases
+        api_key: $RELEASE_TOKEN
+        file: build/jpackage/lockbook-macos.tar.gz
+        skip_cleanup: true
+        on:
+          tags: false
+        name: Lockbook 0.$TRAVIS_BUILD_NUMBER
+        body: "$TRAVIS_COMMIT - $(date +'%d.%m.%Y %R')"
 
     - stage: build
       name: "Dist Linux"
@@ -27,11 +27,11 @@ jobs:
       dist: bionic
       script: ./ci/dist_linux.sh
       deploy:
-          provider: releases
-          api_key: $RELEASE_TOKEN
-          file: build/jpackage/lockbook-linux.tar.gz
-          skip_cleanup: true
-          on:
-              tags: false
-          name: Lockbook 0.$TRAVIS_BUILD_NUMBER
-          body: "$TRAVIS_COMMIT - $(date +'%d.%m.%Y %R')"
+        provider: releases
+        api_key: $RELEASE_TOKEN
+        file: build/jpackage/lockbook-linux.tar.gz
+        skip_cleanup: true
+        on:
+          tags: false
+        name: Lockbook 0.$TRAVIS_BUILD_NUMBER
+        body: "$TRAVIS_COMMIT - $(date +'%d.%m.%Y %R')"

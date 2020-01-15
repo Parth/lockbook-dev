@@ -99,7 +99,6 @@ class SettingsUi(settingsHelper: SettingsHelper, fileHelper: FileHelper) {
     dialog.getDialogPane.getStylesheets.add(settingsHelper.getTheme.fileName)
     dialog.getDialogPane.setContent(gridPane)
 
-
     dialog.setResultConverter(
       dialogButton => {
         if (dialogButton == ButtonType.APPLY)

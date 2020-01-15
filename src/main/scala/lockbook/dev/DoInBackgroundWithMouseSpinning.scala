@@ -6,7 +6,9 @@ import javafx.scene.{Cursor, Scene}
 import scala.concurrent.{ExecutionContext, Future}
 
 object DoInBackgroundWithMouseSpinning {
-  def apply(dialogUi: DialogUi, name: String, task: () => Either[LockbookError, Any], scene: Scene)(implicit ec: ExecutionContext): Unit = {
+  def apply(dialogUi: DialogUi, name: String, task: () => Either[LockbookError, Any], scene: Scene)(
+      implicit ec: ExecutionContext
+  ): Unit = {
     scene.setCursor(Cursor.WAIT)
 
     Future {
@@ -23,4 +25,3 @@ object DoInBackgroundWithMouseSpinning {
   }
 
 }
-

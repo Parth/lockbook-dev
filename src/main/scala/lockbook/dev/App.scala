@@ -68,4 +68,3 @@ class App extends Application {
     uiOrchestrator.showView()
   }
 }
-
