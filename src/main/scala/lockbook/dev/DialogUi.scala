@@ -5,7 +5,7 @@ import java.util.Optional
 import javafx.scene.control.Alert.AlertType
 import javafx.scene.control.{Alert, ButtonType, TextInputDialog}
 
-object DialogUi {
+object DialogUi { // Dummy change
 
   def showGood(title: String, message: String): Unit = {
     val alert = new Alert(AlertType.CONFIRMATION)
