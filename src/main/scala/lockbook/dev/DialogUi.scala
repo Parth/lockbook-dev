@@ -6,7 +6,6 @@ import javafx.scene.control.Alert.AlertType
 import javafx.scene.control.{Alert, ButtonType, TextInputDialog}
 
 class DialogUi(settingsHelper: SettingsHelper) {
-
   def showGood(title: String, message: String): Unit = {
     val alert = new Alert(AlertType.CONFIRMATION)
     alert.getDialogPane.getStylesheets.add(settingsHelper.getTheme.fileName)
