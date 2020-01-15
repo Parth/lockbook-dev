@@ -7,13 +7,14 @@ import javafx.scene.control.Label
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class CloneRepoDialog(gitHelper: GitHelper) {
+class CloneRepoDialog(gitHelper: GitHelper, dialogUi: DialogUi, settingsHelper: SettingsHelper) {
 
   def showDialog(repoList: ObservableList[RepositoryCell], scene: Scene): Unit =
-    DialogUi
+    dialogUi
       .askUserForString("Clone", "Clone a repository", "Repository URL")
       .foreach(url => {
         DoInBackgroundWithMouseSpinning(
+          dialogUi,
           name = "Clone",
           task = () =>
             gitHelper

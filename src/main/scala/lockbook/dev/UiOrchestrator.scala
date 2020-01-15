@@ -5,9 +5,9 @@ import java.util.concurrent.{ScheduledFuture, ScheduledThreadPoolExecutor, TimeU
 
 import javafx.application.Platform
 import javafx.scene.Scene
-import javafx.scene.control.SplitPane
+import javafx.scene.control.{Menu, MenuBar, MenuItem, SplitPane}
 import javafx.scene.input.{KeyCode, KeyCodeCombination, KeyCombination, KeyEvent}
-import javafx.scene.layout.StackPane
+import javafx.scene.layout.{BorderPane, StackPane}
 import javafx.stage.{Screen, Stage}
 import org.eclipse.jgit.api.Git
 
@@ -17,6 +17,8 @@ import scala.concurrent.duration.FiniteDuration
 
 class UiOrchestrator(
     lockfile: LockfileHelper,
+    settingsHelper: SettingsHelper,
+    settingsUi: SettingsUi,
     unlockUI: UnlockUi,
     newPassphraseUI: NewPassphraseUi,
     repositoryUi: RepositoryUi,
@@ -30,38 +32,59 @@ class UiOrchestrator(
   private var closing: Boolean = false
 
   def showView(): Unit = {
-    val root: StackPane = new StackPane
+    val root                 = new BorderPane // revert back to root
+    val stackPane: StackPane = new StackPane
+    root.setCenter(stackPane)
     stage.setMaximized(false)
     stage.setFullScreen(false)
     stage.setScene(new Scene(root, 300, 130))
     stage.setTitle("Lockbook Dev")
-    processLockfileAndShowUi(root, showRepo())
+    stage.getScene.getStylesheets.add(settingsHelper.getTheme.fileName)
+    processLockfileAndShowUi(stackPane, showRepo())
     stage.show()
+  }
+
+  private def getMenuUi: MenuBar = {
+    val menuBar      = new MenuBar
+    val fileMenu     = new Menu("File")
+    val settingsItem = new MenuItem("Settings")
+
+    settingsItem.setOnAction(_ => {
+      settingsUi.showView()
+    })
+
+    fileMenu.getItems.add(settingsItem)
+    menuBar.getMenus.add(fileMenu)
+
+    menuBar
   }
 
   private def showRepo(): Unit = {
     stage.close()
     locked = false
 
-    val root            = new SplitPane
+    val splitPane       = new SplitPane
+    val borderPane      = new BorderPane
     val repoStackPane   = new StackPane
     val fileStackPane   = new StackPane
     val editorStackPane = new StackPane
 
-    root.setDividerPositions(0.15, 0.3)
-    root.getItems.setAll(repoStackPane, fileStackPane, editorStackPane)
+    borderPane.setTop(getMenuUi)
+    borderPane.setCenter(splitPane)
+
+    splitPane.setDividerPositions(0.15, 0.3)
+    splitPane.getItems.setAll(repoStackPane, fileStackPane, editorStackPane)
     repoStackPane.getChildren.setAll(
       repositoryUi.getView(showFileUi(fileStackPane, editorStackPane))
     )
 
     stage.setScene(
       new Scene(
-        root,
+        borderPane,
         Screen.getPrimary.getVisualBounds.getWidth * 0.8,
         Screen.getPrimary.getVisualBounds.getHeight * 0.8
       )
     )
-
 
     closeRequestListener()
     addFocusListener()
@@ -81,7 +104,6 @@ class UiOrchestrator(
       lockfile.getLockfile match {
         case Right(_) =>
           Platform.runLater(() => root.getChildren.add(unlockUI.getView(onDone)))
-
         case Left(_) =>
           Platform.runLater(() => root.getChildren.add(newPassphraseUI.getView(onDone)))
       }
@@ -96,7 +118,11 @@ class UiOrchestrator(
 
   private def addFocusListener(): Unit = {
     val lockWhenBackground =
-      CancelableAction(executor, FiniteDuration(15, TimeUnit.MINUTES), lockTask) // good settings candidate
+      settingsHelper.getAutoLock.time match { // TODO make this better
+        case Some(time) => CancelableAction(executor, time, lockTask)
+        case None       => CancelableAction(executor, FiniteDuration(1, TimeUnit.SECONDS), () => ())
+      }
+    // good settings candidate
 
     var refreshRepos: Option[ScheduledFuture[_]] = Some(
       executor.scheduleAtFixedRate(refreshStatus, 1, 1, TimeUnit.SECONDS)

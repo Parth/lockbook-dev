@@ -28,9 +28,9 @@ object RepositoryCell {
     }
 }
 
-class RepositoryCellUi(gitHelper: GitHelper) {
+class RepositoryCellUi(gitHelper: GitHelper, dialogUi: DialogUi) {
 
-  // These particular functions need to be passed in becaues they require both both the list element & list
+  // These particular functions need to be passed in because they require both both the list element & list
   def getListCell(
       onClick: Git => Unit,
       onDelete: RepositoryCell => Unit,
@@ -69,6 +69,7 @@ class RepositoryCellUi(gitHelper: GitHelper) {
 
   private def commitPullPushClicked(item: RepositoryCell): Unit =
     DoInBackgroundWithMouseSpinning(
+      dialogUi,
       name = "Commit, Pull, Push",
       task = () => gitHelper.sync(item.git),
       item.statusLabel.getScene
@@ -76,6 +77,7 @@ class RepositoryCellUi(gitHelper: GitHelper) {
 
   private def pushClicked(item: RepositoryCell): Unit =
     DoInBackgroundWithMouseSpinning(
+      dialogUi,
       name = "Push",
       task = () => gitHelper.commitAndPush("", item.git),
       item.statusLabel.getScene
@@ -83,6 +85,7 @@ class RepositoryCellUi(gitHelper: GitHelper) {
 
   private def pullClicked(item: RepositoryCell): Unit =
     DoInBackgroundWithMouseSpinning(
+      dialogUi,
       name = "Pull",
       task = () => gitHelper.pull(item.git),
       item.statusLabel.getScene

@@ -6,7 +6,7 @@ import javafx.scene.control._
 import javafx.scene.layout.BorderPane
 import org.eclipse.jgit.api.Git
 
-class FileTreeUi(fileHelper: FileHelper) {
+class FileTreeUi(fileHelper: FileHelper, dialogUi: DialogUi) {
 
   def getView(git: Git, onSelected: (Git, File) => Unit): BorderPane = {
     // Setup TreeView
@@ -111,7 +111,7 @@ class FileTreeUi(fileHelper: FileHelper) {
     val header  = s"Enter $fileOrFolder name"
     val content = "Name:"
 
-    DialogUi.askUserForString(title, header, content)
+    dialogUi.askUserForString(title, header, content)
   }
 
 }
