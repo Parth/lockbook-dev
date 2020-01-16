@@ -1,4 +1,4 @@
-![Build Status](https://travis-ci.com/lockbook/lockbook-dev-desktop.svg?branch=master)
+![Build Status](https://travis-ci.com/lockbook/developer-edition.svg?branch=master)
 
 ![Dev Logo Color][logo-dev-color]
 
