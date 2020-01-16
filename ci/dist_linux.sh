@@ -1,4 +1,4 @@
-curl -o jpackage.tar.gz $(curl -v --silent https://jdk.java.net/jpackage/ 2>&1 | sed -n 's/.*href="\([^"]*\).*/\1/p' | grep "jpackage+1-.*linux-x64_bin.tar.gz$")
+curl -o jpackage.tar.gz https://download.java.net/java/early_access/jdk14/31/GPL/openjdk-14-ea+31_linux-x64_bin.tar.gz
 tar -xzf jpackage.tar.gz
 BADASS_RUNTIME_JPACKAGE_HOME=jdk-14 ./gradlew jpackageImage
 cd build/jpackage
