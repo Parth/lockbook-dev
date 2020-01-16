@@ -7,7 +7,7 @@ jobs:
     - stage: build
       name: "Dist macOS"
       os: osx
-      jdk: oraclejdk11
+      jdk: oraclejdk13
       osx_image: xcode11
       script: ./ci/dist_mac_os.sh
       deploy:
@@ -22,7 +22,7 @@ jobs:
 
     - stage: build
       name: "Dist Linux"
-      jdk: oraclejdk11
+      jdk: oraclejdk13
       os: linux
       dist: bionic
       script: ./ci/dist_linux.sh
